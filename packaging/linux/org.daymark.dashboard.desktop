@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Daymark
+GenericName=Daily Dashboard
+Comment=Plan the day with an explainable priority queue
+Exec=daymark
+Icon=org.daymark.dashboard
+Terminal=false
+Categories=Office;ProjectManagement;
+Keywords=tasks;planning;dashboard;productivity;priority;
+StartupNotify=true
+StartupWMClass=org.daymark.dashboard
+X-GNOME-UsesNotifications=true
