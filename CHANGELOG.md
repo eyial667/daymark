@@ -7,6 +7,8 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-28
+
 ### Added
 
 - Native Qt 6 application shell for Linux, macOS, and Windows.
