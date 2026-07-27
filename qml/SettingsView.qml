@@ -12,6 +12,7 @@ Item {
 
     required property var appSettings
     required property var dataTransfer
+    required property var updateService
     required property var theme
 
     property bool folderOpenFailed: false
@@ -470,6 +471,90 @@ Item {
                                 checked: root.appSettings.confirmTaskCompletion
                                 onToggled: root.appSettings.confirmTaskCompletion = checked
                             }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: updateContent.implicitHeight + 32
+                    radius: root.theme.radius
+                    color: root.theme.surface
+                    border.color: root.theme.border
+
+                    ColumnLayout {
+                        id: updateContent
+                        anchors.fill: parent
+                        anchors.margins: 16
+                        spacing: 13
+
+                        SectionHeading {
+                            Layout.fillWidth: true
+                            heading: "Software updates"
+                            description: "Daymark checks its official GitHub Releases page when it starts. Downloads and installation always need your approval."
+                        }
+
+                        SettingDivider { Layout.fillWidth: true }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            SettingCopy {
+                                Layout.fillWidth: true
+                                heading: root.updateService.latestVersion.length > 0
+                                    ? "Installed " + root.updateService.currentVersion
+                                        + " · Latest " + root.updateService.latestVersion
+                                    : "Installed " + root.updateService.currentVersion
+                                description: root.updateService.statusMessage.length > 0
+                                    ? root.updateService.statusMessage
+                                    : "No package is downloaded until you choose to update."
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+
+                                Item { Layout.fillWidth: true }
+
+                                AppButton {
+                                    theme: root.theme
+                                    text: root.updateService.checking ? "Checking…" : "Check now"
+                                    enabled: !root.updateService.busy
+                                    onClicked: root.updateService.checkForUpdates()
+                                }
+
+                                AppButton {
+                                    visible: root.updateService.canDownload
+                                    theme: root.theme
+                                    primary: true
+                                    text: "Download"
+                                    onClicked: root.updateService.downloadUpdate()
+                                }
+
+                                AppButton {
+                                    visible: root.updateService.canInstall
+                                    theme: root.theme
+                                    primary: true
+                                    text: root.updateService.installActionLabel
+                                    onClicked: root.updateService.installUpdate()
+                                }
+                            }
+                        }
+
+                        ProgressBar {
+                            Layout.fillWidth: true
+                            visible: root.updateService.downloading
+                            from: 0
+                            to: 100
+                            value: root.updateService.downloadProgress
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Update checks contact GitHub only for release metadata. Downloaded packages must match GitHub’s SHA-256 digest before Daymark opens an installer."
+                            color: root.theme.textMuted
+                            font.pixelSize: 10
+                            wrapMode: Text.WordWrap
                         }
                     }
                 }

@@ -16,6 +16,7 @@ ApplicationWindow {
     required property var focusSession
     required property var appSettings
     required property var dataTransfer
+    required property var updateService
 
     property int currentPage: 0
     property int pendingCompletionIndex: -1
@@ -157,6 +158,13 @@ ApplicationWindow {
         target: window.dailyNoteModel
         function onStatusMessageChanged() {
             window.showFeedback(window.dailyNoteModel.statusMessage)
+        }
+    }
+
+    Connections {
+        target: window.updateService
+        function onUpdateFound() {
+            updateDialog.open()
         }
     }
 
@@ -387,6 +395,7 @@ ApplicationWindow {
                 SettingsView {
                     appSettings: window.appSettings
                     dataTransfer: window.dataTransfer
+                    updateService: window.updateService
                     theme: interfaceTheme
                 }
             }
@@ -436,6 +445,12 @@ ApplicationWindow {
         appSettings: window.appSettings
         theme: interfaceTheme
         onManageCategoriesRequested: window.currentPage = 3
+    }
+
+    UpdateDialog {
+        id: updateDialog
+        updateService: window.updateService
+        theme: interfaceTheme
     }
 
     Dialog {

@@ -34,6 +34,14 @@ and unfinished milestones so each native map renderer presents the same facts.
 to QML. These objects translate user actions into repository operations without
 exposing SQL to QML.
 
+`UpdateService` is the single network and installer boundary. It performs a
+non-blocking startup request to the public GitHub Releases API, accepts only a
+strictly newer semantic version and the exact package name for the running
+platform, streams the package into the application cache, and checks GitHub's
+SHA-256 digest before any operating-system installer handoff. Downloads and
+installation are always explicit user actions. Update failures do not affect
+the database or offline task workflows.
+
 ## Persistence
 
 SQLite is the source of truth. Schema changes use SQLite's `user_version` value

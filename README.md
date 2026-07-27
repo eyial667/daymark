@@ -45,6 +45,8 @@ embedded webview, Node.js, or a local web server.
   goals, milestones, and preferences to a portable `.daymark.json` file, then
   merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
+- Check the official GitHub Releases feed after launch, offer newer native
+  packages, and verify GitHub's SHA-256 digest before installation.
 - Navigate the initial desktop application shell.
 
 The working product name is **Daymark** and can be changed before the first
@@ -52,16 +54,20 @@ public release.
 
 ## Install a packaged build
 
-Daymark does not publish signed releases yet. The current packages are unsigned
-development snapshots attached to successful runs of the
-[CI workflow](https://github.com/eyial667/daymark/actions/workflows/ci.yml).
-Open the latest successful run on `main`, scroll to **Artifacts**, and download
-the package for your operating system. GitHub wraps each package in an artifact
-ZIP, so extract that outer ZIP first.
+Daymark publishes native packages on its
+[GitHub Releases page](https://github.com/eyial667/daymark/releases). Packages
+are not code-signed or notarized yet. Daymark nevertheless verifies the
+SHA-256 digest recorded by GitHub before it opens any downloaded installer.
+
+Installed copies check that Releases feed shortly after launch without blocking
+the rest of the application. When a newer semantic version has a package for
+the current operating system, Daymark shows its release notes and size. Nothing
+is downloaded or installed until the user explicitly approves each step. The
+same controls remain available under **Settings → Software updates**.
 
 ### Linux
 
-The Linux artifact contains `Daymark-0.1.0-Linux.tar.gz`. It is currently a
+The Linux release contains `Daymark-0.2.0-Linux.tar.gz`. It is currently a
 host-compatible package rather than a distribution-independent AppImage, so the
 system must provide a compatible Qt 6 runtime, including Qt Quick, Qt Quick
 Controls, the SQLite driver, and the Wayland or XCB platform plugin used by the
@@ -70,9 +76,8 @@ desktop session.
 Install it for the current user without administrator privileges:
 
 ```bash
-unzip daymark-linux.zip
 mkdir -p daymark-package
-tar --strip-components=1 -xzf Daymark-0.1.0-Linux.tar.gz \
+tar --strip-components=1 -xzf Daymark-0.2.0-Linux.tar.gz \
   -C daymark-package
 ./daymark-package/install.sh
 ```
@@ -90,7 +95,7 @@ If `~/.local/bin` is not on `PATH`, launch it with
 
 ### macOS
 
-Extract `daymark-macos.zip`, then open `Daymark-0.1.0-Darwin.dmg`. Drag
+Open `Daymark-0.2.0-Darwin.dmg`. Drag
 **Daymark** into the **Applications** folder and eject the disk image.
 
 Launch Daymark from Applications, Spotlight, or Terminal:
@@ -106,8 +111,7 @@ launch.
 
 ### Windows
 
-Extract `daymark-windows.zip`, then run
-`Daymark-0.1.0-win64-setup.exe`. The installation wizard installs Daymark for
+Run `Daymark-0.2.0-win64-setup.exe`. The installation wizard installs Daymark for
 the current user under `%LOCALAPPDATA%\Programs\Daymark`, so administrator
 access is not required. It creates a Start-menu entry, offers an optional
 desktop shortcut, and registers an uninstaller in Windows **Settings → Apps**.
@@ -116,7 +120,7 @@ Launch Daymark from the Start menu, the optional desktop shortcut, or the
 wizard's final page. Windows may display a SmartScreen warning because the
 development snapshot is not code-signed.
 
-Package filenames above use the current `0.1.0` version; substitute the version
+Package filenames above use the current `0.2.0` version; substitute the version
 shown in a newer artifact when it changes.
 
 ## Build from source
@@ -126,7 +130,7 @@ shown in a newer artifact when it changes.
 - A C++20 compiler
 - CMake 3.21 or newer
 - Ninja
-- Qt 6.5 or newer with Core, GUI, Quick, Quick Controls, SQL, and Test modules
+- Qt 6.5 or newer with Core, GUI, Network, Quick, Quick Controls, SQL, and Test modules
 - The Qt SQLite driver
 
 ### Fedora
@@ -208,6 +212,14 @@ notes are not included in portable exports.
 
 Use **Focus** to select a Today task and start, pause, or reset its countdown.
 
+On launch, Daymark makes one HTTPS request to the public GitHub Releases API to
+look for a newer version. This request contains the app version and the normal
+network metadata visible to GitHub; it never includes tasks, notes, preferences,
+or database contents. A failed check does not interrupt offline use. Windows
+updates hand off to the per-user setup wizard, macOS updates open the verified
+DMG for replacement in Applications, and Linux updates run the verified
+per-user `install.sh` package. Daymark never installs an update silently.
+
 The main window supports compact layouts down to 640 pixels wide, including
 standard left- or right-half desktop window snapping. Secondary panels collapse
 or stack at narrow widths instead of forcing a wide window.
@@ -238,6 +250,12 @@ GitHub Actions builds, lints, tests, packages, and uploads short-lived build
 artifacts for Linux, Windows, and macOS on every push to `main` and every pull
 request. The workflow uses read-only repository permissions and immutable action
 revisions.
+
+Pushing a semantic-version tag that matches the CMake project version, such as
+`v0.2.0`, runs the separate release workflow. It creates a draft, repeats the
+complete build, lint, and test matrix, attaches the native Linux, Windows, and
+macOS packages directly to GitHub Releases, and publishes only after all three
+jobs succeed. GitHub records the SHA-256 digest consumed by the in-app updater.
 
 ## Architecture
 

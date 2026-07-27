@@ -9,6 +9,7 @@
 #include "presentation/goallistmodel.h"
 #include "presentation/mentalmapmodel.h"
 #include "presentation/tasklistmodel.h"
+#include "presentation/updateservice.h"
 
 #include <QGuiApplication>
 #include <QIcon>
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QStringLiteral("Daymark"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("daymark.org"));
     QCoreApplication::setApplicationName(QStringLiteral("Daymark"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QCoreApplication::setApplicationVersion(QString::fromLatin1(DAYMARK_VERSION));
     application.setDesktopFileName(QStringLiteral("org.daymark.dashboard"));
     application.setWindowIcon(
         QIcon(QStringLiteral(":/assets/icons/org.daymark.dashboard.svg")));
@@ -54,6 +55,13 @@ int main(int argc, char *argv[])
         categoryModel,
         goalModel,
         appSettings);
+    UpdateService updateService;
+
+    QObject::connect(
+        &updateService,
+        &UpdateService::quitRequested,
+        &application,
+        &QCoreApplication::quit);
 
     QObject::connect(
         &taskModel,
@@ -133,6 +141,7 @@ int main(int argc, char *argv[])
         {QStringLiteral("focusSession"), QVariant::fromValue(&focusSession)},
         {QStringLiteral("appSettings"), QVariant::fromValue(&appSettings)},
         {QStringLiteral("dataTransfer"), QVariant::fromValue(&dataTransfer)},
+        {QStringLiteral("updateService"), QVariant::fromValue(&updateService)},
     });
     QObject::connect(
         &engine,
@@ -141,6 +150,10 @@ int main(int argc, char *argv[])
         [] { QCoreApplication::exit(EXIT_FAILURE); },
         Qt::QueuedConnection);
     engine.loadFromModule(QStringLiteral("Daymark"), QStringLiteral("Main"));
+
+    QTimer::singleShot(1200, &updateService, [&updateService] {
+        updateService.checkForUpdates();
+    });
 
     return application.exec();
 }

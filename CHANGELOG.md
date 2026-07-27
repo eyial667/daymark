@@ -38,6 +38,10 @@ and releases will use semantic versioning.
   constellation views.
 - Rolling dashboard notes that retain today and yesterday only, with yesterday’s
   note available in Daily Review.
+- Non-blocking GitHub release checks on launch, checksum-verified update
+  downloads, and native installation handoff on Linux, Windows, and macOS.
+- A tag-driven release workflow that publishes all three updater packages only
+  after the complete build, QML lint, and test matrix succeeds.
 
 ### Changed
 

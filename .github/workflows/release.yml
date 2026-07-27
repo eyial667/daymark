@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  QT_VERSION: 6.8.3
+  INNO_SETUP_VERSION: 6.7.1
+
+jobs:
+  prepare-release:
+    name: Prepare draft release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify tag matches application version
+        run: cmake -DRELEASE_TAG="${GITHUB_REF_NAME}" -P packaging/verify-release-version.cmake
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" --json isDraft --jq .isDraft > release-draft.txt 2>/dev/null; then
+            test "$(< release-draft.txt)" = "true"
+          else
+            gh release create "${GITHUB_REF_NAME}" --draft --verify-tag --generate-notes
+          fi
+
+  build-release:
+    name: Package ${{ matrix.name }}
+    needs: prepare-release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-24.04
+          - name: Windows
+            os: windows-2022
+          - name: macOS
+            os: macos-15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify tag matches application version
+        shell: bash
+        run: cmake -DRELEASE_TAG="${GITHUB_REF_NAME}" -P packaging/verify-release-version.cmake
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ninja-build libgl1-mesa-dev
+
+      - name: Install Windows packaging dependencies
+        if: runner.os == 'Windows'
+        run: >-
+          choco install innosetup
+          --version ${{ env.INNO_SETUP_VERSION }}
+          --no-progress --yes
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+
+      - name: Configure
+        if: runner.os != 'Windows'
+        run: cmake --preset release
+
+      - name: Configure with MSVC
+        if: runner.os == 'Windows'
+        run: cmake --preset release -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build --preset release --config Release --parallel 2
+
+      - name: Lint QML
+        run: cmake --build --preset release --config Release --target daymark_qmllint
+
+      - name: Run tests
+        run: ctest --test-dir build/release --build-config Release --output-on-failure
+
+      - name: Package
+        run: cpack --config build/release/CPackConfig.cmake -C Release -B build/packages
+
+      - name: Upload native package to draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "${GITHUB_REF_NAME}" build/packages/Daymark-* --clobber
+
+  publish-release:
+    name: Publish verified release
+    needs: build-release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "${GITHUB_REF_NAME}" --draft=false --latest
