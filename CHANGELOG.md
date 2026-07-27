@@ -15,3 +15,4 @@ and releases will use semantic versioning.
 - Persistent light and dark color modes with configurable accents.
 - Application settings for planning defaults and behavior.
 - Per-user Linux installer, terminal launcher, menu entry, and desktop shortcut.
+- Cross-platform GitHub Actions build, lint, test, package, and artifact pipeline.

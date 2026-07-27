@@ -1,5 +1,7 @@
 # Daymark
 
+[![CI](https://github.com/eyial667/daymark/actions/workflows/ci.yml/badge.svg)](https://github.com/eyial667/daymark/actions/workflows/ci.yml)
+
 Daymark is a local-first, cross-platform daily command center. It turns tasks into
 an explainable priority queue and will grow into a connected view of goals,
 projects, dependencies, calendar commitments, focus sessions, and reviews.
@@ -102,6 +104,13 @@ The installer requires no administrator privileges. It creates:
 - `~/.local/bin/daymark` for terminal launches
 - an application-menu entry and scalable application icon
 - a `Daymark.desktop` shortcut in the user's configured desktop directory
+
+## Continuous integration
+
+GitHub Actions builds, lints, tests, packages, and uploads short-lived build
+artifacts for Linux, Windows, and macOS on every push to `main` and every pull
+request. The workflow uses read-only repository permissions and immutable action
+revisions.
 
 ## Architecture
 
