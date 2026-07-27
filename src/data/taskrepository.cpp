@@ -80,6 +80,8 @@ Task taskFromQuery(const QSqlQuery &query)
     task.completedAt = deserializeDateTime(query.value(9).toString());
     task.categoryId = query.value(10).toString();
     task.categoryName = query.value(11).toString();
+    task.subcategoryId = query.value(12).toString();
+    task.subcategoryName = query.value(13).toString();
     return task;
 }
 
@@ -100,6 +102,7 @@ void bindTask(QSqlQuery &query, const Task &task)
     query.bindValue(QStringLiteral(":is_completed"), task.completed);
     bindNullableDateTime(query, QStringLiteral(":completed_at"), task.completedAt);
     bindNullableString(query, QStringLiteral(":category_id"), task.categoryId);
+    bindNullableString(query, QStringLiteral(":subcategory_id"), task.subcategoryId);
 }
 
 void bindCategory(QSqlQuery &query, const Category &category)
@@ -110,6 +113,17 @@ void bindCategory(QSqlQuery &query, const Category &category)
         QStringLiteral(":notes"),
         category.notes.isNull() ? QStringLiteral("") : category.notes);
     query.bindValue(QStringLiteral(":created_at"), serializeDateTime(category.createdAt));
+}
+
+void bindSubcategory(QSqlQuery &query, const Subcategory &subcategory)
+{
+    query.bindValue(QStringLiteral(":id"), subcategory.id);
+    query.bindValue(QStringLiteral(":category_id"), subcategory.categoryId);
+    query.bindValue(QStringLiteral(":name"), subcategory.name);
+    query.bindValue(
+        QStringLiteral(":notes"),
+        subcategory.notes.isNull() ? QStringLiteral("") : subcategory.notes);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(subcategory.createdAt));
 }
 
 void bindGoal(QSqlQuery &query, const Goal &goal)
@@ -223,8 +237,10 @@ QVector<Task> TaskRepository::loadTasks(
     if (!query.exec(QStringLiteral(
             "SELECT t.id, t.title, t.notes, t.project, t.due_at, t.created_at, "
             "t.importance, t.estimated_minutes, t.is_completed, t.completed_at, "
-            "t.category_id, COALESCE(c.name, '') FROM tasks t "
-            "LEFT JOIN categories c ON c.id = t.category_id")
+            "t.category_id, COALESCE(c.name, ''), t.subcategory_id, "
+            "COALESCE(s.name, '') FROM tasks t "
+            "LEFT JOIN categories c ON c.id = t.category_id "
+            "LEFT JOIN subcategories s ON s.id = t.subcategory_id")
             + whereClause
             + QStringLiteral(" ORDER BY t.created_at ASC"))) {
         assignError(errorMessage, query.lastError().text());
@@ -240,13 +256,34 @@ QVector<Task> TaskRepository::loadTasks(
 
 bool TaskRepository::addTask(const Task &task, QString *errorMessage)
 {
+    if (task.categoryId.isEmpty() && !task.subcategoryId.isEmpty()) {
+        assignError(errorMessage, QStringLiteral("A subcategory requires its parent category."));
+        return false;
+    }
+    if (!task.subcategoryId.isEmpty()) {
+        QSqlQuery validationQuery(m_database);
+        validationQuery.prepare(QStringLiteral(
+            "SELECT 1 FROM subcategories WHERE id = :id AND category_id = :category_id"));
+        validationQuery.bindValue(QStringLiteral(":id"), task.subcategoryId);
+        validationQuery.bindValue(QStringLiteral(":category_id"), task.categoryId);
+        if (!validationQuery.exec() || !validationQuery.next()) {
+            assignError(
+                errorMessage,
+                validationQuery.lastError().isValid()
+                    ? validationQuery.lastError().text()
+                    : QStringLiteral("The selected subcategory does not belong to that category."));
+            return false;
+        }
+    }
+
     QSqlQuery query(m_database);
     query.prepare(QStringLiteral(
         "INSERT INTO tasks "
         "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
-        "is_completed, completed_at, category_id) "
+        "is_completed, completed_at, category_id, subcategory_id) "
         "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
-        ":estimated_minutes, :is_completed, :completed_at, :category_id)"));
+        ":estimated_minutes, :is_completed, :completed_at, :category_id, "
+        ":subcategory_id)"));
     bindTask(query, task);
 
     if (!query.exec()) {
@@ -289,12 +326,35 @@ bool TaskRepository::setCompleted(
 bool TaskRepository::setTaskCategory(
     const QString &taskId,
     const QString &categoryId,
+    const QString &subcategoryId,
     QString *errorMessage)
 {
+    if (categoryId.isEmpty() && !subcategoryId.isEmpty()) {
+        assignError(errorMessage, QStringLiteral("A subcategory requires its parent category."));
+        return false;
+    }
+    if (!subcategoryId.isEmpty()) {
+        QSqlQuery validationQuery(m_database);
+        validationQuery.prepare(QStringLiteral(
+            "SELECT 1 FROM subcategories WHERE id = :id AND category_id = :category_id"));
+        validationQuery.bindValue(QStringLiteral(":id"), subcategoryId);
+        validationQuery.bindValue(QStringLiteral(":category_id"), categoryId);
+        if (!validationQuery.exec() || !validationQuery.next()) {
+            assignError(
+                errorMessage,
+                validationQuery.lastError().isValid()
+                    ? validationQuery.lastError().text()
+                    : QStringLiteral("The selected subcategory does not belong to that category."));
+            return false;
+        }
+    }
+
     QSqlQuery query(m_database);
     query.prepare(QStringLiteral(
-        "UPDATE tasks SET category_id = :category_id WHERE id = :id"));
+        "UPDATE tasks SET category_id = :category_id, subcategory_id = :subcategory_id "
+        "WHERE id = :id"));
     bindNullableString(query, QStringLiteral(":category_id"), categoryId);
+    bindNullableString(query, QStringLiteral(":subcategory_id"), subcategoryId);
     query.bindValue(QStringLiteral(":id"), taskId);
 
     if (!query.exec()) {
@@ -311,6 +371,7 @@ bool TaskRepository::setTaskCategory(
 QVector<Category> TaskRepository::categories(QString *errorMessage) const
 {
     QVector<Category> result;
+    QHash<QString, qsizetype> categoryIndexes;
     QSqlQuery query(m_database);
     if (!query.exec(QStringLiteral(
             "SELECT c.id, c.name, c.notes, c.created_at, COUNT(t.id) "
@@ -328,7 +389,33 @@ QVector<Category> TaskRepository::categories(QString *errorMessage) const
         category.notes = query.value(2).toString();
         category.createdAt = deserializeDateTime(query.value(3).toString());
         category.taskCount = query.value(4).toInt();
+        categoryIndexes.insert(category.id, result.size());
         result.append(category);
+    }
+
+    QSqlQuery subcategoryQuery(m_database);
+    if (!subcategoryQuery.exec(QStringLiteral(
+            "SELECT s.id, s.category_id, s.name, s.notes, s.created_at, COUNT(t.id) "
+            "FROM subcategories s LEFT JOIN tasks t ON t.subcategory_id = s.id "
+            "GROUP BY s.id, s.category_id, s.name, s.notes, s.created_at "
+            "ORDER BY s.name COLLATE NOCASE ASC"))) {
+        assignError(errorMessage, subcategoryQuery.lastError().text());
+        return {};
+    }
+    while (subcategoryQuery.next()) {
+        const QString categoryId = subcategoryQuery.value(1).toString();
+        const auto categoryIndex = categoryIndexes.constFind(categoryId);
+        if (categoryIndex == categoryIndexes.cend()) {
+            continue;
+        }
+        Subcategory subcategory;
+        subcategory.id = subcategoryQuery.value(0).toString();
+        subcategory.categoryId = categoryId;
+        subcategory.name = subcategoryQuery.value(2).toString();
+        subcategory.notes = subcategoryQuery.value(3).toString();
+        subcategory.createdAt = deserializeDateTime(subcategoryQuery.value(4).toString());
+        subcategory.taskCount = subcategoryQuery.value(5).toInt();
+        result[*categoryIndex].subcategories.append(subcategory);
     }
     return result;
 }
@@ -367,6 +454,47 @@ bool TaskRepository::updateCategory(
     }
     if (query.numRowsAffected() != 1) {
         assignError(errorMessage, QStringLiteral("The selected category no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::addSubcategory(
+    const Subcategory &subcategory,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO subcategories (id, category_id, name, notes, created_at) "
+        "VALUES (:id, :category_id, :name, :notes, :created_at)"));
+    bindSubcategory(query, subcategory);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::updateSubcategory(
+    const Subcategory &subcategory,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE subcategories SET name = :name, notes = :notes "
+        "WHERE id = :id AND category_id = :category_id"));
+    query.bindValue(QStringLiteral(":id"), subcategory.id);
+    query.bindValue(QStringLiteral(":category_id"), subcategory.categoryId);
+    query.bindValue(QStringLiteral(":name"), subcategory.name);
+    query.bindValue(
+        QStringLiteral(":notes"),
+        subcategory.notes.isNull() ? QStringLiteral("") : subcategory.notes);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected subcategory no longer exists."));
         return false;
     }
     return true;
@@ -534,6 +662,12 @@ bool TaskRepository::mergeImportedData(
         "VALUES (:id, :name, :notes, :created_at) "
         "ON CONFLICT(id) DO UPDATE SET name = excluded.name, notes = excluded.notes, "
         "created_at = excluded.created_at"));
+    QSqlQuery subcategoryQuery(m_database);
+    subcategoryQuery.prepare(QStringLiteral(
+        "INSERT INTO subcategories (id, category_id, name, notes, created_at) "
+        "VALUES (:id, :category_id, :name, :notes, :created_at) "
+        "ON CONFLICT(id) DO UPDATE SET category_id = excluded.category_id, "
+        "name = excluded.name, notes = excluded.notes, created_at = excluded.created_at"));
     for (const Category &category : categoriesToMerge) {
         bindCategory(categoryQuery, category);
         if (!categoryQuery.exec()) {
@@ -541,21 +675,30 @@ bool TaskRepository::mergeImportedData(
             m_database.rollback();
             return false;
         }
+        for (const Subcategory &subcategory : category.subcategories) {
+            bindSubcategory(subcategoryQuery, subcategory);
+            if (!subcategoryQuery.exec()) {
+                assignError(errorMessage, subcategoryQuery.lastError().text());
+                m_database.rollback();
+                return false;
+            }
+        }
     }
 
     QSqlQuery taskQuery(m_database);
     taskQuery.prepare(QStringLiteral(
         "INSERT INTO tasks "
         "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
-        "is_completed, completed_at, category_id) "
+        "is_completed, completed_at, category_id, subcategory_id) "
         "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
-        ":estimated_minutes, :is_completed, :completed_at, :category_id) "
+        ":estimated_minutes, :is_completed, :completed_at, :category_id, "
+        ":subcategory_id) "
         "ON CONFLICT(id) DO UPDATE SET title = excluded.title, notes = excluded.notes, "
         "project = excluded.project, due_at = excluded.due_at, "
         "created_at = excluded.created_at, importance = excluded.importance, "
         "estimated_minutes = excluded.estimated_minutes, "
         "is_completed = excluded.is_completed, completed_at = excluded.completed_at, "
-        "category_id = excluded.category_id"));
+        "category_id = excluded.category_id, subcategory_id = excluded.subcategory_id"));
 
     for (const Task &task : tasks) {
         bindTask(taskQuery, task);
@@ -626,13 +769,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 3) {
+    if (version > 4) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-    if (version == 3) {
+    if (version == 4) {
         return true;
     }
 
@@ -706,6 +849,45 @@ bool TaskRepository::migrate(QString *errorMessage)
             && execute(QStringLiteral(
                 "CREATE INDEX tasks_category_index ON tasks(category_id)"), errorMessage)
             && execute(QStringLiteral("PRAGMA user_version = 3"), errorMessage);
+    }
+
+    if (migrated && version < 4) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE subcategories ("
+            "id TEXT PRIMARY KEY NOT NULL, "
+            "category_id TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE, "
+            "name TEXT NOT NULL COLLATE NOCASE CHECK(length(trim(name)) > 0), "
+            "notes TEXT NOT NULL DEFAULT '', "
+            "created_at TEXT NOT NULL, "
+            "UNIQUE(category_id, name)"
+            ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX subcategories_category_name_index "
+                "ON subcategories(category_id, name)"), errorMessage)
+            && execute(QStringLiteral(
+                "ALTER TABLE tasks ADD COLUMN subcategory_id TEXT "
+                "REFERENCES subcategories(id) ON DELETE SET NULL"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX tasks_subcategory_index ON tasks(subcategory_id)"), errorMessage)
+            && execute(QStringLiteral(
+                "INSERT INTO categories (id, name, notes, created_at) "
+                "SELECT 'migrated-project-' || lower(hex(randomblob(16))), "
+                "legacy.project_name, 'Migrated from the former Projects field.', "
+                "legacy.created_at FROM ("
+                "SELECT trim(project) AS project_name, MIN(created_at) AS created_at "
+                "FROM tasks WHERE length(trim(project)) > 0 "
+                "GROUP BY trim(project) COLLATE NOCASE"
+                ") AS legacy WHERE NOT EXISTS ("
+                "SELECT 1 FROM categories c "
+                "WHERE c.name = legacy.project_name COLLATE NOCASE)"), errorMessage)
+            && execute(QStringLiteral(
+                "UPDATE tasks SET category_id = ("
+                "SELECT c.id FROM categories c "
+                "WHERE c.name = trim(tasks.project) COLLATE NOCASE LIMIT 1) "
+                "WHERE category_id IS NULL AND length(trim(project)) > 0"), errorMessage)
+            && execute(QStringLiteral(
+                "UPDATE tasks SET project = '' WHERE length(project) > 0"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 4"), errorMessage);
     }
 
     if (!migrated) {

@@ -8,6 +8,9 @@
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSettings>
 #include <QTemporaryDir>
 #include <QTest>
@@ -53,14 +56,19 @@ private slots:
             QStringLiteral("Portable category"),
             QStringLiteral("These notes must move with the category.")));
         const QString sourceCategoryId = sourceCategories.idAt(0);
+        QVERIFY(sourceCategories.addSubcategory(
+            0,
+            QStringLiteral("Portable subcategory"),
+            QStringLiteral("These subcategory notes must move too.")));
+        const QString sourceSubcategoryId = sourceCategories.subcategoryIdForAssignment(1);
 
         QVERIFY(sourceTasks.addTask(
             QStringLiteral("Open task"),
             QStringLiteral("2030-01-01"),
             4,
             45,
-            QStringLiteral("Transfer"),
-            sourceCategoryId));
+            sourceCategoryId,
+            sourceSubcategoryId));
 
         Task completedTask;
         completedTask.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -110,18 +118,23 @@ private slots:
             targetSettings);
 
         QVERIFY(targetTasks.addTask(
-            QStringLiteral("Existing target task"), {}, 2, 20, QStringLiteral("Local")));
+            QStringLiteral("Existing target task"), {}, 2, 20, {}));
         QVERIFY(targetTransfer.importData(QUrl::fromLocalFile(exportPath)));
 
         const QVector<Task> importedTasks = targetRepository.allTasks(&error);
         QCOMPARE(importedTasks.size(), 3);
         QCOMPARE(targetTasks.activeCount(), 2);
         QCOMPARE(targetCategories.categoryCount(), 1);
+        QCOMPARE(targetCategories.subcategoryCount(), 1);
         QCOMPARE(
             targetCategories.data(
                 targetCategories.index(0),
                 CategoryListModel::NotesRole).toString(),
             QStringLiteral("These notes must move with the category."));
+        QCOMPARE(
+            targetCategories.subcategoriesAt(0).first().toMap()
+                .value(QStringLiteral("notes")).toString(),
+            QStringLiteral("These subcategory notes must move too."));
         const auto assignedTask = std::find_if(
             importedTasks.cbegin(),
             importedTasks.cend(),
@@ -129,6 +142,10 @@ private slots:
         QVERIFY(assignedTask != importedTasks.cend());
         QCOMPARE(assignedTask->categoryId, sourceCategoryId);
         QCOMPARE(assignedTask->categoryName, QStringLiteral("Portable category"));
+        QCOMPARE(assignedTask->subcategoryId, sourceSubcategoryId);
+        QCOMPARE(
+            assignedTask->subcategoryName,
+            QStringLiteral("Portable subcategory"));
         QCOMPARE(targetGoals.goalCount(), 1);
         QCOMPARE(targetGoals.totalMilestoneCount(), 1);
         QCOMPARE(targetGoals.completedMilestoneCount(), 1);
@@ -170,6 +187,77 @@ private slots:
         QCOMPARE(repository.allTasks(&error).size(), 1);
         QCOMPARE(tasks.activeCount(), 1);
         QVERIFY(transfer.statusMessage().contains(QStringLiteral("not valid JSON")));
+    }
+
+    void importsLegacyProjectsAsCategories()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        QCoreApplication::setOrganizationName(QStringLiteral("DaymarkTransferTest"));
+        QCoreApplication::setApplicationName(QStringLiteral("LegacyProjectSource"));
+
+        TaskRepository sourceRepository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(sourceRepository.open(&error), qPrintable(error));
+        TaskListModel sourceTasks(sourceRepository);
+        CategoryListModel sourceCategories(sourceRepository);
+        GoalListModel sourceGoals(sourceRepository);
+        AppSettings sourceSettings(directory.filePath(QStringLiteral("legacy-source")));
+        DataTransferService sourceTransfer(
+            sourceRepository,
+            sourceTasks,
+            sourceCategories,
+            sourceGoals,
+            sourceSettings);
+        const QString exportBase = directory.filePath(QStringLiteral("legacy-project"));
+        QVERIFY(sourceTransfer.exportData(QUrl::fromLocalFile(exportBase)));
+        const QString exportPath = exportBase + QStringLiteral(".daymark.json");
+
+        QFile exportFile(exportPath);
+        QVERIFY(exportFile.open(QIODevice::ReadOnly));
+        QJsonObject root = QJsonDocument::fromJson(exportFile.readAll()).object();
+        exportFile.close();
+        QJsonArray tasks = root.value(QStringLiteral("tasks")).toArray();
+        tasks.append(QJsonObject {
+            {QStringLiteral("id"), QStringLiteral("legacy-project-task")},
+            {QStringLiteral("title"), QStringLiteral("Imported legacy work")},
+            {QStringLiteral("notes"), QStringLiteral("")},
+            {QStringLiteral("project"), QStringLiteral("Client work")},
+            {QStringLiteral("dueAt"), QStringLiteral("")},
+            {QStringLiteral("createdAt"), QStringLiteral("2026-01-01T09:00:00.000Z")},
+            {QStringLiteral("completedAt"), QStringLiteral("")},
+            {QStringLiteral("importance"), 3},
+            {QStringLiteral("estimatedMinutes"), 30},
+            {QStringLiteral("completed"), false},
+        });
+        root.insert(QStringLiteral("tasks"), tasks);
+        QVERIFY(exportFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        const QByteArray payload = QJsonDocument(root).toJson();
+        QCOMPARE(exportFile.write(payload), payload.size());
+        exportFile.close();
+
+        QCoreApplication::setApplicationName(QStringLiteral("LegacyProjectTarget"));
+        TaskRepository targetRepository(QStringLiteral(":memory:"));
+        QVERIFY2(targetRepository.open(&error), qPrintable(error));
+        TaskListModel targetTasks(targetRepository);
+        CategoryListModel targetCategories(targetRepository);
+        GoalListModel targetGoals(targetRepository);
+        AppSettings targetSettings(directory.filePath(QStringLiteral("legacy-target")));
+        DataTransferService targetTransfer(
+            targetRepository,
+            targetTasks,
+            targetCategories,
+            targetGoals,
+            targetSettings);
+
+        QVERIFY(targetTransfer.importData(QUrl::fromLocalFile(exportPath)));
+        QCOMPARE(targetCategories.categoryCount(), 1);
+        QCOMPARE(targetCategories.names(), QStringList {QStringLiteral("Client work")});
+        const QVector<Task> importedTasks = targetRepository.allTasks(&error);
+        QCOMPARE(importedTasks.size(), 1);
+        QCOMPARE(importedTasks.first().categoryName, QStringLiteral("Client work"));
+        QVERIFY(importedTasks.first().project.isEmpty());
     }
 };
 

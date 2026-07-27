@@ -13,7 +13,11 @@ Item {
     required property var theme
     signal addRequested()
     signal completionRequested(int taskIndex, string taskTitle)
-    signal categoryRequested(string taskId, string taskTitle, string categoryId)
+    signal categoryRequested(
+        string taskId,
+        string taskTitle,
+        string categoryId,
+        string subcategoryId)
 
     component MapNode: Rectangle {
         id: node
@@ -69,7 +73,7 @@ Item {
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "Goals, projects, dependencies, and today’s work"
+                    text: "Goals, categories, subcategories, and today’s work"
                     color: root.theme.textMuted
                     font.pixelSize: 11
                 }
@@ -246,8 +250,9 @@ Item {
                             showReason: root.appSettings.showPriorityReasons
                             onCompletionRequested: rowIndex =>
                                 root.completionRequested(rowIndex, taskRow.title)
-                            onCategoryRequested: (taskId, categoryId) =>
-                                root.categoryRequested(taskId, taskRow.title, categoryId)
+                            onCategoryRequested: (taskId, categoryId, subcategoryId) =>
+                                root.categoryRequested(
+                                    taskId, taskRow.title, categoryId, subcategoryId)
                         }
                     }
 

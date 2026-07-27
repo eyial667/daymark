@@ -12,24 +12,36 @@ Item {
     required property var categoryModel
     required property var theme
     property int editingIndex: -1
+    property var selectedSubcategories: []
+    property int editingSubcategoryIndex: -1
 
     function startNewCategory(clearStatus) {
         editingIndex = -1
         categoryList.currentIndex = -1
         nameField.clear()
         notesField.clear()
+        selectedSubcategories = []
         if (clearStatus === undefined || clearStatus)
             categoryModel.clearStatus()
         nameField.forceActiveFocus()
     }
 
-    function startEditing(index, name, notes) {
+    function startEditing(index, name, notes, subcategories) {
         editingIndex = index
         categoryList.currentIndex = index
         nameField.text = name
         notesField.text = notes
+        selectedSubcategories = subcategories
         categoryModel.clearStatus()
         nameField.forceActiveFocus()
+    }
+
+    function openSubcategoryEditor(index, name, notes) {
+        editingSubcategoryIndex = index
+        subcategoryNameField.text = name || ""
+        subcategoryNotesField.text = notes || ""
+        categoryModel.clearStatus()
+        subcategoryDialog.open()
     }
 
     ColumnLayout {
@@ -57,7 +69,8 @@ Item {
             Item { Layout.fillWidth: true }
             Text {
                 text: root.categoryModel.categoryCount + (root.categoryModel.categoryCount === 1
-                    ? " category" : " categories")
+                    ? " category" : " categories") + "  ·  "
+                    + root.categoryModel.subcategoryCount + " subcategories"
                 color: root.theme.textMuted
                 font.pixelSize: 11
             }
@@ -100,6 +113,8 @@ Item {
                             required property string name
                             required property string notes
                             required property int taskCount
+                            required property int subcategoryCount
+                            required property var subcategories
 
                             width: ListView.view.width
                             height: 82
@@ -126,8 +141,9 @@ Item {
                                         elide: Text.ElideRight
                                     }
                                     Text {
-                                        text: categoryRow.taskCount + (categoryRow.taskCount === 1
-                                            ? " task" : " tasks")
+                                        text: categoryRow.subcategoryCount + " sub  ·  "
+                                            + categoryRow.taskCount + (categoryRow.taskCount === 1
+                                                ? " task" : " tasks")
                                         color: root.theme.accent
                                         font.pixelSize: 10
                                         font.weight: Font.DemiBold
@@ -149,7 +165,8 @@ Item {
                                 onTapped: root.startEditing(
                                     categoryRow.index,
                                     categoryRow.name,
-                                    categoryRow.notes)
+                                    categoryRow.notes,
+                                    categoryRow.subcategories)
                             }
                         }
                     }
@@ -231,8 +248,7 @@ Item {
                     }
                     ScrollView {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.minimumHeight: 180
+                        Layout.preferredHeight: root.editingIndex >= 0 ? 118 : 260
                         clip: true
 
                         TextArea {
@@ -249,6 +265,114 @@ Item {
                                 radius: root.theme.radius
                             }
                         }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.editingIndex >= 0
+
+                        Text {
+                            text: "SUBCATEGORIES"
+                            color: root.theme.textMuted
+                            font.pixelSize: 9
+                            font.weight: Font.Bold
+                            font.letterSpacing: 1.1
+                        }
+                        Item { Layout.fillWidth: true }
+                        AppButton {
+                            theme: root.theme
+                            quiet: true
+                            text: "+ Add subcategory"
+                            onClicked: root.openSubcategoryEditor(-1, "", "")
+                        }
+                    }
+
+                    ListView {
+                        id: subcategoryList
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 120
+                        visible: root.editingIndex >= 0
+                            && root.selectedSubcategories.length > 0
+                        spacing: 6
+                        clip: true
+                        model: root.selectedSubcategories
+
+                        delegate: Rectangle {
+                            id: subcategoryRow
+
+                            required property int index
+                            required property var modelData
+
+                            width: ListView.view.width
+                            height: 62
+                            radius: root.theme.radius
+                            color: subcategoryHover.hovered
+                                ? root.theme.surfaceHover : root.theme.surfaceRaised
+                            border.color: root.theme.border
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 9
+                                spacing: 10
+
+                                Rectangle {
+                                    implicitWidth: 7
+                                    implicitHeight: 7
+                                    radius: 4
+                                    color: root.theme.secondaryAccent
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 3
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: subcategoryRow.modelData.name
+                                        color: root.theme.textPrimary
+                                        font.pixelSize: 12
+                                        font.weight: Font.DemiBold
+                                        elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: subcategoryRow.modelData.notes.length > 0
+                                            ? subcategoryRow.modelData.notes : "No notes"
+                                        color: root.theme.textMuted
+                                        font.pixelSize: 10
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                                Text {
+                                    text: subcategoryRow.modelData.taskCount + " tasks"
+                                    color: root.theme.secondaryAccent
+                                    font.pixelSize: 10
+                                }
+                                AppButton {
+                                    theme: root.theme
+                                    quiet: true
+                                    text: "Edit"
+                                    onClicked: root.openSubcategoryEditor(
+                                        subcategoryRow.index,
+                                        subcategoryRow.modelData.name,
+                                        subcategoryRow.modelData.notes)
+                                }
+                            }
+                            HoverHandler { id: subcategoryHover }
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.editingIndex >= 0
+                            && root.selectedSubcategories.length === 0
+                        text: "No subcategories yet. Add one to divide this category into smaller contexts."
+                        color: root.theme.textMuted
+                        font.pixelSize: 11
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     Text {
@@ -290,6 +414,114 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Dialog {
+        id: subcategoryDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 500
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: root.theme.radius + 3
+            color: root.theme.surfaceRaised
+            border.color: root.theme.borderStrong
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            Text {
+                text: root.editingSubcategoryIndex >= 0
+                    ? "Edit subcategory" : "Add subcategory"
+                color: root.theme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "This subcategory belongs to " + nameField.text + "."
+                color: root.theme.textSecondary
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+            TextField {
+                id: subcategoryNameField
+                Layout.fillWidth: true
+                placeholderText: "Subcategory name"
+                maximumLength: 120
+                selectByMouse: true
+            }
+            TextArea {
+                id: subcategoryNotesField
+                Layout.fillWidth: true
+                Layout.preferredHeight: 150
+                placeholderText: "Notes for this subcategory…"
+                wrapMode: TextEdit.Wrap
+                selectByMouse: true
+                color: root.theme.textPrimary
+                placeholderTextColor: root.theme.textMuted
+                background: Rectangle {
+                    color: root.theme.surface
+                    border.color: subcategoryNotesField.activeFocus
+                        ? root.theme.accent : root.theme.border
+                    radius: root.theme.radius
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: root.categoryModel.statusMessage.length > 0
+                text: root.categoryModel.statusMessage
+                color: root.theme.danger
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: root.theme
+                    quiet: true
+                    text: "Cancel"
+                    onClicked: subcategoryDialog.close()
+                }
+                AppButton {
+                    theme: root.theme
+                    primary: true
+                    text: root.editingSubcategoryIndex >= 0 ? "Save changes" : "Add"
+                    enabled: subcategoryNameField.text.trim().length > 0
+                    onClicked: {
+                        const saved = root.editingSubcategoryIndex >= 0
+                            ? root.categoryModel.updateSubcategory(
+                                root.editingIndex,
+                                root.editingSubcategoryIndex,
+                                subcategoryNameField.text,
+                                subcategoryNotesField.text)
+                            : root.categoryModel.addSubcategory(
+                                root.editingIndex,
+                                subcategoryNameField.text,
+                                subcategoryNotesField.text)
+                        if (saved) {
+                            root.selectedSubcategories =
+                                root.categoryModel.subcategoriesAt(root.editingIndex)
+                            subcategoryDialog.close()
+                        }
+                    }
+                }
+            }
+        }
+
+        onOpened: subcategoryNameField.forceActiveFocus()
+        onClosed: {
+            root.editingSubcategoryIndex = -1
+            subcategoryNameField.clear()
+            subcategoryNotesField.clear()
         }
     }
 }

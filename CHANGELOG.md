@@ -22,9 +22,14 @@ and releases will use semantic versioning.
   goals, milestones, and preferences.
 - Reusable task categories with notes, task-row reassignment, and portable
   category assignments.
+- One-level category nesting with subcategory notes and hierarchical task
+  assignment.
+- A dedicated To-do page for the complete open-task queue.
 
 ### Changed
 
+- Retired the incomplete Projects surface. Existing project labels migrate to
+  categories so previously entered organization is preserved.
 - Enlarged task-estimate input and duration labels for better readability across
   capture, queues, and compact timelines.
 - Added a themed calendar picker alongside manual `YYYY-MM-DD` entry for task,

@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+
+Item {
+    id: root
+
+    required property var taskModel
+    required property var appSettings
+    required property var theme
+    signal addRequested()
+    signal completionRequested(int taskIndex, string taskTitle)
+    signal categoryRequested(
+        string taskId,
+        string taskTitle,
+        string categoryId,
+        string subcategoryId)
+
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 24
+        spacing: 16
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                spacing: 3
+                Text {
+                    text: "To-do"
+                    color: root.theme.textPrimary
+                    font.pixelSize: 26
+                    font.weight: Font.DemiBold
+                }
+                Text {
+                    text: "Every open task, kept in priority order."
+                    color: root.theme.textSecondary
+                    font.pixelSize: 12
+                }
+            }
+            Item { Layout.fillWidth: true }
+            Rectangle {
+                implicitWidth: queueSummary.implicitWidth + 24
+                implicitHeight: 32
+                radius: 16
+                color: root.theme.accentSoft
+                border.color: root.theme.borderStrong
+                Text {
+                    id: queueSummary
+                    anchors.centerIn: parent
+                    text: root.taskModel.activeCount + " open  ·  "
+                        + root.taskModel.plannedDuration
+                    color: root.theme.accent
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                }
+            }
+            AppButton {
+                theme: root.theme
+                primary: true
+                text: "+ Add task"
+                onClicked: root.addRequested()
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            radius: root.theme.radius
+            color: root.theme.surface
+            border.color: root.theme.border
+
+            Item {
+                anchors.fill: parent
+                anchors.margins: 14
+
+                ListView {
+                    anchors.fill: parent
+                    spacing: 7
+                    clip: true
+                    model: root.taskModel
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    delegate: TaskRow {
+                        id: taskRow
+                        width: ListView.view.width
+                        theme: root.theme
+                        showReason: root.appSettings.showPriorityReasons
+                        onCompletionRequested: rowIndex =>
+                            root.completionRequested(rowIndex, taskRow.title)
+                        onCategoryRequested: (taskId, categoryId, subcategoryId) =>
+                            root.categoryRequested(
+                                taskId, taskRow.title, categoryId, subcategoryId)
+                    }
+                }
+
+                EmptyState {
+                    anchors.centerIn: parent
+                    visible: root.taskModel.activeCount === 0
+                    theme: root.theme
+                }
+            }
+        }
+    }
+}

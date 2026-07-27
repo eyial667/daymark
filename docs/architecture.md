@@ -26,10 +26,11 @@ user actions into repository operations without exposing SQL to QML.
 SQLite is the source of truth. Schema changes use SQLite's `user_version` value
 and transactional migrations. Timestamps are stored as UTC ISO-8601 strings and
 converted to local time at the presentation boundary. Tasks refer to categories
-through nullable stable IDs; category names and notes are stored once and an
-assignment is cleared safely if a category is removed in a future version. Goal
-and milestone target dates are calendar dates stored in ISO-8601 form without a
-timezone.
+and optional child subcategories through nullable stable IDs; names and notes
+are stored once, and assignments are cleared safely if their category is removed
+in a future version. The former free-text project field is migrated into
+categories and is no longer part of the product interface. Goal and milestone
+target dates are calendar dates stored in ISO-8601 form without a timezone.
 
 Portable data uses the versioned `org.daymark.backup` JSON format. Import fully
 validates a file before starting a database transaction, upserts matching record
@@ -60,6 +61,7 @@ will not silently replace the deterministic engine.
 ## Planned boundaries
 
 - Calendar adapters import events into a separate calendar domain.
-- A graph service owns goals, projects, dependencies, and mind-map layout.
+- A graph service owns goals, category relationships, dependencies, and mind-map
+  layout.
 - Platform services wrap notifications, autostart, tray, and credential storage.
 - Export and backup operate on documented, versioned formats.

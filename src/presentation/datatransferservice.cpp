@@ -11,11 +11,13 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QSet>
+#include <QUuid>
 
 namespace {
 
@@ -53,8 +55,9 @@ QJsonObject taskToJson(const Task &task)
         {QStringLiteral("id"), task.id},
         {QStringLiteral("title"), task.title},
         {QStringLiteral("notes"), task.notes},
-        {QStringLiteral("project"), task.project},
+        {QStringLiteral("project"), QStringLiteral("")},
         {QStringLiteral("categoryId"), task.categoryId},
+        {QStringLiteral("subcategoryId"), task.subcategoryId},
         {QStringLiteral("dueAt"), serializedDateTime(task.dueAt)},
         {QStringLiteral("createdAt"), serializedDateTime(task.createdAt)},
         {QStringLiteral("completedAt"), serializedDateTime(task.completedAt)},
@@ -64,13 +67,28 @@ QJsonObject taskToJson(const Task &task)
     };
 }
 
+QJsonObject subcategoryToJson(const Subcategory &subcategory)
+{
+    return {
+        {QStringLiteral("id"), subcategory.id},
+        {QStringLiteral("name"), subcategory.name},
+        {QStringLiteral("notes"), subcategory.notes},
+        {QStringLiteral("createdAt"), serializedDateTime(subcategory.createdAt)},
+    };
+}
+
 QJsonObject categoryToJson(const Category &category)
 {
+    QJsonArray subcategories;
+    for (const Subcategory &subcategory : category.subcategories) {
+        subcategories.append(subcategoryToJson(subcategory));
+    }
     return {
         {QStringLiteral("id"), category.id},
         {QStringLiteral("name"), category.name},
         {QStringLiteral("notes"), category.notes},
         {QStringLiteral("createdAt"), serializedDateTime(category.createdAt)},
+        {QStringLiteral("subcategories"), subcategories},
     };
 }
 
@@ -267,6 +285,12 @@ bool taskFromJson(
             &task->categoryId,
             errorMessage,
             128)
+        && readOptionalString(
+            object,
+            QStringLiteral("subcategoryId"),
+            &task->subcategoryId,
+            errorMessage,
+            128)
         && readDateTime(object, QStringLiteral("dueAt"), &task->dueAt, errorMessage, false)
         && readDateTime(object, QStringLiteral("createdAt"), &task->createdAt, errorMessage, true)
         && readDateTime(object, QStringLiteral("completedAt"), &task->completedAt, errorMessage, false)
@@ -279,6 +303,40 @@ bool taskFromJson(
             &task->estimatedMinutes,
             errorMessage)
         && readBool(object, QStringLiteral("completed"), &task->completed, errorMessage);
+}
+
+bool subcategoryFromJson(
+    const QJsonValue &value,
+    const QString &categoryId,
+    Subcategory *subcategory,
+    QString *errorMessage)
+{
+    if (!value.isObject()) {
+        *errorMessage = QStringLiteral("Every subcategory must be an object.");
+        return false;
+    }
+    const QJsonObject object = value.toObject();
+    subcategory->categoryId = categoryId;
+    if (!(readString(object, QStringLiteral("id"), &subcategory->id, errorMessage, false, 128)
+        && readString(
+            object,
+            QStringLiteral("name"),
+            &subcategory->name,
+            errorMessage,
+            false,
+            120)
+        && readString(object, QStringLiteral("notes"), &subcategory->notes, errorMessage)
+        && readDateTime(
+            object,
+            QStringLiteral("createdAt"),
+            &subcategory->createdAt,
+            errorMessage,
+            true))) {
+        return false;
+    }
+    subcategory->name = subcategory->name.trimmed();
+    subcategory->notes = subcategory->notes.trimmed();
+    return true;
 }
 
 bool categoryFromJson(
@@ -310,6 +368,38 @@ bool categoryFromJson(
     }
     category->name = category->name.trimmed();
     category->notes = category->notes.trimmed();
+
+    const QJsonValue subcategoriesValue = object.value(QStringLiteral("subcategories"));
+    if (subcategoriesValue.isUndefined()) {
+        return true;
+    }
+    if (!subcategoriesValue.isArray()) {
+        *errorMessage = QStringLiteral("'subcategories' must be a list.");
+        return false;
+    }
+    const QJsonArray subcategories = subcategoriesValue.toArray();
+    if (subcategories.size() > MaximumRecords) {
+        *errorMessage = QStringLiteral("The backup contains too many subcategories.");
+        return false;
+    }
+    QSet<QString> names;
+    for (const QJsonValue &subcategoryValue : subcategories) {
+        Subcategory subcategory;
+        if (!subcategoryFromJson(
+                subcategoryValue,
+                category->id,
+                &subcategory,
+                errorMessage)) {
+            return false;
+        }
+        const QString normalizedName = subcategory.name.toCaseFolded();
+        if (names.contains(normalizedName)) {
+            *errorMessage = QStringLiteral("A category contains duplicate subcategory names.");
+            return false;
+        }
+        names.insert(normalizedName);
+        category->subcategories.append(subcategory);
+    }
     return true;
 }
 
@@ -557,7 +647,8 @@ bool DataTransferService::exportData(const QUrl &destination)
         return false;
     }
 
-    setStatusMessage(QStringLiteral("Exported tasks, categories, goals, and preferences to %1.")
+    setStatusMessage(QStringLiteral(
+        "Exported tasks, categories, subcategories, goals, and preferences to %1.")
         .arg(QFileInfo(path).fileName()));
     return true;
 }
@@ -624,9 +715,24 @@ bool DataTransferService::importData(const QUrl &source)
     QSet<QString> taskIds;
     QSet<QString> categoryIds;
     QSet<QString> categoryNames;
+    QHash<QString, QString> categoryIdsByName;
+    QHash<QString, QString> existingCategoryIdsByName;
+    QHash<QString, QString> subcategoryParents;
     QSet<QString> goalIds;
     QSet<QString> milestoneIds;
+    qsizetype subcategoryCount = 0;
     QString validationError;
+
+    QString existingDataError;
+    const QVector<Category> existingCategories = m_repository.categories(&existingDataError);
+    if (!existingDataError.isEmpty()) {
+        setStatusMessage(QStringLiteral("Could not inspect existing categories: %1")
+            .arg(existingDataError));
+        return false;
+    }
+    for (const Category &category : existingCategories) {
+        existingCategoryIdsByName.insert(category.name.trimmed().toCaseFolded(), category.id);
+    }
 
     for (const QJsonValue &value : categoryArray) {
         Category category;
@@ -641,6 +747,20 @@ bool DataTransferService::importData(const QUrl &source)
         }
         categoryIds.insert(category.id);
         categoryNames.insert(normalizedName);
+        categoryIdsByName.insert(normalizedName, category.id);
+        for (const Subcategory &subcategory : category.subcategories) {
+            if (subcategoryParents.contains(subcategory.id)) {
+                setStatusMessage(QStringLiteral(
+                    "The export contains a duplicate subcategory ID."));
+                return false;
+            }
+            subcategoryParents.insert(subcategory.id, category.id);
+            ++subcategoryCount;
+            if (subcategoryCount > MaximumRecords) {
+                setStatusMessage(QStringLiteral("The export contains too many records."));
+                return false;
+            }
+        }
         categories.append(category);
     }
 
@@ -654,9 +774,39 @@ bool DataTransferService::importData(const QUrl &source)
             setStatusMessage(QStringLiteral("The export contains a duplicate task ID."));
             return false;
         }
+        const QString legacyProjectName = task.project.trimmed();
+        if (task.categoryId.isEmpty() && !legacyProjectName.isEmpty()) {
+            const QString normalizedProjectName = legacyProjectName.toCaseFolded();
+            if (categoryIdsByName.contains(normalizedProjectName)) {
+                task.categoryId = categoryIdsByName.value(normalizedProjectName);
+            } else if (existingCategoryIdsByName.contains(normalizedProjectName)) {
+                task.categoryId = existingCategoryIdsByName.value(normalizedProjectName);
+                categoryIds.insert(task.categoryId);
+            } else {
+                Category migratedCategory;
+                migratedCategory.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+                migratedCategory.name = legacyProjectName;
+                migratedCategory.notes = QStringLiteral(
+                    "Migrated from the former Projects field during import.");
+                migratedCategory.createdAt = task.createdAt;
+                categories.append(migratedCategory);
+                categoryIds.insert(migratedCategory.id);
+                categoryNames.insert(normalizedProjectName);
+                categoryIdsByName.insert(normalizedProjectName, migratedCategory.id);
+                task.categoryId = migratedCategory.id;
+            }
+        }
+        task.project.clear();
         if (!task.categoryId.isEmpty() && !categoryIds.contains(task.categoryId)) {
             setStatusMessage(QStringLiteral(
                 "A task refers to a category that is missing from the export."));
+            return false;
+        }
+        if (!task.subcategoryId.isEmpty()
+            && (!subcategoryParents.contains(task.subcategoryId)
+                || subcategoryParents.value(task.subcategoryId) != task.categoryId)) {
+            setStatusMessage(QStringLiteral(
+                "A task refers to a subcategory outside its category."));
             return false;
         }
         taskIds.insert(task.id);
@@ -697,9 +847,11 @@ bool DataTransferService::importData(const QUrl &source)
     m_taskModel.reload();
     m_goalModel.reload();
     setStatusMessage(QStringLiteral(
-        "Imported %1 tasks, %2 categories, and %3 goals. Existing records were kept.")
+        "Imported %1 tasks, %2 categories, %3 subcategories, and %4 goals. "
+        "Existing records were kept.")
         .arg(tasks.size())
         .arg(categories.size())
+        .arg(subcategoryCount)
         .arg(goals.size()));
     return true;
 }

@@ -4,6 +4,8 @@
 
 #include <QDateTime>
 #include <QUuid>
+#include <QVariantList>
+#include <QVariantMap>
 
 CategoryListModel::CategoryListModel(TaskRepository &repository, QObject *parent)
     : QAbstractListModel(parent)
@@ -33,6 +35,21 @@ QVariant CategoryListModel::data(const QModelIndex &index, int role) const
         return category.notes;
     case TaskCountRole:
         return category.taskCount;
+    case SubcategoryCountRole:
+        return category.subcategories.size();
+    case SubcategoriesRole: {
+        QVariantList subcategories;
+        subcategories.reserve(category.subcategories.size());
+        for (const Subcategory &subcategory : category.subcategories) {
+            subcategories.append(QVariantMap {
+                {QStringLiteral("subcategoryId"), subcategory.id},
+                {QStringLiteral("name"), subcategory.name},
+                {QStringLiteral("notes"), subcategory.notes},
+                {QStringLiteral("taskCount"), subcategory.taskCount},
+            });
+        }
+        return subcategories;
+    }
     default:
         return {};
     }
@@ -45,6 +62,8 @@ QHash<int, QByteArray> CategoryListModel::roleNames() const
         {NameRole, "name"},
         {NotesRole, "notes"},
         {TaskCountRole, "taskCount"},
+        {SubcategoryCountRole, "subcategoryCount"},
+        {SubcategoriesRole, "subcategories"},
     };
 }
 
@@ -53,12 +72,33 @@ int CategoryListModel::categoryCount() const
     return m_categories.size();
 }
 
+int CategoryListModel::subcategoryCount() const
+{
+    int count = 0;
+    for (const Category &category : m_categories) {
+        count += category.subcategories.size();
+    }
+    return count;
+}
+
 QStringList CategoryListModel::names() const
 {
     QStringList result;
     result.reserve(m_categories.size());
     for (const Category &category : m_categories) {
         result.append(category.name);
+    }
+    return result;
+}
+
+QStringList CategoryListModel::assignmentNames() const
+{
+    QStringList result;
+    for (const Category &category : m_categories) {
+        result.append(category.name);
+        for (const Subcategory &subcategory : category.subcategories) {
+            result.append(QStringLiteral("%1 / %2").arg(category.name, subcategory.name));
+        }
     }
     return result;
 }
@@ -138,6 +178,86 @@ bool CategoryListModel::updateCategory(
     return true;
 }
 
+bool CategoryListModel::addSubcategory(
+    int categoryRow,
+    const QString &name,
+    const QString &notes)
+{
+    if (categoryRow < 0 || categoryRow >= m_categories.size()) {
+        setStatusMessage(QStringLiteral("Choose a parent category first."));
+        return false;
+    }
+    const QString cleanName = name.trimmed();
+    const QString cleanNotes = notes.trimmed();
+    if (cleanName.isEmpty()) {
+        setStatusMessage(QStringLiteral("A subcategory needs a name."));
+        return false;
+    }
+    if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
+        setStatusMessage(QStringLiteral("The subcategory name or notes are too long."));
+        return false;
+    }
+    if (hasDuplicateSubcategoryName(categoryRow, cleanName, -1)) {
+        setStatusMessage(QStringLiteral("That category already has this subcategory."));
+        return false;
+    }
+
+    Subcategory subcategory;
+    subcategory.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    subcategory.categoryId = m_categories.at(categoryRow).id;
+    subcategory.name = cleanName;
+    subcategory.notes = cleanNotes;
+    subcategory.createdAt = QDateTime::currentDateTime();
+    QString errorMessage;
+    if (!m_repository.addSubcategory(subcategory, &errorMessage)) {
+        setStatusMessage(QStringLiteral("Could not save the subcategory: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(QStringLiteral("Subcategory created."));
+    return true;
+}
+
+bool CategoryListModel::updateSubcategory(
+    int categoryRow,
+    int subcategoryRow,
+    const QString &name,
+    const QString &notes)
+{
+    if (categoryRow < 0 || categoryRow >= m_categories.size()
+        || subcategoryRow < 0
+        || subcategoryRow >= m_categories.at(categoryRow).subcategories.size()) {
+        setStatusMessage(QStringLiteral("That subcategory is no longer in the list."));
+        return false;
+    }
+    const QString cleanName = name.trimmed();
+    const QString cleanNotes = notes.trimmed();
+    if (cleanName.isEmpty()) {
+        setStatusMessage(QStringLiteral("A subcategory needs a name."));
+        return false;
+    }
+    if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
+        setStatusMessage(QStringLiteral("The subcategory name or notes are too long."));
+        return false;
+    }
+    if (hasDuplicateSubcategoryName(categoryRow, cleanName, subcategoryRow)) {
+        setStatusMessage(QStringLiteral("That category already has this subcategory."));
+        return false;
+    }
+
+    Subcategory subcategory = m_categories.at(categoryRow).subcategories.at(subcategoryRow);
+    subcategory.name = cleanName;
+    subcategory.notes = cleanNotes;
+    QString errorMessage;
+    if (!m_repository.updateSubcategory(subcategory, &errorMessage)) {
+        setStatusMessage(QStringLiteral("Could not update the subcategory: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(QStringLiteral("Subcategory updated."));
+    return true;
+}
+
 QString CategoryListModel::idAt(int row) const
 {
     return row >= 0 && row < m_categories.size() ? m_categories.at(row).id : QString();
@@ -151,6 +271,81 @@ int CategoryListModel::indexOfId(const QString &categoryId) const
         }
     }
     return -1;
+}
+
+QString CategoryListModel::categoryIdForAssignment(int row) const
+{
+    int current = 0;
+    for (const Category &category : m_categories) {
+        if (current == row) {
+            return category.id;
+        }
+        ++current;
+        for (qsizetype index = 0; index < category.subcategories.size(); ++index) {
+            if (current == row) {
+                return category.id;
+            }
+            ++current;
+        }
+    }
+    return {};
+}
+
+QString CategoryListModel::subcategoryIdForAssignment(int row) const
+{
+    int current = 0;
+    for (const Category &category : m_categories) {
+        if (current == row) {
+            return {};
+        }
+        ++current;
+        for (const Subcategory &subcategory : category.subcategories) {
+            if (current == row) {
+                return subcategory.id;
+            }
+            ++current;
+        }
+    }
+    return {};
+}
+
+int CategoryListModel::indexOfAssignment(
+    const QString &categoryId,
+    const QString &subcategoryId) const
+{
+    int current = 0;
+    for (const Category &category : m_categories) {
+        if (category.id == categoryId && subcategoryId.isEmpty()) {
+            return current;
+        }
+        ++current;
+        for (const Subcategory &subcategory : category.subcategories) {
+            if (category.id == categoryId && subcategory.id == subcategoryId) {
+                return current;
+            }
+            ++current;
+        }
+    }
+    return -1;
+}
+
+QVariantList CategoryListModel::subcategoriesAt(int categoryRow) const
+{
+    QVariantList result;
+    if (categoryRow < 0 || categoryRow >= m_categories.size()) {
+        return result;
+    }
+    const QVector<Subcategory> &subcategories = m_categories.at(categoryRow).subcategories;
+    result.reserve(subcategories.size());
+    for (const Subcategory &subcategory : subcategories) {
+        result.append(QVariantMap {
+            {QStringLiteral("subcategoryId"), subcategory.id},
+            {QStringLiteral("name"), subcategory.name},
+            {QStringLiteral("notes"), subcategory.notes},
+            {QStringLiteral("taskCount"), subcategory.taskCount},
+        });
+    }
+    return result;
 }
 
 void CategoryListModel::clearStatus()
@@ -185,6 +380,24 @@ bool CategoryListModel::hasDuplicateName(const QString &name, int excludedRow) c
     for (qsizetype index = 0; index < m_categories.size(); ++index) {
         if (index != excludedRow
             && m_categories.at(index).name.compare(name, Qt::CaseInsensitive) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CategoryListModel::hasDuplicateSubcategoryName(
+    int categoryRow,
+    const QString &name,
+    int excludedRow) const
+{
+    if (categoryRow < 0 || categoryRow >= m_categories.size()) {
+        return false;
+    }
+    const QVector<Subcategory> &subcategories = m_categories.at(categoryRow).subcategories;
+    for (qsizetype index = 0; index < subcategories.size(); ++index) {
+        if (index != excludedRow
+            && subcategories.at(index).name.compare(name, Qt::CaseInsensitive) == 0) {
             return true;
         }
     }

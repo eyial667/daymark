@@ -4,6 +4,17 @@
 
 #include <QDateTime>
 #include <QString>
+#include <QVector>
+
+struct Subcategory
+{
+    QString id;
+    QString categoryId;
+    QString name;
+    QString notes;
+    QDateTime createdAt;
+    int taskCount = 0;
+};
 
 struct Category
 {
@@ -12,4 +23,5 @@ struct Category
     QString notes;
     QDateTime createdAt;
     int taskCount = 0;
+    QVector<Subcategory> subcategories;
 };

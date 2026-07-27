@@ -31,6 +31,7 @@ public:
     [[nodiscard]] bool setTaskCategory(
         const QString &taskId,
         const QString &categoryId,
+        const QString &subcategoryId,
         QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Category> categories(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addCategory(
@@ -38,6 +39,12 @@ public:
         QString *errorMessage = nullptr);
     [[nodiscard]] bool updateCategory(
         const Category &category,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool addSubcategory(
+        const Subcategory &subcategory,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool updateSubcategory(
+        const Subcategory &subcategory,
         QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Goal> goals(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addGoal(const Goal &goal, QString *errorMessage = nullptr);

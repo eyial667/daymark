@@ -22,14 +22,15 @@ public:
         IdRole = Qt::UserRole + 1,
         TitleRole,
         NotesRole,
-        ProjectRole,
         DueTextRole,
         ImportanceRole,
         EstimatedMinutesRole,
         PriorityScoreRole,
         PriorityReasonRole,
         CategoryIdRole,
-        CategoryNameRole
+        CategoryNameRole,
+        SubcategoryIdRole,
+        SubcategoryNameRole
     };
     Q_ENUM(Role)
 
@@ -50,11 +51,12 @@ public:
         const QString &dueDate,
         int importance,
         int estimatedMinutes,
-        const QString &project,
-        const QString &categoryId = {});
+        const QString &categoryId = {},
+        const QString &subcategoryId = {});
     Q_INVOKABLE bool assignTaskCategory(
         const QString &taskId,
-        const QString &categoryId);
+        const QString &categoryId,
+        const QString &subcategoryId = {});
     Q_INVOKABLE bool completeTask(int row);
     Q_INVOKABLE void clearStatus();
     Q_INVOKABLE void reload();

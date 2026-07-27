@@ -10,7 +10,7 @@
 ## Slice 2 — Planning essentials
 
 - Edit, postpone, and restore completed tasks
-- Inbox processing
+- To-do processing and category filtering
 - Daily capacity and overload warnings
 - Recurring tasks
 - Keyboard command palette
@@ -18,7 +18,7 @@
 ## Slice 3 — Connected mind map
 
 - Long-term goals and dated milestones (foundation complete)
-- Life areas, projects, and links between goals and tasks
+- Deeper category relationships and links between goals and tasks
 - Task dependencies and blocked states
 - Zoomable native graphics scene
 - Shared selection between the map and Today queue

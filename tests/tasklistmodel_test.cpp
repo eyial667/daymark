@@ -24,15 +24,22 @@ private slots:
         category.createdAt = QDateTime::currentDateTime();
         QVERIFY2(repository.addCategory(category, &error), qPrintable(error));
 
+        Subcategory subcategory;
+        subcategory.id = QStringLiteral("deep-work-subcategory");
+        subcategory.categoryId = category.id;
+        subcategory.name = QStringLiteral("Deep work");
+        subcategory.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addSubcategory(subcategory, &error), qPrintable(error));
+
         QVERIFY(model.addTask(
-            QStringLiteral("Low priority"), {}, 1, 60, QStringLiteral("Personal")));
+            QStringLiteral("Low priority"), {}, 1, 60, {}));
         QVERIFY(model.addTask(
             QStringLiteral("High priority"),
             {},
             5,
             25,
-            QStringLiteral("Daymark"),
-            category.id));
+            category.id,
+            subcategory.id));
 
         QCOMPARE(model.activeCount(), 2);
         QCOMPARE(model.totalEstimatedMinutes(), 85);
@@ -44,9 +51,13 @@ private slots:
             QStringLiteral("High priority"));
         QVERIFY(!model.data(first, TaskListModel::PriorityReasonRole).toString().isEmpty());
         QCOMPARE(model.data(first, TaskListModel::CategoryNameRole).toString(), category.name);
+        QCOMPARE(
+            model.data(first, TaskListModel::SubcategoryNameRole).toString(),
+            subcategory.name);
 
         QVERIFY(model.assignTaskCategory(
             model.data(first, TaskListModel::IdRole).toString(),
+            {},
             {}));
         QCOMPARE(model.data(model.index(0), TaskListModel::CategoryIdRole).toString(), QString());
 

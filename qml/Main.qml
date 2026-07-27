@@ -19,6 +19,7 @@ ApplicationWindow {
     property string pendingCategoryTaskId: ""
     property string pendingCategoryTitle: ""
     property string pendingCategoryId: ""
+    property string pendingSubcategoryId: ""
 
     function requestTaskCompletion(taskIndex, taskTitle) {
         if (!appSettings.confirmTaskCompletion) {
@@ -30,12 +31,14 @@ ApplicationWindow {
         completionDialog.open()
     }
 
-    function requestTaskCategory(taskId, taskTitle, categoryId) {
+    function requestTaskCategory(taskId, taskTitle, categoryId, subcategoryId) {
         pendingCategoryTaskId = taskId
         pendingCategoryTitle = taskTitle
         pendingCategoryId = categoryId
-        categoryAssignmentField.currentIndex = categoryId.length > 0
-            ? categoryModel.indexOfId(categoryId) + 1 : 0
+        pendingSubcategoryId = subcategoryId
+        const assignmentIndex = categoryModel.indexOfAssignment(categoryId, subcategoryId)
+        categoryAssignmentField.currentIndex = assignmentIndex >= 0
+            ? assignmentIndex + 1 : 0
         categoryAssignmentDialog.open()
     }
 
@@ -102,7 +105,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Ctrl+,"
-        onActivated: window.currentPage = 8
+        onActivated: window.currentPage = 7
     }
 
     Shortcut {
@@ -192,8 +195,9 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
-                            window.requestTaskCategory(taskId, taskTitle, categoryId)
+                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                            window.requestTaskCategory(
+                                taskId, taskTitle, categoryId, subcategoryId)
                     }
 
                     SpatialMapView {
@@ -203,8 +207,9 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
-                            window.requestTaskCategory(taskId, taskTitle, categoryId)
+                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                            window.requestTaskCategory(
+                                taskId, taskTitle, categoryId, subcategoryId)
                     }
 
                     QuietFocusView {
@@ -214,8 +219,9 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
-                            window.requestTaskCategory(taskId, taskTitle, categoryId)
+                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                            window.requestTaskCategory(
+                                taskId, taskTitle, categoryId, subcategoryId)
                     }
 
                     HybridView {
@@ -225,14 +231,22 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
-                            window.requestTaskCategory(taskId, taskTitle, categoryId)
+                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                            window.requestTaskCategory(
+                                taskId, taskTitle, categoryId, subcategoryId)
                     }
                 }
 
-                PlaceholderPage {
-                    pageTitle: "Inbox"
-                    detail: "A frictionless landing place for uncategorized thoughts and tasks is coming next."
+                TodoListView {
+                    taskModel: window.taskModel
+                    appSettings: window.appSettings
+                    theme: interfaceTheme
+                    onAddRequested: quickAdd.open()
+                    onCompletionRequested: (taskIndex, taskTitle) =>
+                        window.requestTaskCompletion(taskIndex, taskTitle)
+                    onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                        window.requestTaskCategory(
+                            taskId, taskTitle, categoryId, subcategoryId)
                 }
 
                 SpatialMapView {
@@ -242,13 +256,9 @@ ApplicationWindow {
                     onAddRequested: quickAdd.open()
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(taskIndex, taskTitle)
-                    onCategoryRequested: (taskId, taskTitle, categoryId) =>
-                        window.requestTaskCategory(taskId, taskTitle, categoryId)
-                }
-
-                PlaceholderPage {
-                    pageTitle: "Projects"
-                    detail: "Project progress, milestones, and the tasks holding each outcome together."
+                    onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                        window.requestTaskCategory(
+                            taskId, taskTitle, categoryId, subcategoryId)
                 }
 
                 CategoriesView {
@@ -286,7 +296,7 @@ ApplicationWindow {
         categoryModel: window.categoryModel
         appSettings: window.appSettings
         theme: interfaceTheme
-        onManageCategoriesRequested: window.currentPage = 4
+        onManageCategoriesRequested: window.currentPage = 3
     }
 
     Dialog {
@@ -325,7 +335,7 @@ ApplicationWindow {
             ComboBox {
                 id: categoryAssignmentField
                 Layout.fillWidth: true
-                model: ["No category"].concat(window.categoryModel.names)
+                model: ["No category"].concat(window.categoryModel.assignmentNames)
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -337,7 +347,7 @@ ApplicationWindow {
                     text: "Manage categories"
                     onClicked: {
                         categoryAssignmentDialog.close()
-                        window.currentPage = 4
+                        window.currentPage = 3
                     }
                 }
                 Item { Layout.fillWidth: true }
@@ -353,10 +363,17 @@ ApplicationWindow {
                     text: "Save"
                     onClicked: {
                         const categoryId = categoryAssignmentField.currentIndex > 0
-                            ? window.categoryModel.idAt(categoryAssignmentField.currentIndex - 1)
+                            ? window.categoryModel.categoryIdForAssignment(
+                                categoryAssignmentField.currentIndex - 1)
+                            : ""
+                        const subcategoryId = categoryAssignmentField.currentIndex > 0
+                            ? window.categoryModel.subcategoryIdForAssignment(
+                                categoryAssignmentField.currentIndex - 1)
                             : ""
                         if (window.taskModel.assignTaskCategory(
-                                window.pendingCategoryTaskId, categoryId)) {
+                                window.pendingCategoryTaskId,
+                                categoryId,
+                                subcategoryId)) {
                             window.categoryModel.reload()
                             categoryAssignmentDialog.close()
                         }
@@ -369,6 +386,7 @@ ApplicationWindow {
             window.pendingCategoryTaskId = ""
             window.pendingCategoryTitle = ""
             window.pendingCategoryId = ""
+            window.pendingSubcategoryId = ""
         }
     }
 

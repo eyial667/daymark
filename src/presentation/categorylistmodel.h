@@ -6,13 +6,16 @@
 
 #include <QAbstractListModel>
 #include <QStringList>
+#include <QVariantList>
 #include <QVector>
 
 class CategoryListModel final : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int categoryCount READ categoryCount NOTIFY categoriesChanged)
+    Q_PROPERTY(int subcategoryCount READ subcategoryCount NOTIFY categoriesChanged)
     Q_PROPERTY(QStringList names READ names NOTIFY categoriesChanged)
+    Q_PROPERTY(QStringList assignmentNames READ assignmentNames NOTIFY categoriesChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
 
 public:
@@ -20,7 +23,9 @@ public:
         CategoryIdRole = Qt::UserRole + 1,
         NameRole,
         NotesRole,
-        TaskCountRole
+        TaskCountRole,
+        SubcategoryCountRole,
+        SubcategoriesRole
     };
     Q_ENUM(Role)
 
@@ -31,13 +36,30 @@ public:
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
     [[nodiscard]] int categoryCount() const;
+    [[nodiscard]] int subcategoryCount() const;
     [[nodiscard]] QStringList names() const;
+    [[nodiscard]] QStringList assignmentNames() const;
     [[nodiscard]] QString statusMessage() const;
 
     Q_INVOKABLE bool addCategory(const QString &name, const QString &notes);
     Q_INVOKABLE bool updateCategory(int row, const QString &name, const QString &notes);
+    Q_INVOKABLE bool addSubcategory(
+        int categoryRow,
+        const QString &name,
+        const QString &notes);
+    Q_INVOKABLE bool updateSubcategory(
+        int categoryRow,
+        int subcategoryRow,
+        const QString &name,
+        const QString &notes);
     Q_INVOKABLE QString idAt(int row) const;
     Q_INVOKABLE int indexOfId(const QString &categoryId) const;
+    Q_INVOKABLE QString categoryIdForAssignment(int row) const;
+    Q_INVOKABLE QString subcategoryIdForAssignment(int row) const;
+    Q_INVOKABLE int indexOfAssignment(
+        const QString &categoryId,
+        const QString &subcategoryId) const;
+    Q_INVOKABLE QVariantList subcategoriesAt(int categoryRow) const;
     Q_INVOKABLE void clearStatus();
     Q_INVOKABLE void reload();
 
@@ -48,6 +70,10 @@ signals:
 private:
     void setStatusMessage(const QString &message);
     [[nodiscard]] bool hasDuplicateName(const QString &name, int excludedRow) const;
+    [[nodiscard]] bool hasDuplicateSubcategoryName(
+        int categoryRow,
+        const QString &name,
+        int excludedRow) const;
 
     TaskRepository &m_repository;
     QVector<Category> m_categories;

@@ -36,8 +36,6 @@ QVariant TaskListModel::data(const QModelIndex &index, int role) const
         return item.task.title;
     case NotesRole:
         return item.task.notes;
-    case ProjectRole:
-        return item.task.project;
     case DueTextRole:
         return formatDueDate(item.task.dueAt);
     case ImportanceRole:
@@ -52,6 +50,10 @@ QVariant TaskListModel::data(const QModelIndex &index, int role) const
         return item.task.categoryId;
     case CategoryNameRole:
         return item.task.categoryName;
+    case SubcategoryIdRole:
+        return item.task.subcategoryId;
+    case SubcategoryNameRole:
+        return item.task.subcategoryName;
     default:
         return {};
     }
@@ -63,7 +65,6 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
         {IdRole, "taskId"},
         {TitleRole, "title"},
         {NotesRole, "notes"},
-        {ProjectRole, "project"},
         {DueTextRole, "dueText"},
         {ImportanceRole, "importance"},
         {EstimatedMinutesRole, "estimatedMinutes"},
@@ -71,6 +72,8 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
         {PriorityReasonRole, "priorityReason"},
         {CategoryIdRole, "categoryId"},
         {CategoryNameRole, "categoryName"},
+        {SubcategoryIdRole, "subcategoryId"},
+        {SubcategoryNameRole, "subcategoryName"},
     };
 }
 
@@ -118,8 +121,8 @@ bool TaskListModel::addTask(
     const QString &dueDate,
     int importance,
     int estimatedMinutes,
-    const QString &project,
-    const QString &categoryId)
+    const QString &categoryId,
+    const QString &subcategoryId)
 {
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
@@ -140,8 +143,8 @@ bool TaskListModel::addTask(
     Task task;
     task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     task.title = cleanTitle;
-    task.project = project.trimmed();
     task.categoryId = categoryId.trimmed();
+    task.subcategoryId = subcategoryId.trimmed();
     task.dueAt = dueAt;
     task.createdAt = QDateTime::currentDateTime();
     task.importance = std::clamp(importance, 1, 5);
@@ -160,7 +163,8 @@ bool TaskListModel::addTask(
 
 bool TaskListModel::assignTaskCategory(
     const QString &taskId,
-    const QString &categoryId)
+    const QString &categoryId,
+    const QString &subcategoryId)
 {
     const auto item = std::find_if(
         m_items.cbegin(),
@@ -172,7 +176,11 @@ bool TaskListModel::assignTaskCategory(
     }
 
     QString errorMessage;
-    if (!m_repository.setTaskCategory(taskId, categoryId.trimmed(), &errorMessage)) {
+    if (!m_repository.setTaskCategory(
+            taskId,
+            categoryId.trimmed(),
+            subcategoryId.trimmed(),
+            &errorMessage)) {
         setStatusMessage(QStringLiteral("Could not assign the category: %1").arg(errorMessage));
         return false;
     }

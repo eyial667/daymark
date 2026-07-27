@@ -56,9 +56,8 @@ Rectangle {
         Repeater {
             model: [
                 { name: "Today", glyph: "◫" },
-                { name: "Inbox", glyph: "▱" },
+                { name: "To-do", glyph: "☑" },
                 { name: "Map", glyph: "⌘" },
-                { name: "Projects", glyph: "□" },
                 { name: "Categories", glyph: "▤" },
                 { name: "Goals", glyph: "◇" },
                 { name: "Focus", glyph: "◎" },

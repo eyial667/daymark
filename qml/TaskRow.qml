@@ -11,18 +11,24 @@ Rectangle {
     required property int index
     required property string taskId
     required property string title
-    required property string project
     required property string categoryId
     required property string categoryName
+    required property string subcategoryId
+    required property string subcategoryName
     required property string dueText
     required property int estimatedMinutes
     required property int priorityScore
     required property string priorityReason
     property bool compact: false
     property bool showReason: true
+    readonly property string categoryPath: subcategoryName.length > 0
+        ? categoryName + " / " + subcategoryName : categoryName
 
     signal completionRequested(int taskIndex)
-    signal categoryRequested(string taskId, string currentCategoryId)
+    signal categoryRequested(
+        string taskId,
+        string currentCategoryId,
+        string currentSubcategoryId)
 
     implicitHeight: compact ? 68 : 84
     radius: theme.radius
@@ -143,7 +149,7 @@ Rectangle {
                     implicitHeight: 24
                     leftPadding: 9
                     rightPadding: 9
-                    text: row.categoryName.length > 0 ? row.categoryName : "Uncategorized"
+                    text: row.categoryPath.length > 0 ? row.categoryPath : "Uncategorized"
 
                     contentItem: Text {
                         id: categoryText
@@ -164,15 +170,10 @@ Rectangle {
                     }
                     ToolTip.visible: hovered
                     ToolTip.text: "Change category"
-                    onClicked: row.categoryRequested(row.taskId, row.categoryId)
-                }
-
-                Text {
-                    visible: row.project.length > 0
-                    text: row.project
-                    color: row.theme.secondaryAccent
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
+                    onClicked: row.categoryRequested(
+                        row.taskId,
+                        row.categoryId,
+                        row.subcategoryId)
                 }
             }
         }

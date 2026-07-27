@@ -51,13 +51,6 @@ Dialog {
             onAccepted: saveButton.clicked()
         }
 
-        TextField {
-            id: projectField
-            Layout.fillWidth: true
-            placeholderText: "Project (optional)"
-            selectByMouse: true
-        }
-
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
@@ -67,7 +60,7 @@ Dialog {
                 spacing: 5
 
                 Text {
-                    text: "Category"
+                    text: "Category or subcategory"
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -75,7 +68,7 @@ Dialog {
                 ComboBox {
                     id: categoryField
                     Layout.fillWidth: true
-                    model: ["No category"].concat(dialog.categoryModel.names)
+                    model: ["No category"].concat(dialog.categoryModel.assignmentNames)
                     currentIndex: 0
                 }
             }
@@ -187,9 +180,13 @@ Dialog {
                             dueField.text,
                             importanceField.currentValue,
                             estimateField.value,
-                            projectField.text,
                             categoryField.currentIndex > 0
-                                ? dialog.categoryModel.idAt(categoryField.currentIndex - 1)
+                                ? dialog.categoryModel.categoryIdForAssignment(
+                                    categoryField.currentIndex - 1)
+                                : "",
+                            categoryField.currentIndex > 0
+                                ? dialog.categoryModel.subcategoryIdForAssignment(
+                                    categoryField.currentIndex - 1)
                                 : "")) {
                         dialog.categoryModel.reload()
                         dialog.close()
@@ -206,7 +203,6 @@ Dialog {
     }
     onClosed: {
         titleField.clear()
-        projectField.clear()
         categoryField.currentIndex = 0
         dueField.clear()
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1

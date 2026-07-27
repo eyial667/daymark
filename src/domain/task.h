@@ -10,9 +10,11 @@ struct Task
     QString id;
     QString title;
     QString notes;
-    QString project;
+    QString project; // Legacy portable-data field; no longer exposed in the application.
     QString categoryId;
     QString categoryName;
+    QString subcategoryId;
+    QString subcategoryName;
     QDateTime dueAt;
     QDateTime createdAt;
     QDateTime completedAt;

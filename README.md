@@ -4,16 +4,17 @@
 
 Daymark is a local-first, cross-platform daily command center. It turns tasks into
 an explainable priority queue and will grow into a connected view of goals,
-projects, dependencies, calendar commitments, focus sessions, and reviews.
+categories, dependencies, calendar commitments, focus sessions, and reviews.
 
 Daymark is a native Qt application. It does not use HTML, a browser engine, an
 embedded webview, Node.js, or a local web server.
 
 ## Current vertical slice
 
-- Create tasks with a due date, importance, estimate, project, and category.
-- Create reusable categories with notes, assign them during capture, and change a
-  task's category directly from any Today interface.
+- Create tasks with a due date, importance, estimate, category, and subcategory.
+- Create reusable categories and nested subcategories with notes, assign them
+  during capture, and change a task's placement from any task list.
+- Work through every open task in a dedicated native To-do page.
 - Store all data locally in SQLite.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
@@ -29,9 +30,9 @@ embedded webview, Node.js, or a local web server.
   and keep achieved goals in local history.
 - Choose task, goal, and milestone dates from a calendar or enter them manually
   as `YYYY-MM-DD`.
-- Export tasks, completed history, categories and their notes, goals, milestones,
-  and preferences to a portable `.daymark.json` file, then merge it safely on
-  another computer.
+- Export tasks, completed history, categories, subcategories and their notes,
+  goals, milestones, and preferences to a portable `.daymark.json` file, then
+  merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
 - Navigate the initial desktop application shell.
 

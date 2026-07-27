@@ -81,6 +81,7 @@ qt_add_qml_module(daymark
         qml/SpatialMapView.qml
         qml/TaskRow.qml
         qml/Theme.qml
+        qml/TodoListView.qml
 )
 
 target_link_libraries(daymark PRIVATE
