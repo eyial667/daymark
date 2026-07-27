@@ -55,29 +55,29 @@ Item {
             ColumnLayout {
                 spacing: 3
                 Text {
-                    text: "Categories"
+                    text: qsTr("Categories")
                     color: root.theme.textPrimary
                     font.pixelSize: 26
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "Group related tasks and keep useful context in category notes."
+                    text: qsTr("Group related tasks and keep useful context in category notes.")
                     color: root.theme.textSecondary
                     font.pixelSize: 12
                 }
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.categoryModel.categoryCount + (root.categoryModel.categoryCount === 1
-                    ? " category" : " categories") + "  ·  "
-                    + root.categoryModel.subcategoryCount + " subcategories"
+                text: qsTr("%1 categories · %2 subcategories")
+                    .arg(root.categoryModel.categoryCount)
+                    .arg(root.categoryModel.subcategoryCount)
                 color: root.theme.textMuted
                 font.pixelSize: 11
             }
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "+ New category"
+                text: qsTr("+ New category")
                 onClicked: root.startNewCategory()
             }
         }
@@ -141,9 +141,9 @@ Item {
                                         elide: Text.ElideRight
                                     }
                                     Text {
-                                        text: categoryRow.subcategoryCount + " sub  ·  "
-                                            + categoryRow.taskCount + (categoryRow.taskCount === 1
-                                                ? " task" : " tasks")
+                                        text: qsTr("%1 sub · %2 tasks")
+                                            .arg(categoryRow.subcategoryCount)
+                                            .arg(categoryRow.taskCount)
                                         color: root.theme.accent
                                         font.pixelSize: 10
                                         font.weight: Font.DemiBold
@@ -152,7 +152,7 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: categoryRow.notes.length > 0
-                                        ? categoryRow.notes : "No notes yet"
+                                        ? categoryRow.notes : qsTr("No notes yet")
                                     color: categoryRow.notes.length > 0
                                         ? root.theme.textSecondary : root.theme.textMuted
                                     font.pixelSize: 11
@@ -178,7 +178,7 @@ Item {
                         spacing: 9
                         Text {
                             Layout.fillWidth: true
-                            text: "No categories yet"
+                            text: qsTr("No categories yet")
                             color: root.theme.textPrimary
                             font.pixelSize: 17
                             font.weight: Font.DemiBold
@@ -186,7 +186,7 @@ Item {
                         }
                         Text {
                             Layout.fillWidth: true
-                            text: "Create one to group tasks by area, context, or responsibility."
+                            text: qsTr("Create one to group tasks by area, context, or responsibility.")
                             color: root.theme.textSecondary
                             font.pixelSize: 11
                             wrapMode: Text.WordWrap
@@ -209,7 +209,8 @@ Item {
                     spacing: 13
 
                     Text {
-                        text: root.editingIndex >= 0 ? "Edit category" : "Create a category"
+                        text: root.editingIndex >= 0
+                            ? qsTr("Edit category") : qsTr("Create a category")
                         color: root.theme.textPrimary
                         font.pixelSize: 19
                         font.weight: Font.DemiBold
@@ -217,15 +218,15 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         text: root.editingIndex >= 0
-                            ? "Changes appear on every assigned task."
-                            : "Names stay short; notes can hold definitions, links, or working context."
+                            ? qsTr("Changes appear on every assigned task.")
+                            : qsTr("Names stay short; notes can hold definitions, links, or working context.")
                         color: root.theme.textSecondary
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap
                     }
 
                     Text {
-                        text: "NAME"
+                        text: qsTr("NAME")
                         color: root.theme.textMuted
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -234,13 +235,13 @@ Item {
                     TextField {
                         id: nameField
                         Layout.fillWidth: true
-                        placeholderText: "For example: Health, Finance, Deep work"
+                        placeholderText: qsTr("For example: Health, Finance, Deep work")
                         maximumLength: 120
                         selectByMouse: true
                     }
 
                     Text {
-                        text: "NOTES"
+                        text: qsTr("NOTES")
                         color: root.theme.textMuted
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -253,7 +254,7 @@ Item {
 
                         TextArea {
                             id: notesField
-                            placeholderText: "What belongs here? Add context that will help later…"
+                            placeholderText: qsTr("What belongs here? Add context that will help later…")
                             wrapMode: TextEdit.Wrap
                             selectByMouse: true
                             color: root.theme.textPrimary
@@ -272,7 +273,7 @@ Item {
                         visible: root.editingIndex >= 0
 
                         Text {
-                            text: "SUBCATEGORIES"
+                            text: qsTr("SUBCATEGORIES")
                             color: root.theme.textMuted
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -282,7 +283,7 @@ Item {
                         AppButton {
                             theme: root.theme
                             quiet: true
-                            text: "+ Add subcategory"
+                            text: qsTr("+ Add subcategory")
                             onClicked: root.openSubcategoryEditor(-1, "", "")
                         }
                     }
@@ -337,21 +338,21 @@ Item {
                                     Text {
                                         Layout.fillWidth: true
                                         text: subcategoryRow.modelData.notes.length > 0
-                                            ? subcategoryRow.modelData.notes : "No notes"
+                                            ? subcategoryRow.modelData.notes : qsTr("No notes")
                                         color: root.theme.textMuted
                                         font.pixelSize: 10
                                         elide: Text.ElideRight
                                     }
                                 }
                                 Text {
-                                    text: subcategoryRow.modelData.taskCount + " tasks"
+                                    text: qsTr("%1 tasks").arg(subcategoryRow.modelData.taskCount)
                                     color: root.theme.secondaryAccent
                                     font.pixelSize: 10
                                 }
                                 AppButton {
                                     theme: root.theme
                                     quiet: true
-                                    text: "Edit"
+                                    text: qsTr("Edit")
                                     onClicked: root.openSubcategoryEditor(
                                         subcategoryRow.index,
                                         subcategoryRow.modelData.name,
@@ -367,7 +368,7 @@ Item {
                         Layout.fillHeight: true
                         visible: root.editingIndex >= 0
                             && root.selectedSubcategories.length === 0
-                        text: "No subcategories yet. Add one to divide this category into smaller contexts."
+                        text: qsTr("No subcategories yet. Add one to divide this category into smaller contexts.")
                         color: root.theme.textMuted
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap
@@ -379,9 +380,9 @@ Item {
                         Layout.fillWidth: true
                         visible: root.categoryModel.statusMessage.length > 0
                         text: root.categoryModel.statusMessage
-                        color: root.categoryModel.statusMessage.indexOf("Could not") === 0
-                            || root.categoryModel.statusMessage.indexOf("needs") >= 0
-                            || root.categoryModel.statusMessage.indexOf("already") >= 0
+                        color: root.categoryModel.statusMessage.indexOf(qsTr("Could not")) === 0
+                            || root.categoryModel.statusMessage.indexOf(qsTr("needs")) >= 0
+                            || root.categoryModel.statusMessage.indexOf(qsTr("already")) >= 0
                             ? root.theme.danger : root.theme.success
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap
@@ -394,13 +395,14 @@ Item {
                             visible: root.editingIndex >= 0
                             theme: root.theme
                             quiet: true
-                            text: "New category"
+                            text: qsTr("New category")
                             onClicked: root.startNewCategory()
                         }
                         AppButton {
                             theme: root.theme
                             primary: true
-                            text: root.editingIndex >= 0 ? "Save changes" : "Create category"
+                            text: root.editingIndex >= 0
+                                ? qsTr("Save changes") : qsTr("Create category")
                             enabled: nameField.text.trim().length > 0
                             onClicked: {
                                 const saved = root.editingIndex >= 0
@@ -439,14 +441,14 @@ Item {
 
             Text {
                 text: root.editingSubcategoryIndex >= 0
-                    ? "Edit subcategory" : "Add subcategory"
+                    ? qsTr("Edit subcategory") : qsTr("Add subcategory")
                 color: root.theme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
             }
             Text {
                 Layout.fillWidth: true
-                text: "This subcategory belongs to " + nameField.text + "."
+                text: qsTr("This subcategory belongs to %1.").arg(nameField.text)
                 color: root.theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
@@ -454,7 +456,7 @@ Item {
             TextField {
                 id: subcategoryNameField
                 Layout.fillWidth: true
-                placeholderText: "Subcategory name"
+                placeholderText: qsTr("Subcategory name")
                 maximumLength: 120
                 selectByMouse: true
             }
@@ -462,7 +464,7 @@ Item {
                 id: subcategoryNotesField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 150
-                placeholderText: "Notes for this subcategory…"
+                placeholderText: qsTr("Notes for this subcategory…")
                 wrapMode: TextEdit.Wrap
                 selectByMouse: true
                 color: root.theme.textPrimary
@@ -488,13 +490,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: subcategoryDialog.close()
                 }
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: root.editingSubcategoryIndex >= 0 ? "Save changes" : "Add"
+                    text: root.editingSubcategoryIndex >= 0
+                        ? qsTr("Save changes") : qsTr("Add")
                     enabled: subcategoryNameField.text.trim().length > 0
                     onClicked: {
                         const saved = root.editingSubcategoryIndex >= 0

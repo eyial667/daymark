@@ -22,10 +22,10 @@ Item {
         const hours = Math.floor(minutes / 60)
         const remaining = minutes % 60
         if (hours === 0)
-            return remaining + " min"
+            return qsTr("%1 min").arg(remaining)
         return remaining === 0
-            ? hours + (hours === 1 ? " hour" : " hours")
-            : hours + "h " + remaining + "m"
+            ? (hours === 1 ? qsTr("%1 hour").arg(hours) : qsTr("%1 hours").arg(hours))
+            : qsTr("%1h %2m").arg(hours).arg(remaining)
     }
 
     component SettingCopy: ColumnLayout {
@@ -141,13 +141,13 @@ Item {
                     ColumnLayout {
                         spacing: 3
                         Text {
-                            text: "Settings"
+                            text: qsTr("Settings")
                             color: root.theme.textPrimary
                             font.pixelSize: 27
                             font.weight: Font.DemiBold
                         }
                         Text {
-                            text: "Shape Daymark around the way you plan and work."
+                            text: qsTr("Shape Daymark around the way you plan and work.")
                             color: root.theme.textSecondary
                             font.pixelSize: 12
                         }
@@ -165,7 +165,7 @@ Item {
                         Text {
                             id: savedLabel
                             anchors.centerIn: parent
-                            text: "✓  Saved automatically"
+                            text: qsTr("✓  Saved automatically")
                             color: root.theme.accent
                             font.pixelSize: 10
                             font.weight: Font.DemiBold
@@ -188,8 +188,8 @@ Item {
 
                         SectionHeading {
                             Layout.fillWidth: true
-                            heading: "Appearance"
-                            description: "Choose the application’s color mode, structure, and accent."
+                            heading: qsTr("Appearance")
+                            description: qsTr("Choose the application’s color mode, structure, and accent.")
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -200,18 +200,18 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Interface"
-                                description: "Changes the Today layout without changing your tasks."
+                                heading: qsTr("Interface")
+                                description: qsTr("Changes the Today layout without changing your tasks.")
                             }
 
                             ComboBox {
                                 id: interfaceSelector
                                 Layout.preferredWidth: 250
                                 model: [
-                                    "A · Midnight Command",
-                                    "B · Spatial Map",
-                                    "C · Quiet Focus",
-                                    "D · Daymark Hybrid"
+                                    qsTr("A · Midnight Command"),
+                                    qsTr("B · Spatial Map"),
+                                    qsTr("C · Quiet Focus"),
+                                    qsTr("D · Daymark Hybrid")
                                 ]
                                 currentIndex: Number(root.appSettings.interfaceStyle)
                                 onActivated: root.appSettings.interfaceStyle = currentIndex
@@ -226,8 +226,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Accent color"
-                                description: "Use each interface’s signature color or choose one globally."
+                                heading: qsTr("Accent color")
+                                description: qsTr("Use each interface’s signature color or choose one globally.")
                             }
 
                             RowLayout {
@@ -243,7 +243,8 @@ Item {
                                 ComboBox {
                                     id: accentSelector
                                     Layout.preferredWidth: 190
-                                    model: ["Match interface", "Violet", "Cyan", "Amber", "Green"]
+                                    model: [qsTr("Match interface"), qsTr("Violet"),
+                                        qsTr("Cyan"), qsTr("Amber"), qsTr("Green")]
                                     currentIndex: Number(root.appSettings.accentPreset)
                                     onActivated: root.appSettings.accentPreset = currentIndex
                                 }
@@ -257,8 +258,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Color mode"
-                                description: "Switch the complete application palette between dark and light."
+                                heading: qsTr("Color mode")
+                                description: qsTr("Switch the complete application palette between dark and light.")
                             }
 
                             RowLayout {
@@ -273,7 +274,7 @@ Item {
                                 ComboBox {
                                     id: colorModeSelector
                                     Layout.preferredWidth: 190
-                                    model: ["Dark", "Light"]
+                                    model: [qsTr("Dark"), qsTr("Light")]
                                     currentIndex: Number(root.appSettings.colorMode)
                                     onActivated: root.appSettings.colorMode = currentIndex
                                 }
@@ -297,8 +298,8 @@ Item {
 
                         SectionHeading {
                             Layout.fillWidth: true
-                            heading: "Planning defaults"
-                            description: "These values drive workload guidance and prefill new tasks."
+                            heading: qsTr("Planning defaults")
+                            description: qsTr("These values drive workload guidance and prefill new tasks.")
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -309,8 +310,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Daily task capacity"
-                                description: "How much focused task time can realistically fit in one day."
+                                heading: qsTr("Daily task capacity")
+                                description: qsTr("How much focused task time can realistically fit in one day.")
                             }
 
                             SpinBox {
@@ -321,7 +322,7 @@ Item {
                                 stepSize: 30
                                 editable: true
                                 value: root.appSettings.dailyCapacityMinutes
-                                textFromValue: (value, locale) => value + " min"
+                                textFromValue: (value, locale) => qsTr("%1 min").arg(value)
                                 valueFromText: (text, locale) => {
                                     const parsed = parseInt(text)
                                     return Number.isNaN(parsed) ? capacityControl.value : parsed
@@ -338,8 +339,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Default task estimate"
-                                description: "The initial duration shown when capturing a task."
+                                heading: qsTr("Default task estimate")
+                                description: qsTr("The initial duration shown when capturing a task.")
                             }
 
                             SpinBox {
@@ -349,7 +350,7 @@ Item {
                                 stepSize: 5
                                 editable: true
                                 value: root.appSettings.defaultEstimatedMinutes
-                                textFromValue: (value, locale) => value + " min"
+                                textFromValue: (value, locale) => qsTr("%1 min").arg(value)
                                 valueFromText: (text, locale) => {
                                     const parsed = parseInt(text)
                                     return Number.isNaN(parsed)
@@ -368,13 +369,14 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Default importance"
-                                description: "The starting importance for newly captured tasks."
+                                heading: qsTr("Default importance")
+                                description: qsTr("The starting importance for newly captured tasks.")
                             }
 
                             ComboBox {
                                 Layout.preferredWidth: 160
-                                model: ["1 · Low", "2", "3 · Normal", "4", "5 · Critical"]
+                                model: [qsTr("1 · Low"), "2", qsTr("3 · Normal"),
+                                    "4", qsTr("5 · Critical")]
                                 currentIndex: root.appSettings.defaultImportance - 1
                                 onActivated: root.appSettings.defaultImportance = currentIndex + 1
                             }
@@ -397,8 +399,8 @@ Item {
 
                         SectionHeading {
                             Layout.fillWidth: true
-                            heading: "Behavior"
-                            description: "Control how information and irreversible-looking actions are presented."
+                            heading: qsTr("Behavior")
+                            description: qsTr("Control how information and irreversible-looking actions are presented.")
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -409,8 +411,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Show timeline"
-                                description: "Show time-based planning panels in Today. Leave this off for a task-list-first view."
+                                heading: qsTr("Show timeline")
+                                description: qsTr("Show time-based planning panels in Today. Leave this off for a task-list-first view.")
                             }
 
                             SettingsSwitch {
@@ -427,8 +429,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "24-hour clock"
-                                description: "When timeline panels are shown, display hours as 09:00 and 14:00."
+                                heading: qsTr("24-hour clock")
+                                description: qsTr("When timeline panels are shown, display hours as 09:00 and 14:00.")
                             }
 
                             SettingsSwitch {
@@ -445,8 +447,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Show priority explanations"
-                                description: "Keep the reason behind Daymark’s ranking visible in detailed queues."
+                                heading: qsTr("Show priority explanations")
+                                description: qsTr("Keep the reason behind Daymark’s ranking visible in detailed queues.")
                             }
 
                             SettingsSwitch {
@@ -463,8 +465,8 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Confirm task completion"
-                                description: "Ask before a task is marked complete and removed from the active queue."
+                                heading: qsTr("Confirm task completion")
+                                description: qsTr("Ask before a task is marked complete and removed from the active queue.")
                             }
 
                             SettingsSwitch {
@@ -490,8 +492,8 @@ Item {
 
                         SectionHeading {
                             Layout.fillWidth: true
-                            heading: "Software updates"
-                            description: "Daymark checks its official GitHub Releases page when it starts. Downloads and installation always need your approval."
+                            heading: qsTr("Software updates")
+                            description: qsTr("Daymark checks its official GitHub Releases page when it starts. Downloads and installation always need your approval.")
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -503,12 +505,14 @@ Item {
                             SettingCopy {
                                 Layout.fillWidth: true
                                 heading: root.updateService.latestVersion.length > 0
-                                    ? "Installed " + root.updateService.currentVersion
-                                        + " · Latest " + root.updateService.latestVersion
-                                    : "Installed " + root.updateService.currentVersion
+                                    ? qsTr("Installed %1 · Latest %2")
+                                        .arg(root.updateService.currentVersion)
+                                        .arg(root.updateService.latestVersion)
+                                    : qsTr("Installed %1")
+                                        .arg(root.updateService.currentVersion)
                                 description: root.updateService.statusMessage.length > 0
                                     ? root.updateService.statusMessage
-                                    : "No package is downloaded until you choose to update."
+                                    : qsTr("No package is downloaded until you choose to update.")
                             }
 
                             RowLayout {
@@ -518,7 +522,8 @@ Item {
 
                                 AppButton {
                                     theme: root.theme
-                                    text: root.updateService.checking ? "Checking…" : "Check now"
+                                    text: root.updateService.checking
+                                        ? qsTr("Checking…") : qsTr("Check now")
                                     enabled: !root.updateService.busy
                                     onClicked: root.updateService.checkForUpdates()
                                 }
@@ -527,7 +532,7 @@ Item {
                                     visible: root.updateService.canDownload
                                     theme: root.theme
                                     primary: true
-                                    text: "Download"
+                                    text: qsTr("Download")
                                     onClicked: root.updateService.downloadUpdate()
                                 }
 
@@ -551,7 +556,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Update checks contact GitHub only for release metadata. Downloaded packages must match GitHub’s SHA-256 digest before Daymark opens an installer."
+                            text: qsTr("Update checks contact GitHub only for release metadata. Downloaded packages must match GitHub’s SHA-256 digest before Daymark opens an installer.")
                             color: root.theme.textMuted
                             font.pixelSize: 10
                             wrapMode: Text.WordWrap
@@ -574,8 +579,8 @@ Item {
 
                         SectionHeading {
                             Layout.fillWidth: true
-                            heading: "Local data & privacy"
-                            description: "Your tasks, categories, subcategories, goals, and preferences stay on this machine. Export a portable copy whenever you want."
+                            heading: qsTr("Local data & privacy")
+                            description: qsTr("Your tasks, categories, subcategories, goals, and preferences stay on this machine. Export a portable copy whenever you want.")
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -586,13 +591,13 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Portable Daymark data"
-                                description: "Export tasks, categories, subcategories and notes, completed history, long-term goals, milestones, and preferences. Imports merge with data already on this computer."
+                                heading: qsTr("Portable Daymark data")
+                                description: qsTr("Export tasks, categories, subcategories and notes, completed history, long-term goals, milestones, and preferences. Imports merge with data already on this computer.")
                             }
 
                             AppButton {
                                 theme: root.theme
-                                text: "Import"
+                                text: qsTr("Import")
                                 onClicked: {
                                     root.dataTransfer.clearStatus()
                                     importFileDialog.open()
@@ -602,7 +607,7 @@ Item {
                             AppButton {
                                 theme: root.theme
                                 primary: true
-                                text: "Export"
+                                text: qsTr("Export")
                                 onClicked: {
                                     root.dataTransfer.clearStatus()
                                     exportFileDialog.open()
@@ -630,7 +635,7 @@ Item {
                                 spacing: 5
 
                                 Text {
-                                    text: "Data folder"
+                                    text: qsTr("Data folder")
                                     color: root.theme.textPrimary
                                     font.pixelSize: 13
                                     font.weight: Font.DemiBold
@@ -644,7 +649,7 @@ Item {
                                 }
                                 Text {
                                     visible: root.folderOpenFailed
-                                    text: "The folder could not be opened by the desktop."
+                                    text: qsTr("The folder could not be opened by the desktop.")
                                     color: root.theme.danger
                                     font.pixelSize: 10
                                 }
@@ -652,7 +657,7 @@ Item {
 
                             AppButton {
                                 theme: root.theme
-                                text: "Open data folder"
+                                text: qsTr("Open data folder")
                                 onClicked: root.folderOpenFailed = !root.appSettings.openDataDirectory()
                             }
                         }
@@ -665,13 +670,13 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
-                                heading: "Reset preferences"
-                                description: "Restore settings only. Your tasks, categories, subcategories, goals, milestones, and local database will not be changed."
+                                heading: qsTr("Reset preferences")
+                                description: qsTr("Restore settings only. Your tasks, categories, subcategories, goals, milestones, and local database will not be changed.")
                             }
 
                             AppButton {
                                 theme: root.theme
-                                text: "Reset to defaults"
+                                text: qsTr("Reset to defaults")
                                 onClicked: resetDialog.open()
                             }
                         }
@@ -684,9 +689,9 @@ Item {
     FileDialog {
         id: exportFileDialog
 
-        title: "Export Daymark data"
+        title: qsTr("Export Daymark data")
         fileMode: FileDialog.SaveFile
-        nameFilters: ["Daymark data (*.daymark.json)"]
+        nameFilters: [qsTr("Daymark data (*.daymark.json)")]
         defaultSuffix: "daymark.json"
         onAccepted: root.dataTransfer.exportData(selectedFile)
     }
@@ -694,9 +699,9 @@ Item {
     FileDialog {
         id: importFileDialog
 
-        title: "Import Daymark data"
+        title: qsTr("Import Daymark data")
         fileMode: FileDialog.OpenFile
-        nameFilters: ["Daymark data (*.daymark.json)", "JSON files (*.json)"]
+        nameFilters: [qsTr("Daymark data (*.daymark.json)"), qsTr("JSON files (*.json)")]
         onAccepted: {
             root.pendingImportUrl = selectedFile
             importConfirmationDialog.open()
@@ -724,7 +729,7 @@ Item {
             spacing: 13
 
             Text {
-                text: "Import this Daymark data?"
+                text: qsTr("Import this Daymark data?")
                 color: root.theme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
@@ -732,7 +737,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "Tasks, categories, subcategories, goals, milestones, and preferences from the selected file will be merged into this computer. Existing records are kept."
+                text: qsTr("Tasks, categories, subcategories, goals, milestones, and preferences from the selected file will be merged into this computer. Existing records are kept.")
                 color: root.theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
@@ -746,14 +751,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: importConfirmationDialog.close()
                 }
 
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Import and merge"
+                    text: qsTr("Import and merge")
                     onClicked: {
                         root.dataTransfer.importData(root.pendingImportUrl)
                         importConfirmationDialog.close()
@@ -786,14 +791,14 @@ Item {
             spacing: 13
 
             Text {
-                text: "Reset all preferences?"
+                text: qsTr("Reset all preferences?")
                 color: root.theme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
             }
             Text {
                 Layout.fillWidth: true
-                text: "Color mode, interface, accent, planning defaults, and behavior settings will be restored. Tasks and goals stay untouched."
+                text: qsTr("Color mode, interface, accent, planning defaults, and behavior settings will be restored. Tasks and goals stay untouched.")
                 color: root.theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
@@ -806,13 +811,13 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: resetDialog.close()
                 }
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Reset preferences"
+                    text: qsTr("Reset preferences")
                     onClicked: {
                         root.appSettings.resetDefaults()
                         resetDialog.close()

@@ -7,6 +7,7 @@
 #include "presentation/datatransferservice.h"
 #include "presentation/focussessionmodel.h"
 #include "presentation/goallistmodel.h"
+#include "presentation/languagemanager.h"
 #include "presentation/mentalmapmodel.h"
 #include "presentation/tasklistmodel.h"
 #include "presentation/updateservice.h"
@@ -41,6 +42,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    AppSettings appSettings(dataDirectory);
+    LanguageManager languageManager;
+    if (!languageManager.apply(appSettings.language())) {
+        qWarning("Unable to load the selected Daymark translation.");
+    }
+
     TaskListModel taskModel(repository);
     TaskListModel todayTaskModel(repository, TaskListModel::Today);
     CategoryListModel categoryModel(repository);
@@ -48,7 +55,6 @@ int main(int argc, char *argv[])
     MentalMapModel mentalMapModel(repository);
     DailyNoteModel dailyNoteModel(repository);
     FocusSessionModel focusSession;
-    AppSettings appSettings(dataDirectory);
     DataTransferService dataTransfer(
         repository,
         taskModel,
@@ -131,6 +137,24 @@ int main(int argc, char *argv[])
         &DailyNoteModel::saveNow);
 
     QQmlApplicationEngine engine;
+    QObject::connect(
+        &appSettings,
+        &AppSettings::languageChanged,
+        &engine,
+        [&] {
+            if (!languageManager.apply(appSettings.language())) {
+                qWarning("Unable to load the selected Daymark translation.");
+            }
+            engine.retranslate();
+            dataTransfer.clearStatus();
+            taskModel.reload();
+            todayTaskModel.reload();
+            categoryModel.reload();
+            goalModel.reload();
+            mentalMapModel.reload();
+            dailyNoteModel.refreshDay();
+            updateService.retranslate();
+        });
     engine.setInitialProperties({
         {QStringLiteral("taskModel"), QVariant::fromValue(&taskModel)},
         {QStringLiteral("todayTaskModel"), QVariant::fromValue(&todayTaskModel)},

@@ -57,7 +57,7 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "CHOOSE THE NEXT THING"
+                    text: qsTr("CHOOSE THE NEXT THING")
                     color: root.theme.accent
                     font.pixelSize: 10
                     font.weight: Font.Bold
@@ -66,14 +66,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Close"
+                    text: qsTr("Close")
                     onClicked: root.closeRequested()
                 }
             }
 
             Text {
                 Layout.fillWidth: true
-                text: "Give me something to do"
+                text: qsTr("Give me something to do")
                 color: root.theme.textPrimary
                 font.pixelSize: 25
                 font.weight: Font.DemiBold
@@ -81,7 +81,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "Pull in the best To-do item, pick an area of work, or make progress on a goal milestone. Nothing changes until you choose."
+                text: qsTr("Pull in the best To-do item, pick an area of work, or make progress on a goal milestone. Nothing changes until you choose.")
                 color: root.theme.textSecondary
                 font.pixelSize: 12
                 wrapMode: Text.WordWrap
@@ -106,7 +106,7 @@ Item {
                         spacing: 7
 
                         Text {
-                            text: "FROM TO-DO"
+                            text: qsTr("FROM TO-DO")
                             color: root.theme.accent
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -116,7 +116,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.todayTaskModel.hasBacklogSuggestion
                                 ? root.todayTaskModel.backlogSuggestionTitle
-                                : "No backlog task available"
+                                : qsTr("No backlog task available")
                             color: root.theme.textPrimary
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
@@ -127,7 +127,7 @@ Item {
                             Layout.fillHeight: true
                             text: root.todayTaskModel.hasBacklogSuggestion
                                 ? root.todayTaskModel.backlogSuggestionDetail
-                                : "Capture a task whenever something comes to mind."
+                                : qsTr("Capture a task whenever something comes to mind.")
                             color: root.theme.textMuted
                             font.pixelSize: 10
                             wrapMode: Text.WordWrap
@@ -137,7 +137,7 @@ Item {
                             Layout.alignment: Qt.AlignRight
                             theme: root.theme
                             primary: true
-                            text: "Add to Today"
+                            text: qsTr("Add to Today")
                             enabled: root.todayTaskModel.hasBacklogSuggestion
                             onClicked: {
                                 if (root.todayTaskModel.planSuggestedTaskForToday())
@@ -160,7 +160,7 @@ Item {
                         spacing: 7
 
                         Text {
-                            text: "WORK AREA"
+                            text: qsTr("WORK AREA")
                             color: root.theme.secondaryAccent
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -170,7 +170,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.categoryModel.hasWorkSuggestion
                                 ? root.categoryModel.workSuggestionName
-                                : "No category available"
+                                : qsTr("No category available")
                             color: root.theme.textPrimary
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
@@ -181,7 +181,7 @@ Item {
                             Layout.fillHeight: true
                             text: root.categoryModel.hasWorkSuggestion
                                 ? root.categoryModel.workSuggestionDetail
-                                : "Create a category or subcategory to get a work-area proposal."
+                                : qsTr("Create a category or subcategory to get a work-area proposal.")
                             color: root.theme.textMuted
                             font.pixelSize: 10
                             wrapMode: Text.WordWrap
@@ -194,13 +194,13 @@ Item {
                                 visible: root.categoryModel.workSuggestionCount > 1
                                 theme: root.theme
                                 quiet: true
-                                text: "Another area"
+                                text: qsTr("Another area")
                                 onClicked: root.categoryModel.advanceWorkSuggestion()
                             }
                             Item { Layout.fillWidth: true }
                             AppButton {
                                 theme: root.theme
-                                text: "Create task here"
+                                text: qsTr("Create task here")
                                 enabled: root.categoryModel.hasWorkSuggestion
                                 onClicked: {
                                     root.closeRequested()
@@ -226,7 +226,7 @@ Item {
                         spacing: 7
 
                         Text {
-                            text: "FROM A GOAL"
+                            text: qsTr("FROM A GOAL")
                             color: root.theme.secondaryAccent
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -236,7 +236,7 @@ Item {
                             Layout.fillWidth: true
                             text: root.goalModel.hasMilestoneSuggestion
                                 ? root.goalModel.suggestedMilestoneTitle
-                                : "No unfinished milestone"
+                                : qsTr("No unfinished milestone")
                             color: root.theme.textPrimary
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
@@ -248,7 +248,7 @@ Item {
                             text: root.goalModel.hasMilestoneSuggestion
                                 ? root.goalModel.suggestedMilestoneGoal + " · "
                                     + root.goalModel.suggestedMilestoneTarget
-                                : "Add a milestone to a goal to get a proposal here."
+                                : qsTr("Add a milestone to a goal to get a proposal here.")
                             color: root.theme.textMuted
                             font.pixelSize: 10
                             wrapMode: Text.WordWrap
@@ -257,7 +257,7 @@ Item {
                         AppButton {
                             Layout.alignment: Qt.AlignRight
                             theme: root.theme
-                            text: "Work on milestone"
+                            text: qsTr("Work on milestone")
                             enabled: root.goalModel.hasMilestoneSuggestion
                             onClicked: {
                                 if (root.goalModel.planSuggestedMilestone(
@@ -275,14 +275,14 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "Deadline-day and overdue To-do tasks appear in Today automatically."
+                    text: qsTr("Deadline-day and overdue To-do tasks appear in Today automatically.")
                     color: root.theme.textMuted
                     font.pixelSize: 10
                 }
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "+ Add something else"
+                    text: qsTr("+ Add something else")
                     onClicked: {
                         root.closeRequested()
                         root.addRequested()

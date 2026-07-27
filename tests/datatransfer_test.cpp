@@ -90,6 +90,7 @@ private slots:
         QVERIFY(sourceGoals.setMilestoneCompleted(0, 0, true));
 
         sourceSettings.setInterfaceStyle(AppSettings::QuietFocus);
+        sourceSettings.setLanguage(AppSettings::French);
         sourceSettings.setColorMode(AppSettings::Light);
         sourceSettings.setAccentPreset(AppSettings::Green);
         sourceSettings.setDailyCapacityMinutes(360);
@@ -153,6 +154,7 @@ private slots:
         QCOMPARE(targetGoals.totalMilestoneCount(), 1);
         QCOMPARE(targetGoals.completedMilestoneCount(), 1);
         QCOMPARE(targetSettings.interfaceStyle(), AppSettings::QuietFocus);
+        QCOMPARE(targetSettings.language(), AppSettings::French);
         QCOMPARE(targetSettings.colorMode(), AppSettings::Light);
         QCOMPARE(targetSettings.accentPreset(), AppSettings::Green);
         QCOMPARE(targetSettings.dailyCapacityMinutes(), 360);
@@ -224,6 +226,7 @@ private slots:
         exportFile.close();
         QJsonObject settings = root.value(QStringLiteral("settings")).toObject();
         settings.remove(QStringLiteral("showTimeline"));
+        settings.remove(QStringLiteral("language"));
         root.insert(QStringLiteral("settings"), settings);
         QJsonArray tasks = root.value(QStringLiteral("tasks")).toArray();
         tasks.append(QJsonObject {

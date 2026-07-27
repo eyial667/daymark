@@ -24,8 +24,7 @@ embedded webview, Node.js, or a local web server.
 - Explain every priority score.
 - Complete tasks from the Today queue.
 - See every active work area, subcategory, task, goal, and unfinished milestone
-  in a shared mental map with recursive-cloud, arrow-flow, and constellation
-  views.
+  in a shared mental map with recursive-cloud and constellation views.
 - Run a countdown focus session for any task in Today and review work completed
   or still remaining for the current day.
 - Keep a rolling day note from Today and review yesterday’s note without
@@ -34,6 +33,8 @@ embedded webview, Node.js, or a local web server.
   without changing task data: Midnight Command, Spatial Map, Quiet Focus, and
   Daymark Hybrid.
 - Keep the selected interface across application launches.
+- Switch the complete native interface between English and French from the
+  language selector directly beneath the interface selector.
 - Configure light or dark mode, accent color, daily capacity, task-capture
   defaults, optional timeline panels, clock format, priority explanations, and
   completion confirmation from a native Settings page.
@@ -197,12 +198,12 @@ Today defaults to a list-first layout without assigning tasks to clock times.
 Enable **Settings → Behavior → Show timeline** to restore the timeline, agenda,
 and day-shape panels; the choice is saved locally and included in exports.
 
-Use **Map** to move between three views of the same live hierarchy. **Recursive
-clouds** nests tasks inside their subcategories and work areas. **Arrow flow**
-shows the direction from an area or goal into its concrete next layers.
-**Constellation** places active work around a central working-world node with
-connected task and milestone satellites. Select any node for its details or to
-add a task directly to that work area.
+Use **Map** to move between two views of the same live hierarchy. **Recursive
+clouds** nests tasks inside their subcategories and work areas.
+**Constellation** lays out independent work-area and goal clusters, drawing only
+real parent-to-child relationships instead of connecting everything through a
+decorative center. Select any node for its details or to add a task directly to
+that work area.
 
 Use the floating **Day note** action on Today to capture decisions and context;
 the note saves locally as you type. **Review** shows only yesterday’s note next

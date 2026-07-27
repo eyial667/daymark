@@ -39,14 +39,14 @@ Dialog {
         spacing: 15
 
         Text {
-            text: "Add a task"
+            text: qsTr("Add a task")
             color: dialog.theme.textPrimary
             font.pixelSize: 21
             font.weight: Font.DemiBold
         }
 
         Text {
-            text: "Capture it now. Daymark will place it in priority order."
+            text: qsTr("Capture it now. Daymark will place it in priority order.")
             color: dialog.theme.textSecondary
             font.pixelSize: 12
         }
@@ -54,7 +54,7 @@ Dialog {
         TextField {
             id: titleField
             Layout.fillWidth: true
-            placeholderText: "What needs to be done?"
+            placeholderText: qsTr("What needs to be done?")
             selectByMouse: true
             onAccepted: saveButton.clicked()
         }
@@ -68,7 +68,7 @@ Dialog {
                 spacing: 5
 
                 Text {
-                    text: "Category or subcategory"
+                    text: qsTr("Category or subcategory")
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -76,7 +76,7 @@ Dialog {
                 ComboBox {
                     id: categoryField
                     Layout.fillWidth: true
-                    model: ["No category"].concat(dialog.categoryModel.assignmentNames)
+                    model: [qsTr("No category")].concat(dialog.categoryModel.assignmentNames)
                     currentIndex: 0
                 }
             }
@@ -85,7 +85,7 @@ Dialog {
                 Layout.alignment: Qt.AlignBottom
                 theme: dialog.theme
                 quiet: true
-                text: "Manage"
+                text: qsTr("Manage")
                 onClicked: {
                     dialog.close()
                     dialog.manageCategoriesRequested()
@@ -111,7 +111,7 @@ Dialog {
                 spacing: 5
 
                 Text {
-                    text: "Due date"
+                    text: qsTr("Due date")
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -120,7 +120,7 @@ Dialog {
                     id: dueField
                     Layout.fillWidth: true
                     theme: dialog.theme
-                    placeholderText: "YYYY-MM-DD"
+                    placeholderText: qsTr("YYYY-MM-DD")
                     onAccepted: saveButton.clicked()
                 }
             }
@@ -130,7 +130,7 @@ Dialog {
                 spacing: 5
 
                 Text {
-                    text: "Importance"
+                    text: qsTr("Importance")
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -148,7 +148,7 @@ Dialog {
                 spacing: 5
 
                 Text {
-                    text: "Estimate"
+                    text: qsTr("Estimate")
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -162,7 +162,7 @@ Dialog {
                     value: 30
                     editable: true
                     font.pixelSize: 14
-                    textFromValue: (value, locale) => value + " min"
+                    textFromValue: (value, locale) => qsTr("%1 min").arg(value)
                     valueFromText: (text, locale) => {
                         const parsed = parseInt(text)
                         return Number.isNaN(parsed) ? estimateField.value : parsed
@@ -177,12 +177,12 @@ Dialog {
 
             CheckBox {
                 id: planTodayField
-                text: "Add directly to Today"
+                text: qsTr("Add directly to Today")
                 checked: false
             }
             Text {
                 Layout.fillWidth: true
-                text: "Leave this off for To-do. A task appears in Today automatically when its deadline arrives."
+                text: qsTr("Leave this off for To-do. A task appears in Today automatically when its deadline arrives.")
                 color: dialog.theme.textMuted
                 font.pixelSize: 10
                 wrapMode: Text.WordWrap
@@ -198,7 +198,7 @@ Dialog {
 
             AppButton {
                 theme: dialog.theme
-                text: "Cancel"
+                text: qsTr("Cancel")
                 quiet: true
                 onClicked: dialog.close()
             }
@@ -206,7 +206,7 @@ Dialog {
             AppButton {
                 id: saveButton
                 theme: dialog.theme
-                text: "Add task"
+                text: qsTr("Add task")
                 primary: true
                 enabled: titleField.text.trim().length > 0
                 onClicked: {

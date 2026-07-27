@@ -11,7 +11,7 @@ Item {
     required property var mapModel
     required property var theme
     property bool showSuggestionAction: false
-    property int mapMode: 2
+    property int mapMode: 1
     property var selectedNode: null
     signal addRequested()
     signal addInCategoryRequested(string categoryId, string subcategoryId)
@@ -24,25 +24,16 @@ Item {
     }
 
     function kindLabel(kind) {
-        return kind === "category" ? "WORK AREA"
-            : kind === "subcategory" ? "SUBCATEGORY"
-            : kind === "goal" ? "GOAL"
-            : kind === "milestone" ? "MILESTONE"
-            : "TASK"
+        return kind === "category" ? qsTr("WORK AREA")
+            : kind === "subcategory" ? qsTr("SUBCATEGORY")
+            : kind === "goal" ? qsTr("GOAL")
+            : kind === "milestone" ? qsTr("MILESTONE")
+            : qsTr("TASK")
     }
 
     Component {
         id: cloudMode
         MentalMapClouds {
-            hierarchy: root.mapModel.hierarchy
-            theme: root.theme
-            onNodeSelected: node => root.selectNode(node)
-        }
-    }
-
-    Component {
-        id: flowMode
-        MentalMapFlow {
             hierarchy: root.mapModel.hierarchy
             theme: root.theme
             onNodeSelected: node => root.selectNode(node)
@@ -72,14 +63,15 @@ Item {
                 Layout.fillWidth: true
                 spacing: 2
                 Text {
-                    text: "Mental map"
+                    text: qsTr("Mental map")
                     color: root.theme.textPrimary
                     font.pixelSize: 25
                     font.weight: Font.DemiBold
                 }
                 Text {
                     visible: root.width >= 720
-                    text: root.mapModel.itemCount + " active nodes · work areas, tasks, goals, and milestones"
+                    text: qsTr("%1 active nodes · work areas, tasks, goals, and milestones")
+                        .arg(root.mapModel.itemCount)
                     color: root.theme.textMuted
                     font.pixelSize: 10
                 }
@@ -88,12 +80,12 @@ Item {
                 visible: root.showSuggestionAction && root.width >= 800
                 theme: root.theme
                 primary: true
-                text: "Give me something to do"
+                text: qsTr("Give me something to do")
                 onClicked: root.suggestionRequested()
             }
             AppButton {
                 theme: root.theme
-                text: "+ Add task"
+                text: qsTr("+ Add task")
                 onClicked: root.addRequested()
             }
         }
@@ -104,7 +96,7 @@ Item {
 
             Text {
                 visible: root.width >= 700
-                text: "VIEW"
+                text: qsTr("VIEW")
                 color: root.theme.textMuted
                 font.pixelSize: 9
                 font.weight: Font.Bold
@@ -114,36 +106,29 @@ Item {
                 theme: root.theme
                 primary: root.mapMode === 0
                 quiet: root.mapMode !== 0
-                text: root.width < 720 ? "☁  Clouds" : "☁  Recursive clouds"
+                text: root.width < 720 ? qsTr("☁  Clouds") : qsTr("☁  Recursive clouds")
                 onClicked: root.mapMode = 0
             }
             AppButton {
                 theme: root.theme
                 primary: root.mapMode === 1
                 quiet: root.mapMode !== 1
-                text: root.width < 720 ? "➜  Arrows" : "➜  Arrow flow"
+                text: root.width < 720 ? qsTr("✦  Stars") : qsTr("✦  Constellation")
                 onClicked: root.mapMode = 1
-            }
-            AppButton {
-                theme: root.theme
-                primary: root.mapMode === 2
-                quiet: root.mapMode !== 2
-                text: root.width < 720 ? "✦  Stars" : "✦  Constellation"
-                onClicked: root.mapMode = 2
             }
             Item { Layout.fillWidth: true }
             AppButton {
                 visible: root.width >= 860
                 theme: root.theme
                 quiet: true
-                text: "Work areas"
+                text: qsTr("Work areas")
                 onClicked: root.manageCategoriesRequested()
             }
             AppButton {
                 visible: root.width >= 860
                 theme: root.theme
                 quiet: true
-                text: "Goals"
+                text: qsTr("Goals")
                 onClicked: root.manageGoalsRequested()
             }
         }
@@ -159,8 +144,7 @@ Item {
             Loader {
                 anchors.fill: parent
                 anchors.margins: 2
-                sourceComponent: root.mapMode === 0 ? cloudMode
-                    : root.mapMode === 1 ? flowMode : constellationMode
+                sourceComponent: root.mapMode === 0 ? cloudMode : constellationMode
             }
 
             EmptyState {
@@ -204,7 +188,7 @@ Item {
                         AppButton {
                             theme: root.theme
                             quiet: true
-                            text: "×"
+                            text: qsTr("×")
                             onClicked: root.selectedNode = null
                         }
                     }
@@ -234,7 +218,7 @@ Item {
                                 && root.selectedNode.categoryId.length > 0
                             theme: root.theme
                             primary: true
-                            text: "+ Add in this area"
+                            text: qsTr("+ Add in this area")
                             onClicked: root.addInCategoryRequested(
                                 root.selectedNode.categoryId,
                                 root.selectedNode.subcategoryId)
@@ -244,7 +228,7 @@ Item {
                                 && (root.selectedNode.kind === "goal"
                                     || root.selectedNode.kind === "milestone")
                             theme: root.theme
-                            text: "Open goals"
+                            text: qsTr("Open goals")
                             onClicked: root.manageGoalsRequested()
                         }
                     }

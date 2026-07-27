@@ -35,7 +35,7 @@ Item {
         spacing: 14
 
         Text {
-            text: Qt.formatDate(new Date(), "dddd, MMMM d").toUpperCase()
+            text: Qt.formatDate(new Date(), qsTr("dddd, MMMM d")).toUpperCase()
             color: root.theme.textSecondary
             font.pixelSize: 11
             font.weight: Font.DemiBold
@@ -50,8 +50,8 @@ Item {
                 visible: root.width >= 760
                 text: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
-                    ? "◉  Your day is realistic"
-                    : "◉  Your day needs editing"
+                    ? qsTr("◉  Your day is realistic")
+                    : qsTr("◉  Your day needs editing")
                 color: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
                     ? root.theme.accent
@@ -66,7 +66,8 @@ Item {
             }
             Text {
                 visible: root.width >= 760
-                text: "☆  " + Math.min(3, root.taskModel.activeCount) + " priorities"
+                text: qsTr("☆  %1 priorities")
+                    .arg(Math.min(3, root.taskModel.activeCount))
                 color: root.theme.textPrimary
                 font.pixelSize: 13
             }
@@ -78,7 +79,7 @@ Item {
             }
             Text {
                 visible: root.width >= 760
-                text: "◷  " + root.taskModel.plannedDuration + " planned"
+                text: qsTr("◷  %1 planned").arg(root.taskModel.plannedDuration)
                 color: root.theme.secondaryAccent
                 font.pixelSize: 13
             }
@@ -86,12 +87,12 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "Give me something to do"
+                text: qsTr("Give me something to do")
                 onClicked: root.suggestionRequested()
             }
             AppButton {
                 theme: root.theme
-                text: "+ Add task"
+                text: qsTr("+ Add task")
                 onClicked: root.addRequested()
             }
         }
@@ -110,13 +111,13 @@ Item {
                 spacing: 20
 
                 Text {
-                    text: "Start here"
+                    text: qsTr("Start here")
                     color: root.theme.accent
                     font.pixelSize: 12
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "→"
+                    text: qsTr("→")
                     color: root.theme.textMuted
                     font.pixelSize: 20
                 }
@@ -131,7 +132,7 @@ Item {
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Open focus  →"
+                    text: qsTr("Open focus  →")
                     enabled: root.taskModel.activeCount > 0
                     onClicked: root.focusRequested()
                 }
@@ -156,7 +157,7 @@ Item {
                     spacing: 9
 
                     Text {
-                        text: "PRIORITY ORDER"
+                        text: qsTr("PRIORITY ORDER")
                         color: root.theme.textMuted
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -198,7 +199,7 @@ Item {
                         Layout.fillWidth: true
                         theme: root.theme
                         quiet: true
-                        text: "+  Add task"
+                        text: qsTr("+  Add task")
                         onClicked: root.addRequested()
                     }
                 }
@@ -218,7 +219,7 @@ Item {
                     spacing: 8
 
                     Text {
-                        text: "Agenda"
+                        text: qsTr("Agenda")
                         color: root.theme.textPrimary
                         font.pixelSize: 14
                         font.weight: Font.Medium
@@ -272,7 +273,7 @@ Item {
                                     font.pixelSize: 11
                                 }
                                 Text {
-                                    text: agendaRow.estimatedMinutes + "m"
+                                    text: qsTr("%1m").arg(agendaRow.estimatedMinutes)
                                     color: root.theme.accent
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
@@ -298,7 +299,7 @@ Item {
                 spacing: 14
 
                 Text {
-                    text: "☾"
+                    text: qsTr("☾")
                     color: root.theme.secondaryAccent
                     font.pixelSize: 23
                 }
@@ -306,20 +307,20 @@ Item {
                     Layout.fillWidth: true
                     spacing: 2
                     Text {
-                        text: "Evening review"
+                        text: qsTr("Evening review")
                         color: root.theme.secondaryAccent
                         font.pixelSize: 14
                         font.family: "serif"
                     }
                     Text {
-                        text: "Reflect, close the day, and plan tomorrow."
+                        text: qsTr("Reflect, close the day, and plan tomorrow.")
                         color: root.theme.textMuted
                         font.pixelSize: 10
                     }
                 }
                 AppButton {
                     theme: root.theme
-                    text: "Open review  →"
+                    text: qsTr("Open review  →")
                     onClicked: root.reviewRequested()
                 }
             }

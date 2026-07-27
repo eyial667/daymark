@@ -65,11 +65,11 @@ bool FocusSessionModel::prepareTask(
     const QString cleanId = taskId.trimmed();
     const QString cleanTitle = taskTitle.trimmed();
     if (cleanId.isEmpty() || cleanTitle.isEmpty()) {
-        setStatusMessage(QStringLiteral("Choose a task before starting focus."));
+        setStatusMessage(tr("Choose a task before starting focus."));
         return false;
     }
     if (m_running && cleanId != m_taskId) {
-        setStatusMessage(QStringLiteral("Pause the current focus block before switching tasks."));
+        setStatusMessage(tr("Pause the current focus block before switching tasks."));
         return false;
     }
     if (cleanId == m_taskId && hasTask()) {
@@ -83,7 +83,7 @@ bool FocusSessionModel::prepareTask(
     m_remainingSeconds = m_totalSeconds;
     m_running = false;
     m_finished = false;
-    setStatusMessage(QStringLiteral("Focus task ready."));
+    setStatusMessage(tr("Focus task ready."));
     emit stateChanged();
     return true;
 }
@@ -91,7 +91,7 @@ bool FocusSessionModel::prepareTask(
 bool FocusSessionModel::start()
 {
     if (!hasTask()) {
-        setStatusMessage(QStringLiteral("Choose a task before starting focus."));
+        setStatusMessage(tr("Choose a task before starting focus."));
         return false;
     }
     if (m_remainingSeconds <= 0) {
@@ -103,7 +103,7 @@ bool FocusSessionModel::start()
     m_finished = false;
     m_running = true;
     m_timer.start();
-    setStatusMessage(QStringLiteral("Focus timer started."));
+    setStatusMessage(tr("Focus timer started."));
     emit stateChanged();
     return true;
 }
@@ -115,7 +115,7 @@ void FocusSessionModel::pause()
     }
     m_timer.stop();
     m_running = false;
-    setStatusMessage(QStringLiteral("Focus timer paused."));
+    setStatusMessage(tr("Focus timer paused."));
     emit stateChanged();
 }
 
@@ -128,7 +128,7 @@ void FocusSessionModel::reset()
     m_remainingSeconds = m_totalSeconds;
     m_running = false;
     m_finished = false;
-    setStatusMessage(QStringLiteral("Focus timer reset."));
+    setStatusMessage(tr("Focus timer reset."));
     emit stateChanged();
 }
 
@@ -160,7 +160,7 @@ void FocusSessionModel::tick()
         m_timer.stop();
         m_running = false;
         m_finished = true;
-        setStatusMessage(QStringLiteral("Focus block complete."));
+        setStatusMessage(tr("Focus block complete."));
     }
     emit stateChanged();
 }

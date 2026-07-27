@@ -56,7 +56,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     visible: completedCheck.checked
-                    text: "✓"
+                    text: qsTr("✓")
                     color: "white"
                     font.pixelSize: 11
                     font.weight: Font.Bold
@@ -118,7 +118,7 @@ Rectangle {
 
                 Text {
                     text: row.dueText
-                    color: row.dueText.indexOf("Overdue") === 0
+                    color: row.dueText.indexOf(qsTr("Overdue")) === 0
                         ? row.theme.danger
                         : row.theme.textMuted
                     font.pixelSize: 11
@@ -135,7 +135,7 @@ Rectangle {
                     Text {
                         id: durationText
                         anchors.centerIn: parent
-                        text: row.estimatedMinutes + " min"
+                        text: qsTr("%1 min").arg(row.estimatedMinutes)
                         color: row.theme.accent
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
@@ -149,7 +149,8 @@ Rectangle {
                     implicitHeight: 24
                     leftPadding: 9
                     rightPadding: 9
-                    text: row.categoryPath.length > 0 ? row.categoryPath : "Uncategorized"
+                    text: row.categoryPath.length > 0
+                        ? row.categoryPath : qsTr("Uncategorized")
 
                     contentItem: Text {
                         id: categoryText
@@ -169,7 +170,7 @@ Rectangle {
                             ? row.theme.secondaryAccent : row.theme.border
                     }
                     ToolTip.visible: hovered
-                    ToolTip.text: "Change category"
+                    ToolTip.text: qsTr("Change category")
                     onClicked: row.categoryRequested(
                         row.taskId,
                         row.categoryId,

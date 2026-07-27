@@ -10,6 +10,7 @@ class AppSettings final : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(InterfaceStyle interfaceStyle READ interfaceStyle WRITE setInterfaceStyle NOTIFY interfaceStyleChanged)
+    Q_PROPERTY(Language language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(ColorMode colorMode READ colorMode WRITE setColorMode NOTIFY colorModeChanged)
     Q_PROPERTY(AccentPreset accentPreset READ accentPreset WRITE setAccentPreset NOTIFY accentPresetChanged)
     Q_PROPERTY(int dailyCapacityMinutes READ dailyCapacityMinutes WRITE setDailyCapacityMinutes NOTIFY dailyCapacityMinutesChanged)
@@ -36,6 +37,12 @@ public:
     };
     Q_ENUM(ColorMode)
 
+    enum Language {
+        English = 0,
+        French = 1
+    };
+    Q_ENUM(Language)
+
     enum AccentPreset {
         MatchInterface = 0,
         Violet = 1,
@@ -51,6 +58,9 @@ public:
 
     [[nodiscard]] InterfaceStyle interfaceStyle() const;
     void setInterfaceStyle(InterfaceStyle style);
+
+    [[nodiscard]] Language language() const;
+    void setLanguage(Language language);
 
     [[nodiscard]] ColorMode colorMode() const;
     void setColorMode(ColorMode mode);
@@ -86,6 +96,7 @@ public:
 
 signals:
     void interfaceStyleChanged();
+    void languageChanged();
     void colorModeChanged();
     void accentPresetChanged();
     void dailyCapacityMinutesChanged();
@@ -99,6 +110,7 @@ signals:
 
 private:
     static constexpr auto InterfaceStyleKey = "appearance/interfaceStyle";
+    static constexpr auto LanguageKey = "appearance/language";
     static constexpr auto ColorModeKey = "appearance/colorMode";
     static constexpr auto AccentPresetKey = "appearance/accentPreset";
     static constexpr auto DailyCapacityKey = "planning/dailyCapacityMinutes";
@@ -118,6 +130,7 @@ private:
     QSettings m_settings;
     QString m_dataDirectory;
     InterfaceStyle m_interfaceStyle = Hybrid;
+    Language m_language = English;
     ColorMode m_colorMode = Dark;
     AccentPreset m_accentPreset = MatchInterface;
     int m_dailyCapacityMinutes = DefaultDailyCapacityMinutes;

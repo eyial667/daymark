@@ -83,7 +83,7 @@ ApplicationWindow {
     minimumWidth: 640
     minimumHeight: 600
     visible: true
-    title: "Daymark — " + interfaceTheme.modeName
+    title: qsTr("Daymark — %1").arg(interfaceTheme.modeName)
     color: interfaceTheme.background
 
     palette.window: interfaceTheme.background
@@ -324,7 +324,7 @@ ApplicationWindow {
                         visible: !window.planningPromptOpen && !window.dailyNoteOpen
                         theme: interfaceTheme
                         primary: window.dailyNoteModel.dirty
-                        text: "✎  Day note"
+                        text: qsTr("✎  Day note")
                         onClicked: window.dailyNoteOpen = true
                     }
 
@@ -474,7 +474,7 @@ ApplicationWindow {
             spacing: 13
 
             Text {
-                text: "Assign a category"
+                text: qsTr("Assign a category")
                 color: interfaceTheme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
@@ -489,7 +489,7 @@ ApplicationWindow {
             ComboBox {
                 id: categoryAssignmentField
                 Layout.fillWidth: true
-                model: ["No category"].concat(window.categoryModel.assignmentNames)
+                model: [qsTr("No category")].concat(window.categoryModel.assignmentNames)
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -498,7 +498,7 @@ ApplicationWindow {
                 AppButton {
                     theme: interfaceTheme
                     quiet: true
-                    text: "Manage categories"
+                    text: qsTr("Manage categories")
                     onClicked: {
                         categoryAssignmentDialog.close()
                         window.currentPage = 3
@@ -508,13 +508,13 @@ ApplicationWindow {
                 AppButton {
                     theme: interfaceTheme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: categoryAssignmentDialog.close()
                 }
                 AppButton {
                     theme: interfaceTheme
                     primary: true
-                    text: "Save"
+                    text: qsTr("Save")
                     onClicked: {
                         const categoryId = categoryAssignmentField.currentIndex > 0
                             ? window.categoryModel.categoryIdForAssignment(
@@ -564,7 +564,7 @@ ApplicationWindow {
             spacing: 13
 
             Text {
-                text: "Complete this task?"
+                text: qsTr("Complete this task?")
                 color: interfaceTheme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
@@ -584,13 +584,13 @@ ApplicationWindow {
                 AppButton {
                     theme: interfaceTheme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: completionDialog.close()
                 }
                 AppButton {
                     theme: interfaceTheme
                     primary: true
-                    text: "Mark complete"
+                    text: qsTr("Mark complete")
                     onClicked: {
                         if (window.pendingCompletionModel)
                             window.pendingCompletionModel.completeTask(

@@ -38,6 +38,14 @@ Item {
         return null
     }
 
+    function kindLabel(kind) {
+        return kind === "category" ? qsTr("AREA")
+            : kind === "subcategory" ? qsTr("SUBCATEGORY")
+            : kind === "goal" ? qsTr("GOAL")
+            : kind === "milestone" ? qsTr("MILESTONE")
+            : qsTr("TASK")
+    }
+
     onMapRevisionChanged: constellationCanvas.requestPaint()
     onWidthChanged: constellationCanvas.requestPaint()
     onHeightChanged: constellationCanvas.requestPaint()
@@ -74,8 +82,10 @@ Item {
                 const node = root.flatNodes[index]
                 const parent = node.parentId.length > 0
                     ? root.nodeById(node.parentId) : null
-                const fromX = parent ? root.nodeX(parent) : width / 2
-                const fromY = parent ? root.nodeY(parent) : height / 2
+                if (!parent)
+                    continue
+                const fromX = root.nodeX(parent)
+                const fromY = root.nodeY(parent)
                 const toX = root.nodeX(node)
                 const toY = root.nodeY(node)
                 const accent = root.nodeColor(node.colorIndex)
@@ -93,45 +103,6 @@ Item {
                 context.strokeStyle = root.wash(accent, node.depth === 1 ? 0.66 : 0.34)
                 context.lineWidth = node.depth === 1 ? 1.8 : 1.0
                 context.stroke()
-            }
-        }
-    }
-
-    Rectangle {
-        anchors.centerIn: parent
-        width: 162
-        height: 74
-        radius: 37
-        color: root.theme.accentSoft
-        border.color: root.theme.accent
-        border.width: 2
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width + 24
-            height: parent.height + 24
-            radius: height / 2
-            color: "transparent"
-            border.color: root.wash(root.theme.accent, 0.25)
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 2
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "DAYMARK"
-                color: root.theme.accent
-                font.pixelSize: 9
-                font.weight: Font.Bold
-                font.letterSpacing: 1.7
-            }
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "My working world"
-                color: root.theme.textPrimary
-                font.pixelSize: 14
-                font.weight: Font.DemiBold
             }
         }
     }
@@ -185,7 +156,7 @@ Item {
                     Text {
                         visible: starNode.modelData.depth < 3
                         width: parent.width
-                        text: starNode.modelData.kind.toUpperCase()
+                        text: root.kindLabel(starNode.modelData.kind)
                         color: starNode.starColor
                         font.pixelSize: 7
                         font.weight: Font.Bold
@@ -208,7 +179,7 @@ Item {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.margins: 12
-        text: "CONSTELLATION · select any orbit to inspect it"
+        text: qsTr("CONSTELLATION · select a node to inspect its real relationships")
         color: root.theme.textMuted
         font.pixelSize: 8
         font.weight: Font.Bold

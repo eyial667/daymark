@@ -30,13 +30,13 @@ Item {
             ColumnLayout {
                 spacing: 3
                 Text {
-                    text: "To-do"
+                    text: qsTr("To-do")
                     color: root.theme.textPrimary
                     font.pixelSize: 26
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "Every open task, kept in priority order."
+                    text: qsTr("Every open task, kept in priority order.")
                     color: root.theme.textSecondary
                     font.pixelSize: 12
                 }
@@ -52,8 +52,9 @@ Item {
                 Text {
                     id: queueSummary
                     anchors.centerIn: parent
-                    text: root.taskModel.activeCount + " open  ·  "
-                        + root.taskModel.plannedDuration
+                    text: qsTr("%1 open · %2")
+                        .arg(root.taskModel.activeCount)
+                        .arg(root.taskModel.plannedDuration)
                     color: root.theme.accent
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
@@ -62,7 +63,7 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "+ Add task"
+                text: qsTr("+ Add task")
                 onClicked: root.addRequested()
             }
         }

@@ -32,20 +32,20 @@ Item {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: "Daily review"
+                    text: qsTr("Daily review")
                     color: root.theme.textPrimary
                     font.pixelSize: 27
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: Qt.formatDate(new Date(), "dddd, MMMM d")
+                    text: Qt.formatDate(new Date(), qsTr("dddd, MMMM d"))
                     color: root.theme.textSecondary
                     font.pixelSize: 11
                 }
             }
             AppButton {
                 theme: root.theme
-                text: "Refresh"
+                text: qsTr("Refresh")
                 onClicked: {
                     root.todayTaskModel.reload()
                     root.dailyNoteModel.refreshDay()
@@ -54,7 +54,7 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "Back to Today"
+                text: qsTr("Back to Today")
                 onClicked: root.backRequested()
             }
         }
@@ -76,7 +76,7 @@ Item {
                     Layout.fillWidth: true
                     Text {
                         Layout.fillWidth: true
-                        text: "YESTERDAY’S NOTE"
+                        text: qsTr("YESTERDAY’S NOTE")
                         color: root.theme.secondaryAccent
                         font.pixelSize: 10
                         font.weight: Font.Bold
@@ -103,7 +103,7 @@ Item {
                         width: parent.width
                         text: root.dailyNoteModel.hasPreviousNote
                             ? root.dailyNoteModel.previousText
-                            : "No note was left yesterday. Today’s dashboard note will appear here tomorrow."
+                            : qsTr("No note was left yesterday. Today’s dashboard note will appear here tomorrow.")
                         color: root.dailyNoteModel.hasPreviousNote
                             ? root.theme.textPrimary : root.theme.textMuted
                         font.pixelSize: 12
@@ -123,14 +123,14 @@ Item {
             MetricCard {
                 Layout.fillWidth: true
                 theme: root.theme
-                label: "COMPLETED TODAY"
+                label: qsTr("COMPLETED TODAY")
                 value: root.todayTaskModel.completedTodayCount
                 accent: root.theme.success
             }
             MetricCard {
                 Layout.fillWidth: true
                 theme: root.theme
-                label: "STILL ON TODAY"
+                label: qsTr("STILL ON TODAY")
                 value: root.todayTaskModel.activeCount
                 accent: root.theme.accent
             }
@@ -157,7 +157,7 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: "DONE"
+                        text: qsTr("DONE")
                         color: root.theme.success
                         font.pixelSize: 10
                         font.weight: Font.Bold
@@ -193,7 +193,7 @@ Item {
                         visible: root.todayTaskModel.completedTodayCount === 0
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        text: "Nothing completed yet today."
+                        text: qsTr("Nothing completed yet today.")
                         color: root.theme.textMuted
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter
@@ -215,7 +215,7 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: "REMAINING"
+                        text: qsTr("REMAINING")
                         color: root.theme.accent
                         font.pixelSize: 10
                         font.weight: Font.Bold
@@ -248,7 +248,7 @@ Item {
                         visible: root.todayTaskModel.activeCount === 0
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        text: "Today is clear."
+                        text: qsTr("Today is clear.")
                         color: root.theme.success
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignHCenter

@@ -49,13 +49,13 @@ Item {
                     Layout.fillWidth: true
                     spacing: 2
                     Text {
-                        text: "Today’s note"
+                        text: qsTr("Today’s note")
                         color: root.theme.textPrimary
                         font.pixelSize: 23
                         font.weight: Font.DemiBold
                     }
                     Text {
-                        text: Qt.formatDate(new Date(), "dddd, MMMM d")
+                        text: Qt.formatDate(new Date(), qsTr("dddd, MMMM d"))
                         color: root.theme.textMuted
                         font.pixelSize: 11
                     }
@@ -63,7 +63,7 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Close"
+                    text: qsTr("Close")
                     onClicked: {
                         root.dailyNoteModel.saveNow()
                         root.closeRequested()
@@ -81,7 +81,7 @@ Item {
                 Text {
                     anchors.fill: parent
                     anchors.margins: 11
-                    text: "Capture decisions, loose thoughts, and context worth carrying into tomorrow’s review."
+                    text: qsTr("Capture decisions, loose thoughts, and context worth carrying into tomorrow’s review.")
                     color: root.theme.textSecondary
                     font.pixelSize: 11
                     wrapMode: Text.WordWrap
@@ -95,7 +95,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 text: root.dailyNoteModel.todayText
-                placeholderText: "What happened today? What should tomorrow-you remember?"
+                placeholderText: qsTr("What happened today? What should tomorrow-you remember?")
                 wrapMode: TextEdit.Wrap
                 selectByMouse: true
                 color: root.theme.textPrimary
@@ -128,7 +128,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: root.dailyNoteModel.dirty
-                        ? "Saving…" : "Saved locally · today + yesterday only"
+                        ? qsTr("Saving…") : qsTr("Saved locally · today + yesterday only")
                     color: root.dailyNoteModel.dirty
                         ? root.theme.accent : root.theme.textMuted
                     font.pixelSize: 10
@@ -136,7 +136,7 @@ Item {
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Save note"
+                    text: qsTr("Save note")
                     onClicked: root.dailyNoteModel.saveNow()
                 }
             }

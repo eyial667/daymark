@@ -53,7 +53,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: "MIDNIGHT COMMAND  ·  TODAY’S PRIORITY QUEUE"
+                        text: qsTr("MIDNIGHT COMMAND  ·  TODAY’S PRIORITY QUEUE")
                         color: root.theme.textSecondary
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
@@ -63,7 +63,7 @@ Item {
 
             Text {
                 visible: root.width >= 700
-                text: Qt.formatDate(new Date(), "MMM d, ddd")
+                text: Qt.formatDate(new Date(), qsTr("MMM d, ddd"))
                 color: root.theme.textSecondary
                 font.pixelSize: 12
             }
@@ -71,13 +71,13 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "Give me something to do"
+                text: qsTr("Give me something to do")
                 onClicked: root.suggestionRequested()
             }
 
             AppButton {
                 theme: root.theme
-                text: "+ Add task"
+                text: qsTr("+ Add task")
                 onClicked: root.addRequested()
             }
         }
@@ -105,7 +105,7 @@ Item {
                         spacing: 10
 
                         Text {
-                            text: "NEXT UP"
+                            text: qsTr("NEXT UP")
                             color: root.theme.accent
                             font.pixelSize: 10
                             font.weight: Font.Bold
@@ -123,7 +123,7 @@ Item {
 
                         Text {
                             visible: root.taskModel.activeCount > 0
-                            text: "Highest impact action in your current queue."
+                            text: qsTr("Highest impact action in your current queue.")
                             color: root.theme.textSecondary
                             font.pixelSize: 12
                         }
@@ -141,7 +141,7 @@ Item {
                                 color: root.theme.accentSoft
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Priority 1"
+                                    text: qsTr("Priority 1")
                                     color: root.theme.accent
                                     font.pixelSize: 10
                                     font.weight: Font.DemiBold
@@ -156,7 +156,7 @@ Item {
                                 border.color: root.theme.border
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.taskModel.plannedDuration + " queued"
+                                    text: qsTr("%1 queued").arg(root.taskModel.plannedDuration)
                                     color: root.theme.textSecondary
                                     font.pixelSize: 10
                                 }
@@ -167,7 +167,7 @@ Item {
                             AppButton {
                                 theme: root.theme
                                 primary: true
-                                text: "Open focus  →"
+                                text: qsTr("Open focus  →")
                                 enabled: root.taskModel.activeCount > 0
                                 onClicked: root.focusRequested()
                             }
@@ -179,14 +179,16 @@ Item {
                     Layout.fillWidth: true
 
                     Text {
-                        text: "Priority queue"
+                        text: qsTr("Priority queue")
                         color: root.theme.accent
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
                     }
                     Item { Layout.fillWidth: true }
                     Text {
-                        text: root.taskModel.activeCount + " tasks  ·  " + root.taskModel.plannedDuration
+                        text: qsTr("%1 tasks · %2")
+                            .arg(root.taskModel.activeCount)
+                            .arg(root.taskModel.plannedDuration)
                         color: root.theme.textMuted
                         font.pixelSize: 10
                     }
@@ -246,14 +248,14 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "Today’s timeline"
+                                text: qsTr("Today’s timeline")
                                 color: root.theme.accent
                                 font.pixelSize: 12
                                 font.weight: Font.DemiBold
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: root.taskModel.activeCount + " items"
+                                text: qsTr("%1 items").arg(root.taskModel.activeCount)
                                 color: root.theme.textMuted
                             }
                         }
@@ -309,7 +311,7 @@ Item {
                                             font.weight: Font.Medium
                                         }
                                         Text {
-                                            text: timelineRow.estimatedMinutes + " min"
+                                            text: qsTr("%1 min").arg(timelineRow.estimatedMinutes)
                                             color: root.theme.accent
                                             font.pixelSize: 11
                                             font.weight: Font.DemiBold
@@ -336,7 +338,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "WORKLOAD"
+                                text: qsTr("WORKLOAD")
                                 color: root.theme.textMuted
                                 font.pixelSize: 9
                                 font.weight: Font.Bold
@@ -369,8 +371,8 @@ Item {
                         Text {
                             text: root.taskModel.totalEstimatedMinutes
                                     <= root.appSettings.dailyCapacityMinutes
-                                ? "Within your daily capacity"
-                                : "Today is over capacity"
+                                ? qsTr("Within your daily capacity")
+                                : qsTr("Today is over capacity")
                             color: root.taskModel.totalEstimatedMinutes
                                     <= root.appSettings.dailyCapacityMinutes
                                 ? root.theme.success

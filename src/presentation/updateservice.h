@@ -21,8 +21,8 @@ class UpdateService final : public QObject
     Q_PROPERTY(QString latestVersion READ latestVersion NOTIFY releaseChanged)
     Q_PROPERTY(QString releaseNotes READ releaseNotes NOTIFY releaseChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
-    Q_PROPERTY(QString installActionLabel READ installActionLabel CONSTANT)
-    Q_PROPERTY(QString installHint READ installHint CONSTANT)
+    Q_PROPERTY(QString installActionLabel READ installActionLabel NOTIFY languageChanged)
+    Q_PROPERTY(QString installHint READ installHint NOTIFY languageChanged)
     Q_PROPERTY(qint64 downloadSize READ downloadSize NOTIFY releaseChanged)
     Q_PROPERTY(int downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY stateChanged)
@@ -78,6 +78,7 @@ public:
     Q_INVOKABLE void downloadUpdate();
     Q_INVOKABLE void cancelDownload();
     Q_INVOKABLE void installUpdate();
+    Q_INVOKABLE void retranslate();
 
     static bool parseRelease(
         const QByteArray &payload,
@@ -93,6 +94,7 @@ signals:
     void downloadProgressChanged();
     void updateFound();
     void quitRequested();
+    void languageChanged();
 
 private:
     void setState(State state);

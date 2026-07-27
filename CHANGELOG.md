@@ -34,14 +34,16 @@ and releases will use semantic versioning.
 - An always-available “Give me something to do” chooser for To-do tasks, work
   areas, and goal milestones.
 - Deterministic category and subcategory work-area proposals based on open tasks.
-- A unified mental map of active work with recursive-cloud, arrow-flow, and
-  constellation views.
+- A unified mental map of active work with recursive-cloud and constellation
+  views.
 - Rolling dashboard notes that retain today and yesterday only, with yesterday’s
   note available in Daily Review.
 - Non-blocking GitHub release checks on launch, checksum-verified update
   downloads, and native installation handoff on Linux, Windows, and macOS.
 - A tag-driven release workflow that publishes all three updater packages only
   after the complete build, QML lint, and test matrix succeeds.
+- A complete French interface with immediate, persistent language switching
+  directly beneath the sidebar’s interface selector.
 
 ### Changed
 
@@ -57,3 +59,5 @@ and releases will use semantic versioning.
   success, and validation feedback throughout task interactions.
 - Replaced the category-filter Map with a visual hierarchy spanning work areas,
   tasks, goals, and unfinished milestones.
+- Removed Arrow flow and the decorative “My working world” hubs. Constellation
+  now draws only real parent-child links in independent work and goal clusters.

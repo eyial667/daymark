@@ -132,10 +132,10 @@ QtObject {
         : style === 1 ? 10
         : style === 2 ? 3
         : 8
-    readonly property string modeName: style === 0 ? "Midnight Command"
-        : style === 1 ? "Spatial Map"
-        : style === 2 ? "Quiet Focus"
-        : "Daymark Hybrid"
+    readonly property string modeName: style === 0 ? qsTr("Midnight Command")
+        : style === 1 ? qsTr("Spatial Map")
+        : style === 2 ? qsTr("Quiet Focus")
+        : qsTr("Daymark Hybrid")
     readonly property string modeCode: style === 0 ? "A"
         : style === 1 ? "B"
         : style === 2 ? "C"

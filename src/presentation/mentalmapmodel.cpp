@@ -78,10 +78,10 @@ void MentalMapModel::reload()
                     subcategory.id));
             }
             const QString detail = subcategory.notes.isEmpty()
-                ? QStringLiteral("%1 open %2")
+                ? tr("%1 open %2")
                     .arg(taskChildren.size())
                     .arg(taskChildren.size() == 1
-                        ? QStringLiteral("task") : QStringLiteral("tasks"))
+                        ? tr("task") : tr("tasks"))
                 : subcategory.notes;
             children.append(makeNode(
                 QStringLiteral("subcategory:%1").arg(subcategory.id),
@@ -105,10 +105,10 @@ void MentalMapModel::reload()
                 category.id));
         }
         const QString detail = category.notes.isEmpty()
-            ? QStringLiteral("%1 open %2")
+            ? tr("%1 open %2")
                 .arg(category.taskCount)
                 .arg(category.taskCount == 1
-                    ? QStringLiteral("task") : QStringLiteral("tasks"))
+                    ? tr("task") : tr("tasks"))
             : category.notes;
         hierarchy.append(makeNode(
             QStringLiteral("category:%1").arg(category.id),
@@ -134,9 +134,9 @@ void MentalMapModel::reload()
         }
         hierarchy.append(makeNode(
             QStringLiteral("uncategorized"),
-            QStringLiteral("Uncategorized"),
+            tr("Uncategorized"),
             QStringLiteral("category"),
-            QStringLiteral("Tasks that have not been placed in a work area yet."),
+            tr("Tasks that have not been placed in a work area yet."),
             colorIndex,
             {},
             {},
@@ -157,7 +157,7 @@ void MentalMapModel::reload()
                 QStringLiteral("milestone:%1").arg(milestone.id),
                 milestone.title,
                 QStringLiteral("milestone"),
-                targetDetail(milestone.targetDate, QStringLiteral("No target date")),
+                targetDetail(milestone.targetDate, tr("No target date")),
                 colorIndex));
         }
         hierarchy.append(makeNode(
@@ -165,7 +165,7 @@ void MentalMapModel::reload()
             goal.title,
             QStringLiteral("goal"),
             goal.targetDate.isValid() && !goal.description.isEmpty()
-                ? QStringLiteral("%1 · %2").arg(
+                ? tr("%1 · %2").arg(
                     goal.description,
                     targetDetail(goal.targetDate, {}))
                 : targetDetail(goal.targetDate, goal.description),
@@ -204,7 +204,7 @@ void MentalMapModel::reload()
     const QString error = !taskError.isEmpty() ? taskError
         : !categoryError.isEmpty() ? categoryError : goalError;
     if (!error.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load the mental map: %1").arg(error));
+        setStatusMessage(tr("Could not load the mental map: %1").arg(error));
     }
 }
 
@@ -238,30 +238,30 @@ QVariantMap MentalMapModel::makeNode(
 
 QString MentalMapModel::taskDetail(const Task &task)
 {
-    QString dueText = QStringLiteral("No deadline");
+    QString dueText = tr("No deadline");
     if (task.dueAt.isValid()) {
         const int days = QDate::currentDate().daysTo(task.dueAt.date());
         if (days < 0) {
-            dueText = QStringLiteral("Overdue");
+            dueText = tr("Overdue");
         } else if (days == 0) {
-            dueText = QStringLiteral("Due today");
+            dueText = tr("Due today");
         } else if (days == 1) {
-            dueText = QStringLiteral("Due tomorrow");
+            dueText = tr("Due tomorrow");
         } else {
-            dueText = QStringLiteral("Due %1").arg(
+            dueText = tr("Due %1").arg(
                 QLocale().toString(task.dueAt.date(), QLocale::ShortFormat));
         }
     }
-    return QStringLiteral("%1 · %2 min").arg(dueText).arg(task.estimatedMinutes);
+    return tr("%1 · %2 min").arg(dueText).arg(task.estimatedMinutes);
 }
 
 QString MentalMapModel::targetDetail(const QDate &targetDate, const QString &fallback)
 {
     if (targetDate.isValid()) {
-        return QStringLiteral("Target %1").arg(
+        return tr("Target %1").arg(
             QLocale().toString(targetDate, QLocale::ShortFormat));
     }
-    return fallback.isEmpty() ? QStringLiteral("No target date") : fallback;
+    return fallback.isEmpty() ? tr("No target date") : fallback;
 }
 
 void MentalMapModel::appendFlatNode(
@@ -284,9 +284,9 @@ void MentalMapModel::appendFlatNode(
     flatNode.insert(QStringLiteral("siblingIndex"), siblingIndex);
     flatNode.insert(QStringLiteral("siblingCount"), siblingCount);
     flatNode.insert(QStringLiteral("angle"), angle);
-    const double radius = depth == 1 ? 0.23
-        : depth == 2 ? 0.35
-        : 0.47 + (siblingIndex % 2 == 0 ? 0.0 : 0.055);
+    const double radius = depth == 1 ? 0.28
+        : depth == 2 ? 0.41
+        : 0.50 + (siblingIndex % 2 == 0 ? 0.0 : 0.045);
     flatNode.insert(QStringLiteral("radius"), radius);
     m_flatNodes.append(flatNode);
 

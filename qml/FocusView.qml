@@ -25,20 +25,20 @@ Item {
                 Layout.fillWidth: true
                 spacing: 3
                 Text {
-                    text: "Focus"
+                    text: qsTr("Focus")
                     color: root.theme.textPrimary
                     font.pixelSize: 27
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: "One task, one visible timer, no hidden state."
+                    text: qsTr("One task, one visible timer, no hidden state.")
                     color: root.theme.textSecondary
                     font.pixelSize: 11
                 }
             }
             AppButton {
                 theme: root.theme
-                text: "Back to Today"
+                text: qsTr("Back to Today")
                 onClicked: root.backRequested()
             }
         }
@@ -59,7 +59,8 @@ Item {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: root.focusSession.hasTask ? "CURRENT FOCUS" : "NO TASK SELECTED"
+                    text: root.focusSession.hasTask
+                        ? qsTr("CURRENT FOCUS") : qsTr("NO TASK SELECTED")
                     color: root.theme.accent
                     font.pixelSize: 10
                     font.weight: Font.Bold
@@ -69,7 +70,7 @@ Item {
                     Layout.fillWidth: true
                     text: root.focusSession.hasTask
                         ? root.focusSession.taskTitle
-                        : "Choose a task from today’s queue below."
+                        : qsTr("Choose a task from today’s queue below.")
                     color: root.theme.textPrimary
                     font.pixelSize: root.width < 720 ? 20 : 26
                     font.weight: Font.DemiBold
@@ -112,7 +113,7 @@ Item {
                     AppButton {
                         theme: root.theme
                         primary: true
-                        text: root.focusSession.running ? "Pause" : "Start"
+                        text: root.focusSession.running ? qsTr("Pause") : qsTr("Start")
                         enabled: root.focusSession.hasTask
                         onClicked: {
                             if (root.focusSession.running)
@@ -123,14 +124,14 @@ Item {
                     }
                     AppButton {
                         theme: root.theme
-                        text: "Reset"
+                        text: qsTr("Reset")
                         enabled: root.focusSession.hasTask
                         onClicked: root.focusSession.reset()
                     }
                     AppButton {
                         theme: root.theme
                         quiet: true
-                        text: "Clear"
+                        text: qsTr("Clear")
                         enabled: root.focusSession.hasTask && !root.focusSession.running
                         onClicked: root.focusSession.clear()
                     }
@@ -142,14 +143,14 @@ Item {
             Layout.fillWidth: true
             Text {
                 Layout.fillWidth: true
-                text: "TODAY’S TASKS"
+                text: qsTr("TODAY’S TASKS")
                 color: root.theme.textMuted
                 font.pixelSize: 10
                 font.weight: Font.Bold
                 font.letterSpacing: 1.1
             }
             Text {
-                text: root.taskModel.activeCount + " available"
+                text: qsTr("%1 available").arg(root.taskModel.activeCount)
                 color: root.theme.textMuted
                 font.pixelSize: 10
             }
@@ -198,14 +199,14 @@ Item {
                             elide: Text.ElideRight
                         }
                         Text {
-                            text: focusTask.estimatedMinutes + " min"
+                            text: qsTr("%1 min").arg(focusTask.estimatedMinutes)
                             color: root.theme.textMuted
                             font.pixelSize: 10
                         }
                         AppButton {
                             theme: root.theme
                             text: root.focusSession.taskId === focusTask.taskId
-                                ? "Selected" : "Focus"
+                                ? qsTr("Selected") : qsTr("Focus")
                             enabled: !root.focusSession.running
                                 && root.focusSession.taskId !== focusTask.taskId
                             onClicked: root.focusSession.prepareTask(

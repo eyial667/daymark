@@ -46,7 +46,7 @@ QVariant TaskListModel::data(const QModelIndex &index, int role) const
     case PriorityScoreRole:
         return item.priority.score;
     case PriorityReasonRole:
-        return item.priority.reasons.join(QStringLiteral(" · "));
+        return item.priority.reasons.join(tr(" · "));
     case CategoryIdRole:
         return item.task.categoryId;
     case CategoryNameRole:
@@ -104,7 +104,7 @@ QString TaskListModel::plannedDuration() const
     if (minutes == 0) {
         return QStringLiteral("%1h").arg(hours);
     }
-    return QStringLiteral("%1h %2m").arg(hours).arg(minutes);
+    return tr("%1h %2m").arg(hours).arg(minutes);
 }
 
 QString TaskListModel::topTaskId() const
@@ -114,7 +114,7 @@ QString TaskListModel::topTaskId() const
 
 QString TaskListModel::topTaskTitle() const
 {
-    return m_items.isEmpty() ? QStringLiteral("Nothing queued") : m_items.first().task.title;
+    return m_items.isEmpty() ? tr("Nothing queued") : m_items.first().task.title;
 }
 
 int TaskListModel::topTaskEstimatedMinutes() const
@@ -163,7 +163,7 @@ bool TaskListModel::addTask(
 {
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
-        setStatusMessage(QStringLiteral("A task needs a title."));
+        setStatusMessage(tr("A task needs a title."));
         return false;
     }
 
@@ -171,7 +171,7 @@ bool TaskListModel::addTask(
     if (!dueDate.trimmed().isEmpty()) {
         const QDate parsedDate = QDate::fromString(dueDate.trimmed(), Qt::ISODate);
         if (!parsedDate.isValid()) {
-            setStatusMessage(QStringLiteral("Use YYYY-MM-DD for the due date."));
+            setStatusMessage(tr("Use YYYY-MM-DD for the due date."));
             return false;
         }
         dueAt = QDateTime(parsedDate, QTime(23, 59), QTimeZone::LocalTime);
@@ -190,19 +190,19 @@ bool TaskListModel::addTask(
 
     QString errorMessage;
     if (!m_repository.addTask(task, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the task: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the task: %1").arg(errorMessage));
         return false;
     }
 
     reload();
     emit tasksChanged();
     if (planForToday) {
-        setStatusMessage(QStringLiteral("Task added to Today."));
+        setStatusMessage(tr("Task added to Today."));
     } else if (dueAt.isValid() && dueAt.date() <= QDate::currentDate()) {
-        setStatusMessage(QStringLiteral(
+        setStatusMessage(tr(
             "Task added to To-do and shown in Today because its deadline has arrived."));
     } else {
-        setStatusMessage(QStringLiteral("Task added to To-do."));
+        setStatusMessage(tr("Task added to To-do."));
     }
     return true;
 }
@@ -217,7 +217,7 @@ bool TaskListModel::assignTaskCategory(
         m_items.cend(),
         [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
     if (item == m_items.cend()) {
-        setStatusMessage(QStringLiteral("That task is no longer in the list."));
+        setStatusMessage(tr("That task is no longer in the list."));
         return false;
     }
 
@@ -227,40 +227,40 @@ bool TaskListModel::assignTaskCategory(
             categoryId.trimmed(),
             subcategoryId.trimmed(),
             &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not assign the category: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not assign the category: %1").arg(errorMessage));
         return false;
     }
     reload();
     emit tasksChanged();
     setStatusMessage(categoryId.trimmed().isEmpty()
-            ? QStringLiteral("Category removed from task.")
-            : QStringLiteral("Task category updated."));
+            ? tr("Category removed from task.")
+            : tr("Task category updated."));
     return true;
 }
 
 bool TaskListModel::completeTask(int row)
 {
     if (row < 0 || row >= m_items.size()) {
-        setStatusMessage(QStringLiteral("That task is no longer in the list."));
+        setStatusMessage(tr("That task is no longer in the list."));
         return false;
     }
 
     QString errorMessage;
     if (!m_repository.setCompleted(m_items.at(row).task.id, true, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not complete the task: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not complete the task: %1").arg(errorMessage));
         return false;
     }
 
     reload();
     emit tasksChanged();
-    setStatusMessage(QStringLiteral("Task completed."));
+    setStatusMessage(tr("Task completed."));
     return true;
 }
 
 bool TaskListModel::planSuggestedTaskForToday()
 {
     if (m_backlogSuggestionTaskId.isEmpty()) {
-        setStatusMessage(QStringLiteral("There is no To-do task available to plan."));
+        setStatusMessage(tr("There is no To-do task available to plan."));
         return false;
     }
 
@@ -270,13 +270,13 @@ bool TaskListModel::planSuggestedTaskForToday()
             m_backlogSuggestionTaskId,
             QDate::currentDate(),
             &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not plan the task: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not plan the task: %1").arg(errorMessage));
         return false;
     }
 
     reload();
     emit tasksChanged();
-    setStatusMessage(QStringLiteral("Added “%1” to Today.").arg(suggestionTitle));
+    setStatusMessage(tr("Added “%1” to Today.").arg(suggestionTitle));
     return true;
 }
 
@@ -336,10 +336,10 @@ void TaskListModel::reload()
             if (m_backlogSuggestionTaskId.isEmpty()) {
                 m_backlogSuggestionTaskId = item.task.id;
                 m_backlogSuggestionTitle = item.task.title;
-                m_backlogSuggestionDetail = QStringLiteral("%1 · %2")
+                m_backlogSuggestionDetail = tr("%1 · %2")
                     .arg(
                         formatDueDate(item.task.dueAt),
-                        item.priority.reasons.join(QStringLiteral(" · ")));
+                        item.priority.reasons.join(tr(" · ")));
             }
         }
     } else {
@@ -353,9 +353,9 @@ void TaskListModel::reload()
     emit summaryChanged();
 
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load tasks: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load tasks: %1").arg(errorMessage));
     } else if (!historyError.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load completed tasks: %1").arg(historyError));
+        setStatusMessage(tr("Could not load completed tasks: %1").arg(historyError));
     }
 }
 
@@ -377,22 +377,22 @@ void TaskListModel::setStatusMessage(const QString &message)
 QString TaskListModel::formatDueDate(const QDateTime &dueAt)
 {
     if (!dueAt.isValid()) {
-        return QStringLiteral("No deadline");
+        return tr("No deadline");
     }
 
     const QDate today = QDate::currentDate();
     const int days = today.daysTo(dueAt.date());
     if (days < 0) {
-        return QStringLiteral("Overdue · %1")
+        return tr("Overdue · %1")
             .arg(QLocale().toString(dueAt.date(), QLocale::ShortFormat));
     }
     if (days == 0) {
-        return QStringLiteral("Due today");
+        return tr("Due today");
     }
     if (days == 1) {
-        return QStringLiteral("Due tomorrow");
+        return tr("Due tomorrow");
     }
 
-    return QStringLiteral("Due %1")
+    return tr("Due %1")
         .arg(QLocale().toString(dueAt.date(), QLocale::ShortFormat));
 }

@@ -7,8 +7,8 @@ ColumnLayout {
     id: emptyState
 
     required property var theme
-    property string title: "Your queue is clear"
-    property string detail: "Add a task to let Daymark plan the next action."
+    property string title: qsTr("Your queue is clear")
+    property string detail: qsTr("Add a task to let Daymark plan the next action.")
 
     spacing: 8
 
@@ -22,7 +22,7 @@ ColumnLayout {
 
         Text {
             anchors.centerIn: parent
-            text: "✓"
+            text: qsTr("✓")
             color: emptyState.theme.accent
             font.pixelSize: 19
             font.weight: Font.Bold

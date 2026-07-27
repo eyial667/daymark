@@ -38,7 +38,7 @@ Rectangle {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "D"
+                    text: qsTr("D")
                     color: "white"
                     font.pixelSize: 17
                     font.weight: Font.Bold
@@ -46,7 +46,7 @@ Rectangle {
             }
 
             Text {
-                text: "Daymark"
+                text: qsTr("Daymark")
                 color: sidebar.theme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
@@ -55,14 +55,14 @@ Rectangle {
 
         Repeater {
             model: [
-                { name: "Today", glyph: "◫" },
-                { name: "To-do", glyph: "☑" },
-                { name: "Map", glyph: "⌘" },
-                { name: "Categories", glyph: "▤" },
-                { name: "Goals", glyph: "◇" },
-                { name: "Focus", glyph: "◎" },
-                { name: "Review", glyph: "✓" },
-                { name: "Settings", glyph: "⚙" }
+                { name: qsTr("Today"), glyph: "◫" },
+                { name: qsTr("To-do"), glyph: "☑" },
+                { name: qsTr("Map"), glyph: "⌘" },
+                { name: qsTr("Categories"), glyph: "▤" },
+                { name: qsTr("Goals"), glyph: "◇" },
+                { name: qsTr("Focus"), glyph: "◎" },
+                { name: qsTr("Review"), glyph: "✓" },
+                { name: qsTr("Settings"), glyph: "⚙" }
             ]
 
             delegate: Button {
@@ -122,7 +122,7 @@ Rectangle {
             Layout.fillWidth: true
             theme: sidebar.theme
             primary: true
-            text: "+  Add task"
+            text: qsTr("+  Add task")
             onClicked: sidebar.addRequested()
         }
 
@@ -135,7 +135,7 @@ Rectangle {
         }
 
         Text {
-            text: "INTERFACE"
+            text: qsTr("INTERFACE")
             color: sidebar.theme.textMuted
             font.pixelSize: 9
             font.weight: Font.Bold
@@ -148,10 +148,10 @@ Rectangle {
             Layout.fillWidth: true
             implicitHeight: 38
             model: [
-                "A · Midnight Command",
-                "B · Spatial Map",
-                "C · Quiet Focus",
-                "D · Daymark Hybrid"
+                qsTr("A · Midnight Command"),
+                qsTr("B · Spatial Map"),
+                qsTr("C · Quiet Focus"),
+                qsTr("D · Daymark Hybrid")
             ]
             currentIndex: Number(sidebar.appSettings.interfaceStyle)
             onActivated: sidebar.appSettings.interfaceStyle = currentIndex
@@ -176,13 +176,44 @@ Rectangle {
             }
         }
 
+        ComboBox {
+            id: languageSelector
+
+            Layout.fillWidth: true
+            implicitHeight: 34
+            model: [qsTr("English"), qsTr("Français")]
+            currentIndex: Number(sidebar.appSettings.language)
+            displayText: qsTr("Language") + " · " + currentText
+            Accessible.name: qsTr("Application language")
+            onActivated: sidebar.appSettings.language = currentIndex
+
+            contentItem: Text {
+                leftPadding: 10
+                rightPadding: 24
+                text: languageSelector.displayText
+                color: sidebar.theme.textPrimary
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+
+            background: Rectangle {
+                radius: sidebar.theme.radius
+                color: languageSelector.hovered
+                    ? sidebar.theme.surfaceHover
+                    : sidebar.theme.surface
+                border.color: sidebar.theme.border
+            }
+        }
+
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
 
             Text {
                 Layout.fillWidth: true
-                text: sidebar.theme.modeName + " · Local-first"
+                text: sidebar.theme.modeName + qsTr(" · Local-first")
                 color: sidebar.theme.textMuted
                 font.pixelSize: 10
                 elide: Text.ElideRight
@@ -196,8 +227,8 @@ Rectangle {
                 padding: 0
                 ToolTip.visible: hovered
                 ToolTip.text: sidebar.appSettings.colorMode === 0
-                    ? "Switch to light mode"
-                    : "Switch to dark mode"
+                    ? qsTr("Switch to light mode")
+                    : qsTr("Switch to dark mode")
 
                 contentItem: Text {
                     text: sidebar.appSettings.colorMode === 0 ? "☀" : "☾"

@@ -14,8 +14,8 @@ Dialog {
 
     function sizeLabel(bytes) {
         if (bytes < 1024 * 1024)
-            return Math.max(1, Math.round(bytes / 1024)) + " KB"
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+            return qsTr("%1 KB").arg(Math.max(1, Math.round(bytes / 1024)))
+        return qsTr("%1 MB").arg((bytes / (1024 * 1024)).toFixed(1))
     }
 
     parent: Overlay.overlay
@@ -47,7 +47,7 @@ Dialog {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "↑"
+                    text: qsTr("↑")
                     color: root.theme.accent
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
@@ -60,15 +60,17 @@ Dialog {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "Daymark " + root.updateService.latestVersion + " is available"
+                    text: qsTr("Daymark %1 is available")
+                        .arg(root.updateService.latestVersion)
                     color: root.theme.textPrimary
                     font.pixelSize: 19
                     font.weight: Font.DemiBold
                     wrapMode: Text.WordWrap
                 }
                 Text {
-                    text: "Installed " + root.updateService.currentVersion
-                        + "  ·  " + root.sizeLabel(root.updateService.downloadSize)
+                    text: qsTr("Installed %1 · %2")
+                        .arg(root.updateService.currentVersion)
+                        .arg(root.sizeLabel(root.updateService.downloadSize))
                     color: root.theme.textMuted
                     font.pixelSize: 10
                 }
@@ -141,7 +143,8 @@ Dialog {
             AppButton {
                 theme: root.theme
                 quiet: true
-                text: root.updateService.downloading ? "Cancel download" : "Later"
+                text: root.updateService.downloading
+                    ? qsTr("Cancel download") : qsTr("Later")
                 onClicked: {
                     if (root.updateService.downloading)
                         root.updateService.cancelDownload()
@@ -155,7 +158,7 @@ Dialog {
             AppButton {
                 visible: root.updateService.hasError
                 theme: root.theme
-                text: "Check again"
+                text: qsTr("Check again")
                 onClicked: root.updateService.checkForUpdates()
             }
 
@@ -163,7 +166,7 @@ Dialog {
                 visible: root.updateService.canDownload
                 theme: root.theme
                 primary: true
-                text: "Download update"
+                text: qsTr("Download update")
                 onClicked: root.updateService.downloadUpdate()
             }
 

@@ -42,6 +42,12 @@ SHA-256 digest before any operating-system installer handoff. Downloads and
 installation are always explicit user actions. Update failures do not affect
 the database or offline task workflows.
 
+`LanguageManager` installs the bundled French Qt translation catalog before
+models are constructed and retranslates the QML engine immediately when the
+persistent language setting changes. Model reloads regenerate translated dates,
+priority reasons, map details, and validation feedback without changing stored
+task content.
+
 ## Persistence
 
 SQLite is the source of truth. Schema changes use SQLite's `user_version` value

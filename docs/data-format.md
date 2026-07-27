@@ -26,10 +26,11 @@ imports with a project value convert it into a category. Goal and milestone
 records contain stable IDs, titles, descriptions where applicable, target dates,
 creation timestamps, and completion state.
 
-Settings include the selected interface and palette, planning and capture
+Settings include the selected interface, language, and palette, planning and capture
 defaults, and behavior preferences such as timeline visibility. The
-`showTimeline` setting is optional for compatibility with earlier version 1
-exports and defaults to `false` when absent.
+`showTimeline` and `language` settings are optional for compatibility with
+earlier version 1 exports and default to `false` and English respectively when
+absent.
 
 Rolling dashboard day notes are intentionally absent from this format. They are
 retained only for today and yesterday in the local database, then pruned, so an

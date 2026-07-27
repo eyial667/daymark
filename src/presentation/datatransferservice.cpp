@@ -29,6 +29,7 @@ constexpr qsizetype MaximumRecords = 100000;
 struct ImportedSettings
 {
     int interfaceStyle = 3;
+    int language = 0;
     int colorMode = 0;
     int accentPreset = 0;
     int dailyCapacityMinutes = 480;
@@ -127,6 +128,7 @@ QJsonObject settingsToJson(const AppSettings &settings)
 {
     return {
         {QStringLiteral("interfaceStyle"), static_cast<int>(settings.interfaceStyle())},
+        {QStringLiteral("language"), static_cast<int>(settings.language())},
         {QStringLiteral("colorMode"), static_cast<int>(settings.colorMode())},
         {QStringLiteral("accentPreset"), static_cast<int>(settings.accentPreset())},
         {QStringLiteral("dailyCapacityMinutes"), settings.dailyCapacityMinutes()},
@@ -149,13 +151,13 @@ bool readString(
 {
     const QJsonValue value = object.value(key);
     if (!value.isString()) {
-        *errorMessage = QStringLiteral("'%1' must be text.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' must be text.").arg(key);
         return false;
     }
 
     const QString text = value.toString();
     if ((!allowEmpty && text.trimmed().isEmpty()) || text.size() > maximumLength) {
-        *errorMessage = QStringLiteral("'%1' is empty or too long.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' is empty or too long.").arg(key);
         return false;
     }
     *target = text;
@@ -184,7 +186,7 @@ bool readBool(
 {
     const QJsonValue value = object.value(key);
     if (!value.isBool()) {
-        *errorMessage = QStringLiteral("'%1' must be true or false.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' must be true or false.").arg(key);
         return false;
     }
     *target = value.toBool();
@@ -213,18 +215,32 @@ bool readBoundedInt(
 {
     const QJsonValue value = object.value(key);
     if (!value.isDouble()) {
-        *errorMessage = QStringLiteral("'%1' must be a number.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' must be a number.").arg(key);
         return false;
     }
 
     const double number = value.toDouble();
     const int integer = value.toInt(minimum - 1);
     if (number != static_cast<double>(integer) || integer < minimum || integer > maximum) {
-        *errorMessage = QStringLiteral("'%1' is outside the supported range.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' is outside the supported range.").arg(key);
         return false;
     }
     *target = integer;
     return true;
+}
+
+bool readOptionalBoundedInt(
+    const QJsonObject &object,
+    const QString &key,
+    int minimum,
+    int maximum,
+    int *target,
+    QString *errorMessage)
+{
+    if (!object.contains(key)) {
+        return true;
+    }
+    return readBoundedInt(object, key, minimum, maximum, target, errorMessage);
 }
 
 bool readDateTime(
@@ -240,7 +256,7 @@ bool readDateTime(
     }
     if (serialized.isEmpty()) {
         if (required) {
-            *errorMessage = QStringLiteral("'%1' must contain a date and time.").arg(key);
+            *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' must contain a date and time.").arg(key);
             return false;
         }
         *target = {};
@@ -249,7 +265,7 @@ bool readDateTime(
 
     const QDateTime parsed = QDateTime::fromString(serialized, Qt::ISODateWithMs);
     if (!parsed.isValid()) {
-        *errorMessage = QStringLiteral("'%1' contains an invalid date and time.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' contains an invalid date and time.").arg(key);
         return false;
     }
     *target = parsed.toLocalTime();
@@ -273,7 +289,7 @@ bool readDate(
 
     const QDate parsed = QDate::fromString(serialized, Qt::ISODate);
     if (!parsed.isValid()) {
-        *errorMessage = QStringLiteral("'%1' contains an invalid date.").arg(key);
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'%1' contains an invalid date.").arg(key);
         return false;
     }
     *target = parsed;
@@ -299,7 +315,7 @@ bool taskFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("Every task must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "Every task must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -345,7 +361,7 @@ bool subcategoryFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("Every subcategory must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "Every subcategory must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -378,7 +394,7 @@ bool categoryFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("Every category must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "Every category must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -407,12 +423,12 @@ bool categoryFromJson(
         return true;
     }
     if (!subcategoriesValue.isArray()) {
-        *errorMessage = QStringLiteral("'subcategories' must be a list.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'subcategories' must be a list.");
         return false;
     }
     const QJsonArray subcategories = subcategoriesValue.toArray();
     if (subcategories.size() > MaximumRecords) {
-        *errorMessage = QStringLiteral("The backup contains too many subcategories.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "The backup contains too many subcategories.");
         return false;
     }
     QSet<QString> names;
@@ -427,7 +443,7 @@ bool categoryFromJson(
         }
         const QString normalizedName = subcategory.name.toCaseFolded();
         if (names.contains(normalizedName)) {
-            *errorMessage = QStringLiteral("A category contains duplicate subcategory names.");
+            *errorMessage = QCoreApplication::translate("DataTransferService", "A category contains duplicate subcategory names.");
             return false;
         }
         names.insert(normalizedName);
@@ -443,7 +459,7 @@ bool milestoneFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("Every milestone must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "Every milestone must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -467,7 +483,7 @@ bool goalFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("Every goal must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "Every goal must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -487,12 +503,12 @@ bool goalFromJson(
 
     const QJsonValue milestonesValue = object.value(QStringLiteral("milestones"));
     if (!milestonesValue.isArray()) {
-        *errorMessage = QStringLiteral("'milestones' must be a list.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'milestones' must be a list.");
         return false;
     }
     const QJsonArray milestones = milestonesValue.toArray();
     if (milestones.size() > MaximumRecords) {
-        *errorMessage = QStringLiteral("The backup contains too many milestones.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "The backup contains too many milestones.");
         return false;
     }
 
@@ -502,7 +518,7 @@ bool goalFromJson(
             return false;
         }
         if (milestoneIds->contains(milestone.id)) {
-            *errorMessage = QStringLiteral("The backup contains a duplicate milestone ID.");
+            *errorMessage = QCoreApplication::translate("DataTransferService", "The backup contains a duplicate milestone ID.");
             return false;
         }
         milestoneIds->insert(milestone.id);
@@ -517,7 +533,7 @@ bool settingsFromJson(
     QString *errorMessage)
 {
     if (!value.isObject()) {
-        *errorMessage = QStringLiteral("'settings' must be an object.");
+        *errorMessage = QCoreApplication::translate("DataTransferService", "'settings' must be an object.");
         return false;
     }
     const QJsonObject object = value.toObject();
@@ -528,6 +544,13 @@ bool settingsFromJson(
                3,
                &settings->interfaceStyle,
                errorMessage)
+        && readOptionalBoundedInt(
+            object,
+            QStringLiteral("language"),
+            0,
+            1,
+            &settings->language,
+            errorMessage)
         && readBoundedInt(
             object,
             QStringLiteral("colorMode"),
@@ -588,6 +611,7 @@ bool settingsFromJson(
 void applySettings(const ImportedSettings &source, AppSettings &target)
 {
     target.setInterfaceStyle(static_cast<AppSettings::InterfaceStyle>(source.interfaceStyle));
+    target.setLanguage(static_cast<AppSettings::Language>(source.language));
     target.setColorMode(static_cast<AppSettings::ColorMode>(source.colorMode));
     target.setAccentPreset(static_cast<AppSettings::AccentPreset>(source.accentPreset));
     target.setDailyCapacityMinutes(source.dailyCapacityMinutes);
@@ -625,24 +649,24 @@ QString DataTransferService::statusMessage() const
 bool DataTransferService::exportData(const QUrl &destination)
 {
     if (!destination.isLocalFile()) {
-        setStatusMessage(QStringLiteral("Choose a local file for the export."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Choose a local file for the export."));
         return false;
     }
 
     QString errorMessage;
     const QVector<Task> tasks = m_repository.allTasks(&errorMessage);
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not read tasks: %1").arg(errorMessage));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not read tasks: %1").arg(errorMessage));
         return false;
     }
     const QVector<Category> categories = m_repository.categories(&errorMessage);
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not read categories: %1").arg(errorMessage));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not read categories: %1").arg(errorMessage));
         return false;
     }
     const QVector<Goal> goals = m_repository.goals(&errorMessage);
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not read goals: %1").arg(errorMessage));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not read goals: %1").arg(errorMessage));
         return false;
     }
 
@@ -677,16 +701,16 @@ bool DataTransferService::exportData(const QUrl &destination)
 
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) {
-        setStatusMessage(QStringLiteral("Could not create the export: %1").arg(file.errorString()));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not create the export: %1").arg(file.errorString()));
         return false;
     }
     const QByteArray payload = QJsonDocument(root).toJson(QJsonDocument::Indented);
     if (file.write(payload) != payload.size() || !file.commit()) {
-        setStatusMessage(QStringLiteral("Could not finish the export: %1").arg(file.errorString()));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not finish the export: %1").arg(file.errorString()));
         return false;
     }
 
-    setStatusMessage(QStringLiteral(
+    setStatusMessage(QCoreApplication::translate("DataTransferService",
         "Exported tasks, categories, subcategories, goals, and preferences to %1.")
         .arg(QFileInfo(path).fileName()));
     return true;
@@ -695,36 +719,36 @@ bool DataTransferService::exportData(const QUrl &destination)
 bool DataTransferService::importData(const QUrl &source)
 {
     if (!source.isLocalFile()) {
-        setStatusMessage(QStringLiteral("Choose a local Daymark data file."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Choose a local Daymark data file."));
         return false;
     }
 
     QFile file(source.toLocalFile());
     if (!file.open(QIODevice::ReadOnly)) {
-        setStatusMessage(QStringLiteral("Could not open the import: %1").arg(file.errorString()));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not open the import: %1").arg(file.errorString()));
         return false;
     }
     if (file.size() > MaximumBackupBytes) {
-        setStatusMessage(QStringLiteral("The selected file is too large to be a Daymark export."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "The selected file is too large to be a Daymark export."));
         return false;
     }
 
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
     if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-        setStatusMessage(QStringLiteral("The selected file is not valid JSON: %1")
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "The selected file is not valid JSON: %1")
             .arg(parseError.errorString()));
         return false;
     }
 
     const QJsonObject root = document.object();
     if (root.value(QStringLiteral("format")).toString() != QString::fromLatin1(BackupFormat)) {
-        setStatusMessage(QStringLiteral("The selected file is not a Daymark export."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "The selected file is not a Daymark export."));
         return false;
     }
     if (!root.value(QStringLiteral("version")).isDouble()
         || root.value(QStringLiteral("version")).toDouble() != BackupVersion) {
-        setStatusMessage(QStringLiteral("This Daymark export version is not supported."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "This Daymark export version is not supported."));
         return false;
     }
 
@@ -733,7 +757,7 @@ bool DataTransferService::importData(const QUrl &source)
     const QJsonValue goalsValue = root.value(QStringLiteral("goals"));
     if (!tasksValue.isArray() || !goalsValue.isArray()
         || (!categoriesValue.isUndefined() && !categoriesValue.isArray())) {
-        setStatusMessage(QStringLiteral("The export is missing its task or goal list."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "The export is missing its task or goal list."));
         return false;
     }
 
@@ -744,7 +768,7 @@ bool DataTransferService::importData(const QUrl &source)
     const QJsonArray goalArray = goalsValue.toArray();
     if (taskArray.size() > MaximumRecords || categoryArray.size() > MaximumRecords
         || goalArray.size() > MaximumRecords) {
-        setStatusMessage(QStringLiteral("The export contains too many records."));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains too many records."));
         return false;
     }
 
@@ -765,7 +789,7 @@ bool DataTransferService::importData(const QUrl &source)
     QString existingDataError;
     const QVector<Category> existingCategories = m_repository.categories(&existingDataError);
     if (!existingDataError.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not inspect existing categories: %1")
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not inspect existing categories: %1")
             .arg(existingDataError));
         return false;
     }
@@ -776,12 +800,12 @@ bool DataTransferService::importData(const QUrl &source)
     for (const QJsonValue &value : categoryArray) {
         Category category;
         if (!categoryFromJson(value, &category, &validationError)) {
-            setStatusMessage(QStringLiteral("Could not import a category: %1").arg(validationError));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not import a category: %1").arg(validationError));
             return false;
         }
         const QString normalizedName = category.name.trimmed().toCaseFolded();
         if (categoryIds.contains(category.id) || categoryNames.contains(normalizedName)) {
-            setStatusMessage(QStringLiteral("The export contains a duplicate category."));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains a duplicate category."));
             return false;
         }
         categoryIds.insert(category.id);
@@ -789,14 +813,14 @@ bool DataTransferService::importData(const QUrl &source)
         categoryIdsByName.insert(normalizedName, category.id);
         for (const Subcategory &subcategory : category.subcategories) {
             if (subcategoryParents.contains(subcategory.id)) {
-                setStatusMessage(QStringLiteral(
+                setStatusMessage(QCoreApplication::translate("DataTransferService",
                     "The export contains a duplicate subcategory ID."));
                 return false;
             }
             subcategoryParents.insert(subcategory.id, category.id);
             ++subcategoryCount;
             if (subcategoryCount > MaximumRecords) {
-                setStatusMessage(QStringLiteral("The export contains too many records."));
+                setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains too many records."));
                 return false;
             }
         }
@@ -806,11 +830,11 @@ bool DataTransferService::importData(const QUrl &source)
     for (const QJsonValue &value : taskArray) {
         Task task;
         if (!taskFromJson(value, &task, &validationError)) {
-            setStatusMessage(QStringLiteral("Could not import a task: %1").arg(validationError));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not import a task: %1").arg(validationError));
             return false;
         }
         if (taskIds.contains(task.id)) {
-            setStatusMessage(QStringLiteral("The export contains a duplicate task ID."));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains a duplicate task ID."));
             return false;
         }
         const QString legacyProjectName = task.project.trimmed();
@@ -837,14 +861,14 @@ bool DataTransferService::importData(const QUrl &source)
         }
         task.project.clear();
         if (!task.categoryId.isEmpty() && !categoryIds.contains(task.categoryId)) {
-            setStatusMessage(QStringLiteral(
+            setStatusMessage(QCoreApplication::translate("DataTransferService",
                 "A task refers to a category that is missing from the export."));
             return false;
         }
         if (!task.subcategoryId.isEmpty()
             && (!subcategoryParents.contains(task.subcategoryId)
                 || subcategoryParents.value(task.subcategoryId) != task.categoryId)) {
-            setStatusMessage(QStringLiteral(
+            setStatusMessage(QCoreApplication::translate("DataTransferService",
                 "A task refers to a subcategory outside its category."));
             return false;
         }
@@ -855,11 +879,11 @@ bool DataTransferService::importData(const QUrl &source)
     for (const QJsonValue &value : goalArray) {
         Goal goal;
         if (!goalFromJson(value, &goal, &milestoneIds, &validationError)) {
-            setStatusMessage(QStringLiteral("Could not import a goal: %1").arg(validationError));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not import a goal: %1").arg(validationError));
             return false;
         }
         if (goalIds.contains(goal.id)) {
-            setStatusMessage(QStringLiteral("The export contains a duplicate goal ID."));
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains a duplicate goal ID."));
             return false;
         }
         goalIds.insert(goal.id);
@@ -871,13 +895,13 @@ bool DataTransferService::importData(const QUrl &source)
             root.value(QStringLiteral("settings")),
             &importedSettings,
             &validationError)) {
-        setStatusMessage(QStringLiteral("Could not import preferences: %1").arg(validationError));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not import preferences: %1").arg(validationError));
         return false;
     }
 
     QString databaseError;
     if (!m_repository.mergeImportedData(categories, tasks, goals, &databaseError)) {
-        setStatusMessage(QStringLiteral("Could not merge the imported data: %1").arg(databaseError));
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not merge the imported data: %1").arg(databaseError));
         return false;
     }
 
@@ -885,7 +909,7 @@ bool DataTransferService::importData(const QUrl &source)
     m_categoryModel.reload();
     m_taskModel.reload();
     m_goalModel.reload();
-    setStatusMessage(QStringLiteral(
+    setStatusMessage(QCoreApplication::translate("DataTransferService",
         "Imported %1 tasks, %2 categories, %3 subcategories, and %4 goals. "
         "Existing records were kept.")
         .arg(tasks.size())

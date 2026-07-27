@@ -42,58 +42,6 @@ Item {
             height: cloudFlow.y + cloudFlow.height + 36
             spacing: 20
 
-            Item {
-                width: parent.width
-                height: 116
-
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 270
-                    height: 78
-                    radius: 39
-                    color: root.theme.accentSoft
-                    border.color: root.theme.accent
-                    border.width: 2
-
-                    Rectangle {
-                        x: -24
-                        y: 13
-                        width: 68
-                        height: 54
-                        radius: 28
-                        color: root.wash(root.theme.accent, 0.22)
-                    }
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.rightMargin: -30
-                        y: 8
-                        width: 78
-                        height: 62
-                        radius: 32
-                        color: root.wash(root.theme.secondaryAccent, 0.20)
-                    }
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 3
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "MY WORKING WORLD"
-                            color: root.theme.accent
-                            font.pixelSize: 10
-                            font.weight: Font.Bold
-                            font.letterSpacing: 1.4
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Everything in motion"
-                            color: root.theme.textPrimary
-                            font.pixelSize: 19
-                            font.weight: Font.DemiBold
-                        }
-                    }
-                }
-            }
-
             Flow {
                 id: cloudFlow
 
@@ -172,7 +120,8 @@ Item {
                                         elide: Text.ElideRight
                                     }
                                     Text {
-                                        text: branchCloud.modelData.kind === "goal" ? "GOAL" : "AREA"
+                                        text: branchCloud.modelData.kind === "goal"
+                                            ? qsTr("GOAL") : qsTr("AREA")
                                         color: branchCloud.branchColor
                                         font.pixelSize: 8
                                         font.weight: Font.Bold

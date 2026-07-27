@@ -407,6 +407,32 @@ void UpdateService::installUpdate()
 #endif
 }
 
+void UpdateService::retranslate()
+{
+    emit languageChanged();
+    switch (m_state) {
+    case Checking:
+        setStatusMessage(tr("Checking GitHub for updates…"));
+        break;
+    case UpToDate:
+        setStatusMessage(tr("Daymark %1 is up to date.").arg(currentVersion()));
+        break;
+    case UpdateAvailable:
+        setStatusMessage(tr("Daymark %1 is ready to download.").arg(m_release.version));
+        break;
+    case Downloading:
+        setStatusMessage(tr("Downloading Daymark %1…").arg(m_release.version));
+        break;
+    case ReadyToInstall:
+        setStatusMessage(tr("Daymark %1 was downloaded and verified.").arg(m_release.version));
+        break;
+    case Idle:
+    case Installing:
+    case Error:
+        break;
+    }
+}
+
 void UpdateService::installLinuxArchive()
 {
     const QString tarExecutable = QStandardPaths::findExecutable(QStringLiteral("tar"));

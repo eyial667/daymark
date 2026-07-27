@@ -45,9 +45,9 @@ QVariant GoalListModel::data(const QModelIndex &index, int role) const
             : static_cast<double>(completed) / static_cast<double>(goal.milestones.size());
     case ProgressTextRole:
         if (goal.milestones.isEmpty()) {
-            return QStringLiteral("No milestones yet");
+            return tr("No milestones yet");
         }
-        return QStringLiteral("%1 of %2 milestones")
+        return tr("%1 of %2 milestones")
             .arg(completed)
             .arg(goal.milestones.size());
     case MilestonesRole: {
@@ -136,7 +136,7 @@ bool GoalListModel::addGoal(
 {
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
-        setStatusMessage(QStringLiteral("A goal needs a title."));
+        setStatusMessage(tr("A goal needs a title."));
         return false;
     }
 
@@ -156,12 +156,12 @@ bool GoalListModel::addGoal(
 
     QString errorMessage;
     if (!m_repository.addGoal(goal, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the goal: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the goal: %1").arg(errorMessage));
         return false;
     }
 
     reload();
-    setStatusMessage(QStringLiteral("Goal added. Add milestones to make it actionable."));
+    setStatusMessage(tr("Goal added. Add milestones to make it actionable."));
     return true;
 }
 
@@ -171,13 +171,13 @@ bool GoalListModel::addMilestone(
     const QString &targetDate)
 {
     if (goalRow < 0 || goalRow >= m_goals.size()) {
-        setStatusMessage(QStringLiteral("That goal is no longer in the list."));
+        setStatusMessage(tr("That goal is no longer in the list."));
         return false;
     }
 
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
-        setStatusMessage(QStringLiteral("A milestone needs a title."));
+        setStatusMessage(tr("A milestone needs a title."));
         return false;
     }
 
@@ -197,12 +197,12 @@ bool GoalListModel::addMilestone(
 
     QString errorMessage;
     if (!m_repository.addMilestone(milestone, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the milestone: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the milestone: %1").arg(errorMessage));
         return false;
     }
 
     reload();
-    setStatusMessage(QStringLiteral("Milestone added."));
+    setStatusMessage(tr("Milestone added."));
     return true;
 }
 
@@ -214,53 +214,53 @@ bool GoalListModel::setMilestoneCompleted(
     if (goalRow < 0 || goalRow >= m_goals.size()
         || milestoneIndex < 0
         || milestoneIndex >= m_goals.at(goalRow).milestones.size()) {
-        setStatusMessage(QStringLiteral("That milestone is no longer in the list."));
+        setStatusMessage(tr("That milestone is no longer in the list."));
         return false;
     }
 
     const Milestone &milestone = m_goals.at(goalRow).milestones.at(milestoneIndex);
     QString errorMessage;
     if (!m_repository.setMilestoneCompleted(milestone.id, completed, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not update the milestone: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not update the milestone: %1").arg(errorMessage));
         return false;
     }
 
     reload();
     setStatusMessage(completed
-        ? QStringLiteral("Milestone completed.")
-        : QStringLiteral("Milestone reopened."));
+        ? tr("Milestone completed.")
+        : tr("Milestone reopened."));
     return true;
 }
 
 bool GoalListModel::completeGoal(int goalRow)
 {
     if (goalRow < 0 || goalRow >= m_goals.size()) {
-        setStatusMessage(QStringLiteral("That goal is no longer in the list."));
+        setStatusMessage(tr("That goal is no longer in the list."));
         return false;
     }
 
     QString errorMessage;
     if (!m_repository.setGoalCompleted(m_goals.at(goalRow).id, true, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not complete the goal: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not complete the goal: %1").arg(errorMessage));
         return false;
     }
 
     reload();
-    setStatusMessage(QStringLiteral("Goal marked achieved."));
+    setStatusMessage(tr("Goal marked achieved."));
     return true;
 }
 
 bool GoalListModel::planSuggestedMilestone(int importance, int estimatedMinutes)
 {
     if (!hasMilestoneSuggestion()) {
-        setStatusMessage(QStringLiteral("There is no unfinished milestone to suggest."));
+        setStatusMessage(tr("There is no unfinished milestone to suggest."));
         return false;
     }
 
     Task task;
     task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     task.title = m_suggestedMilestoneTitle;
-    task.notes = QStringLiteral("Milestone for goal: %1").arg(m_suggestedMilestoneGoal);
+    task.notes = tr("Milestone for goal: %1").arg(m_suggestedMilestoneGoal);
     task.plannedDate = QDate::currentDate();
     task.createdAt = QDateTime::currentDateTime();
     task.importance = std::clamp(importance, 1, 5);
@@ -268,12 +268,12 @@ bool GoalListModel::planSuggestedMilestone(int importance, int estimatedMinutes)
 
     QString errorMessage;
     if (!m_repository.addTask(task, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not plan the milestone: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not plan the milestone: %1").arg(errorMessage));
         return false;
     }
 
     emit taskCreated();
-    setStatusMessage(QStringLiteral("Added “%1” to Today.").arg(task.title));
+    setStatusMessage(tr("Added “%1” to Today.").arg(task.title));
     return true;
 }
 
@@ -301,7 +301,7 @@ void GoalListModel::reload()
     emit summaryChanged();
 
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load goals: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load goals: %1").arg(errorMessage));
     }
 }
 
@@ -359,7 +359,7 @@ bool GoalListModel::parseDate(
 
     const QDate parsed = QDate::fromString(cleanText, Qt::ISODate);
     if (!parsed.isValid()) {
-        *errorMessage = QStringLiteral("Use YYYY-MM-DD for the target date.");
+        *errorMessage = tr("Use YYYY-MM-DD for the target date.");
         return false;
     }
     *date = parsed;
@@ -369,18 +369,18 @@ bool GoalListModel::parseDate(
 QString GoalListModel::formatTargetDate(const QDate &date)
 {
     if (!date.isValid()) {
-        return QStringLiteral("No target date");
+        return tr("No target date");
     }
 
     const int days = QDate::currentDate().daysTo(date);
     const QString formatted = QLocale().toString(date, QLocale::ShortFormat);
     if (days < 0) {
-        return QStringLiteral("Overdue · %1").arg(formatted);
+        return tr("Overdue · %1").arg(formatted);
     }
     if (days == 0) {
-        return QStringLiteral("Due today");
+        return tr("Due today");
     }
-    return QStringLiteral("Target %1").arg(formatted);
+    return tr("Target %1").arg(formatted);
 }
 
 int GoalListModel::completedCount(const Goal &goal)

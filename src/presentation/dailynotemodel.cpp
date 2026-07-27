@@ -39,7 +39,7 @@ QString DailyNoteModel::previousText() const
 
 QString DailyNoteModel::previousDayLabel() const
 {
-    return QLocale().toString(m_currentDate.addDays(-1), QStringLiteral("dddd, MMMM d"));
+    return QLocale().toString(m_currentDate.addDays(-1), tr("dddd, MMMM d"));
 }
 
 bool DailyNoteModel::hasPreviousNote() const
@@ -72,18 +72,18 @@ void DailyNoteModel::refreshDay()
     const QDate today = QDate::currentDate();
     QString errorMessage;
     if (!m_repository.pruneDailyNotes(today.addDays(-1), &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not prune old day notes: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not prune old day notes: %1").arg(errorMessage));
         return;
     }
 
     const auto todayNote = m_repository.dailyNote(today, &errorMessage);
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load today's note: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load today's note: %1").arg(errorMessage));
         return;
     }
     const auto previousNote = m_repository.dailyNote(today.addDays(-1), &errorMessage);
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load yesterday's note: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load yesterday's note: %1").arg(errorMessage));
         return;
     }
 
@@ -115,12 +115,12 @@ bool DailyNoteModel::persist(bool announce)
     note.updatedAt = QDateTime::currentDateTime();
     QString errorMessage;
     if (!m_repository.saveDailyNote(note, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the day note: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the day note: %1").arg(errorMessage));
         return false;
     }
     setDirty(false);
     if (announce) {
-        setStatusMessage(QStringLiteral("Day note saved."));
+        setStatusMessage(tr("Day note saved."));
     }
     return true;
 }

@@ -39,6 +39,7 @@ void AppSettingsTest::persistsSelectedSettings()
     {
         AppSettings settings(settingsDirectory.path());
         QCOMPARE(settings.interfaceStyle(), AppSettings::Hybrid);
+        QCOMPARE(settings.language(), AppSettings::English);
         QCOMPARE(settings.colorMode(), AppSettings::Dark);
         QCOMPARE(settings.accentPreset(), AppSettings::MatchInterface);
         QCOMPARE(settings.dailyCapacityMinutes(), 480);
@@ -50,6 +51,7 @@ void AppSettingsTest::persistsSelectedSettings()
 
         QSignalSpy changedSpy(&settings, &AppSettings::interfaceStyleChanged);
         settings.setInterfaceStyle(AppSettings::SpatialMap);
+        settings.setLanguage(AppSettings::French);
         settings.setColorMode(AppSettings::Light);
         settings.setAccentPreset(AppSettings::Cyan);
         settings.setDailyCapacityMinutes(360);
@@ -64,6 +66,7 @@ void AppSettingsTest::persistsSelectedSettings()
 
     AppSettings restoredSettings(settingsDirectory.path());
     QCOMPARE(restoredSettings.interfaceStyle(), AppSettings::SpatialMap);
+    QCOMPARE(restoredSettings.language(), AppSettings::French);
     QCOMPARE(restoredSettings.colorMode(), AppSettings::Light);
     QCOMPARE(restoredSettings.accentPreset(), AppSettings::Cyan);
     QCOMPARE(restoredSettings.dailyCapacityMinutes(), 360);
@@ -88,6 +91,7 @@ void AppSettingsTest::ignoresInvalidStoredValues()
 
     QSettings rawSettings;
     rawSettings.setValue(QStringLiteral("appearance/interfaceStyle"), 99);
+    rawSettings.setValue(QStringLiteral("appearance/language"), 8);
     rawSettings.setValue(QStringLiteral("appearance/colorMode"), 8);
     rawSettings.setValue(QStringLiteral("appearance/accentPreset"), -1);
     rawSettings.setValue(QStringLiteral("planning/dailyCapacityMinutes"), 10);
@@ -96,6 +100,7 @@ void AppSettingsTest::ignoresInvalidStoredValues()
 
     AppSettings settings(settingsDirectory.path());
     QCOMPARE(settings.interfaceStyle(), AppSettings::Hybrid);
+    QCOMPARE(settings.language(), AppSettings::English);
     QCOMPARE(settings.colorMode(), AppSettings::Dark);
     QCOMPARE(settings.accentPreset(), AppSettings::MatchInterface);
     QCOMPARE(settings.dailyCapacityMinutes(), 480);
@@ -116,6 +121,7 @@ void AppSettingsTest::resetsPreferencesWithoutTouchingData()
 
     AppSettings settings(settingsDirectory.path());
     settings.setInterfaceStyle(AppSettings::MidnightCommand);
+    settings.setLanguage(AppSettings::French);
     settings.setColorMode(AppSettings::Light);
     settings.setDailyCapacityMinutes(240);
     settings.setDefaultImportance(5);
@@ -126,6 +132,7 @@ void AppSettingsTest::resetsPreferencesWithoutTouchingData()
 
     QCOMPARE(resetSpy.count(), 1);
     QCOMPARE(settings.interfaceStyle(), AppSettings::Hybrid);
+    QCOMPARE(settings.language(), AppSettings::English);
     QCOMPARE(settings.colorMode(), AppSettings::Dark);
     QCOMPARE(settings.dailyCapacityMinutes(), 480);
     QCOMPARE(settings.defaultImportance(), 3);

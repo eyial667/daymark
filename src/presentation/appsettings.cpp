@@ -51,6 +51,12 @@ AppSettings::AppSettings(const QString &dataDirectory, QObject *parent)
         Hybrid,
         static_cast<int>(MidnightCommand),
         static_cast<int>(Hybrid));
+    m_language = storedEnum(
+        m_settings,
+        LanguageKey,
+        English,
+        static_cast<int>(English),
+        static_cast<int>(French));
     m_colorMode = storedEnum(
         m_settings,
         ColorModeKey,
@@ -110,6 +116,23 @@ void AppSettings::setInterfaceStyle(InterfaceStyle style)
         QString::fromLatin1(InterfaceStyleKey),
         static_cast<int>(style));
     emit interfaceStyleChanged();
+}
+
+AppSettings::Language AppSettings::language() const
+{
+    return m_language;
+}
+
+void AppSettings::setLanguage(Language language)
+{
+    if (language < English || language > French || m_language == language) {
+        return;
+    }
+    m_language = language;
+    m_settings.setValue(
+        QString::fromLatin1(LanguageKey),
+        static_cast<int>(language));
+    emit languageChanged();
 }
 
 AppSettings::ColorMode AppSettings::colorMode() const
@@ -267,6 +290,7 @@ bool AppSettings::openDataDirectory() const
 void AppSettings::resetDefaults()
 {
     m_settings.remove(QString::fromLatin1(InterfaceStyleKey));
+    m_settings.remove(QString::fromLatin1(LanguageKey));
     m_settings.remove(QString::fromLatin1(ColorModeKey));
     m_settings.remove(QString::fromLatin1(AccentPresetKey));
     m_settings.remove(QString::fromLatin1(DailyCapacityKey));
@@ -278,6 +302,7 @@ void AppSettings::resetDefaults()
     m_settings.remove(QString::fromLatin1(ConfirmCompletionKey));
 
     setInterfaceStyle(Hybrid);
+    setLanguage(English);
     setColorMode(Dark);
     setAccentPreset(MatchInterface);
     setDailyCapacityMinutes(DefaultDailyCapacityMinutes);

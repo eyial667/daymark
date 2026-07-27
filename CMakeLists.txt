@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Network Quick QuickControls2 Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui LinguistTools Network Quick QuickControls2 Sql)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -44,6 +44,8 @@ add_library(daymark_core STATIC
     src/presentation/categorylistmodel.h
     src/presentation/goallistmodel.cpp
     src/presentation/goallistmodel.h
+    src/presentation/languagemanager.cpp
+    src/presentation/languagemanager.h
     src/presentation/mentalmapmodel.cpp
     src/presentation/mentalmapmodel.h
     src/presentation/tasklistmodel.cpp
@@ -87,7 +89,6 @@ qt_add_qml_module(daymark
         qml/MetricCard.qml
         qml/MentalMapClouds.qml
         qml/MentalMapConstellation.qml
-        qml/MentalMapFlow.qml
         qml/MidnightCommandView.qml
         qml/QuickAddDialog.qml
         qml/QuietFocusView.qml
@@ -205,7 +206,25 @@ if(BUILD_TESTING)
     qt_add_executable(updateservice_tests tests/updateservice_test.cpp)
     target_link_libraries(updateservice_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME updateservice_tests COMMAND updateservice_tests)
+
+    qt_add_executable(languagemanager_tests tests/languagemanager_test.cpp)
+    target_link_libraries(languagemanager_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME languagemanager_tests COMMAND languagemanager_tests)
 endif()
+
+set(daymark_translation_targets daymark)
+if(BUILD_TESTING)
+    list(APPEND daymark_translation_targets languagemanager_tests)
+endif()
+
+qt_add_translations(
+    TARGETS ${daymark_translation_targets}
+    SOURCE_TARGETS daymark daymark_core
+    TS_FILES translations/daymark_fr.ts
+    RESOURCE_PREFIX "/i18n"
+    LUPDATE_TARGET daymark_lupdate
+    LRELEASE_TARGET daymark_lrelease
+)
 
 set(CPACK_PACKAGE_NAME "Daymark")
 set(CPACK_PACKAGE_VENDOR "Daymark contributors")

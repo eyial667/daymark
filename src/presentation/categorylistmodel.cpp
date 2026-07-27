@@ -100,7 +100,7 @@ QStringList CategoryListModel::assignmentNames() const
     for (const Category &category : m_categories) {
         result.append(category.name);
         for (const Subcategory &subcategory : category.subcategories) {
-            result.append(QStringLiteral("%1 / %2").arg(category.name, subcategory.name));
+            result.append(tr("%1 / %2").arg(category.name, subcategory.name));
         }
     }
     return result;
@@ -150,15 +150,15 @@ bool CategoryListModel::addCategory(const QString &name, const QString &notes)
     const QString cleanName = name.trimmed();
     const QString cleanNotes = notes.trimmed();
     if (cleanName.isEmpty()) {
-        setStatusMessage(QStringLiteral("A category needs a name."));
+        setStatusMessage(tr("A category needs a name."));
         return false;
     }
     if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
-        setStatusMessage(QStringLiteral("The category name or notes are too long."));
+        setStatusMessage(tr("The category name or notes are too long."));
         return false;
     }
     if (hasDuplicateName(cleanName, -1)) {
-        setStatusMessage(QStringLiteral("A category with that name already exists."));
+        setStatusMessage(tr("A category with that name already exists."));
         return false;
     }
 
@@ -170,11 +170,11 @@ bool CategoryListModel::addCategory(const QString &name, const QString &notes)
 
     QString errorMessage;
     if (!m_repository.addCategory(category, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the category: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the category: %1").arg(errorMessage));
         return false;
     }
     reload();
-    setStatusMessage(QStringLiteral("Category created."));
+    setStatusMessage(tr("Category created."));
     return true;
 }
 
@@ -184,21 +184,21 @@ bool CategoryListModel::updateCategory(
     const QString &notes)
 {
     if (row < 0 || row >= m_categories.size()) {
-        setStatusMessage(QStringLiteral("That category is no longer in the list."));
+        setStatusMessage(tr("That category is no longer in the list."));
         return false;
     }
     const QString cleanName = name.trimmed();
     const QString cleanNotes = notes.trimmed();
     if (cleanName.isEmpty()) {
-        setStatusMessage(QStringLiteral("A category needs a name."));
+        setStatusMessage(tr("A category needs a name."));
         return false;
     }
     if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
-        setStatusMessage(QStringLiteral("The category name or notes are too long."));
+        setStatusMessage(tr("The category name or notes are too long."));
         return false;
     }
     if (hasDuplicateName(cleanName, row)) {
-        setStatusMessage(QStringLiteral("A category with that name already exists."));
+        setStatusMessage(tr("A category with that name already exists."));
         return false;
     }
 
@@ -207,11 +207,11 @@ bool CategoryListModel::updateCategory(
     category.notes = cleanNotes;
     QString errorMessage;
     if (!m_repository.updateCategory(category, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not update the category: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not update the category: %1").arg(errorMessage));
         return false;
     }
     reload();
-    setStatusMessage(QStringLiteral("Category updated."));
+    setStatusMessage(tr("Category updated."));
     return true;
 }
 
@@ -221,21 +221,21 @@ bool CategoryListModel::addSubcategory(
     const QString &notes)
 {
     if (categoryRow < 0 || categoryRow >= m_categories.size()) {
-        setStatusMessage(QStringLiteral("Choose a parent category first."));
+        setStatusMessage(tr("Choose a parent category first."));
         return false;
     }
     const QString cleanName = name.trimmed();
     const QString cleanNotes = notes.trimmed();
     if (cleanName.isEmpty()) {
-        setStatusMessage(QStringLiteral("A subcategory needs a name."));
+        setStatusMessage(tr("A subcategory needs a name."));
         return false;
     }
     if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
-        setStatusMessage(QStringLiteral("The subcategory name or notes are too long."));
+        setStatusMessage(tr("The subcategory name or notes are too long."));
         return false;
     }
     if (hasDuplicateSubcategoryName(categoryRow, cleanName, -1)) {
-        setStatusMessage(QStringLiteral("That category already has this subcategory."));
+        setStatusMessage(tr("That category already has this subcategory."));
         return false;
     }
 
@@ -247,11 +247,11 @@ bool CategoryListModel::addSubcategory(
     subcategory.createdAt = QDateTime::currentDateTime();
     QString errorMessage;
     if (!m_repository.addSubcategory(subcategory, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not save the subcategory: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not save the subcategory: %1").arg(errorMessage));
         return false;
     }
     reload();
-    setStatusMessage(QStringLiteral("Subcategory created."));
+    setStatusMessage(tr("Subcategory created."));
     return true;
 }
 
@@ -264,21 +264,21 @@ bool CategoryListModel::updateSubcategory(
     if (categoryRow < 0 || categoryRow >= m_categories.size()
         || subcategoryRow < 0
         || subcategoryRow >= m_categories.at(categoryRow).subcategories.size()) {
-        setStatusMessage(QStringLiteral("That subcategory is no longer in the list."));
+        setStatusMessage(tr("That subcategory is no longer in the list."));
         return false;
     }
     const QString cleanName = name.trimmed();
     const QString cleanNotes = notes.trimmed();
     if (cleanName.isEmpty()) {
-        setStatusMessage(QStringLiteral("A subcategory needs a name."));
+        setStatusMessage(tr("A subcategory needs a name."));
         return false;
     }
     if (cleanName.size() > 120 || cleanNotes.size() > 10000) {
-        setStatusMessage(QStringLiteral("The subcategory name or notes are too long."));
+        setStatusMessage(tr("The subcategory name or notes are too long."));
         return false;
     }
     if (hasDuplicateSubcategoryName(categoryRow, cleanName, subcategoryRow)) {
-        setStatusMessage(QStringLiteral("That category already has this subcategory."));
+        setStatusMessage(tr("That category already has this subcategory."));
         return false;
     }
 
@@ -287,11 +287,11 @@ bool CategoryListModel::updateSubcategory(
     subcategory.notes = cleanNotes;
     QString errorMessage;
     if (!m_repository.updateSubcategory(subcategory, &errorMessage)) {
-        setStatusMessage(QStringLiteral("Could not update the subcategory: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not update the subcategory: %1").arg(errorMessage));
         return false;
     }
     reload();
-    setStatusMessage(QStringLiteral("Subcategory updated."));
+    setStatusMessage(tr("Subcategory updated."));
     return true;
 }
 
@@ -409,7 +409,7 @@ void CategoryListModel::reload()
     rebuildWorkSuggestions();
     emit categoriesChanged();
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load categories: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load categories: %1").arg(errorMessage));
     }
 }
 
@@ -436,10 +436,10 @@ void CategoryListModel::rebuildWorkSuggestions()
             nestedTaskCount += openTaskCount;
             if (openTaskCount > 0) {
                 suggestions.append({
-                    QStringLiteral("%1 / %2").arg(category.name, subcategory.name),
-                    QStringLiteral("%1 open %2 in this area.")
+                    tr("%1 / %2").arg(category.name, subcategory.name),
+                    tr("%1 open %2 in this area.")
                         .arg(openTaskCount)
-                        .arg(openTaskCount == 1 ? QStringLiteral("task") : QStringLiteral("tasks")),
+                        .arg(openTaskCount == 1 ? tr("task") : tr("tasks")),
                     category.id,
                     subcategory.id,
                     openTaskCount,
@@ -452,9 +452,9 @@ void CategoryListModel::rebuildWorkSuggestions()
             const int openTaskCount = directTaskCount;
             suggestions.append({
                 category.name,
-                QStringLiteral("%1 open %2 in this area.")
+                tr("%1 open %2 in this area.")
                     .arg(openTaskCount)
-                    .arg(openTaskCount == 1 ? QStringLiteral("task") : QStringLiteral("tasks")),
+                    .arg(openTaskCount == 1 ? tr("task") : tr("tasks")),
                 category.id,
                 {},
                 openTaskCount,
@@ -468,7 +468,7 @@ void CategoryListModel::rebuildWorkSuggestions()
                 suggestions.append({
                     category.name,
                     category.notes.isEmpty()
-                        ? QStringLiteral("Create a concrete next action in this area.")
+                        ? tr("Create a concrete next action in this area.")
                         : category.notes,
                     category.id,
                     {},
@@ -478,9 +478,9 @@ void CategoryListModel::rebuildWorkSuggestions()
             }
             for (const Subcategory &subcategory : category.subcategories) {
                 suggestions.append({
-                    QStringLiteral("%1 / %2").arg(category.name, subcategory.name),
+                    tr("%1 / %2").arg(category.name, subcategory.name),
                     subcategory.notes.isEmpty()
-                        ? QStringLiteral("Create a concrete next action in this area.")
+                        ? tr("Create a concrete next action in this area.")
                         : subcategory.notes,
                     category.id,
                     subcategory.id,
@@ -504,7 +504,7 @@ void CategoryListModel::rebuildWorkSuggestions()
     emit workSuggestionChanged();
 
     if (!errorMessage.isEmpty()) {
-        setStatusMessage(QStringLiteral("Could not load category suggestions: %1").arg(errorMessage));
+        setStatusMessage(tr("Could not load category suggestions: %1").arg(errorMessage));
     }
 }
 

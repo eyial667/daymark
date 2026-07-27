@@ -40,13 +40,14 @@ Item {
             ColumnLayout {
                 spacing: 2
                 Text {
-                    text: "Today"
+                    text: qsTr("Today")
                     color: root.theme.textPrimary
                     font.pixelSize: 25
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    text: Qt.formatDate(new Date(), "dddd, MMMM d") + "  ·  " + root.theme.modeName
+                    text: Qt.formatDate(new Date(), qsTr("dddd, MMMM d"))
+                        + "  ·  " + root.theme.modeName
                     color: root.theme.textMuted
                     font.pixelSize: 11
                 }
@@ -56,8 +57,8 @@ Item {
                 visible: root.width >= 720
                 text: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
-                    ? "●  Day is realistic"
-                    : "●  Over capacity"
+                    ? qsTr("●  Day is realistic")
+                    : qsTr("●  Over capacity")
                 color: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
                     ? root.theme.success
@@ -67,12 +68,12 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
-                text: "Give me something to do"
+                text: qsTr("Give me something to do")
                 onClicked: root.suggestionRequested()
             }
             AppButton {
                 theme: root.theme
-                text: "+ Add task"
+                text: qsTr("+ Add task")
                 onClicked: root.addRequested()
             }
         }
@@ -99,7 +100,7 @@ Item {
                     Layout.fillWidth: true
                     spacing: 5
                     Text {
-                        text: "NEXT ACTION"
+                        text: qsTr("NEXT ACTION")
                         color: root.theme.accent
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -115,7 +116,7 @@ Item {
                     }
                     Text {
                         visible: root.taskModel.activeCount > 0
-                        text: "Top-ranked by deadline, importance, age, and focus fit"
+                        text: qsTr("Top-ranked by deadline, importance, age, and focus fit")
                         color: root.theme.textSecondary
                         font.pixelSize: 10
                     }
@@ -123,7 +124,7 @@ Item {
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Open focus  →"
+                    text: qsTr("Open focus  →")
                     enabled: root.taskModel.activeCount > 0
                     onClicked: root.focusRequested()
                 }
@@ -143,14 +144,16 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     Text {
-                        text: "Priority queue"
+                        text: qsTr("Priority queue")
                         color: root.theme.textPrimary
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
                     }
                     Item { Layout.fillWidth: true }
                     Text {
-                        text: root.taskModel.activeCount + " tasks  ·  " + root.taskModel.plannedDuration
+                        text: qsTr("%1 tasks · %2")
+                            .arg(root.taskModel.activeCount)
+                            .arg(root.taskModel.plannedDuration)
                         color: root.theme.textMuted
                         font.pixelSize: 10
                     }
@@ -208,7 +211,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "Goal path"
+                                text: qsTr("Goal path")
                                 color: root.theme.secondaryAccent
                                 font.pixelSize: 12
                                 font.weight: Font.DemiBold
@@ -217,13 +220,14 @@ Item {
                             AppButton {
                                 theme: root.theme
                                 quiet: true
-                                text: "Open map  ↗"
+                                text: qsTr("Open map  ↗")
                                 onClicked: root.mapRequested()
                             }
                         }
 
                         Repeater {
-                            model: ["Work", "Product launch", "Website", root.taskModel.topTaskTitle]
+                            model: [qsTr("Work"), qsTr("Product launch"), qsTr("Website"),
+                                root.taskModel.topTaskTitle]
 
                             delegate: RowLayout {
                                 id: pathRow
@@ -275,7 +279,7 @@ Item {
                         spacing: 9
 
                         Text {
-                            text: "Day shape"
+                            text: qsTr("Day shape")
                             color: root.theme.accent
                             font.pixelSize: 12
                             font.weight: Font.DemiBold
@@ -319,7 +323,9 @@ Item {
                                         anchors.fill: parent
                                         anchors.leftMargin: 9
                                         anchors.rightMargin: 9
-                                        text: shapeRow.title + "  ·  " + shapeRow.estimatedMinutes + "m"
+                                        text: qsTr("%1 · %2m")
+                                            .arg(shapeRow.title)
+                                            .arg(shapeRow.estimatedMinutes)
                                         color: root.theme.textPrimary
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter

@@ -11,7 +11,7 @@ Item {
 
     required property var theme
     property alias text: dateInput.text
-    property string placeholderText: "YYYY-MM-DD"
+    property string placeholderText: qsTr("YYYY-MM-DD")
     property int displayedMonth: new Date().getMonth()
     property int displayedYear: new Date().getFullYear()
 
@@ -98,10 +98,10 @@ Item {
             Layout.fillHeight: true
             padding: 0
             ToolTip.visible: hovered
-            ToolTip.text: "Choose from calendar"
+            ToolTip.text: qsTr("Choose from calendar")
 
             contentItem: Text {
-                text: "▦"
+                text: qsTr("▦")
                 color: control.theme.accent
                 font.pixelSize: 18
                 horizontalAlignment: Text.AlignHCenter
@@ -151,7 +151,7 @@ Item {
                 Button {
                     implicitWidth: 34
                     implicitHeight: 32
-                    text: "‹"
+                    text: qsTr("‹")
                     onClicked: control.shiftMonth(-1)
                 }
 
@@ -165,7 +165,7 @@ Item {
                             12,
                             0,
                             0),
-                        "MMMM yyyy")
+                        qsTr("MMMM yyyy"))
                     color: control.theme.textPrimary
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
@@ -175,7 +175,7 @@ Item {
                 Button {
                     implicitWidth: 34
                     implicitHeight: 32
-                    text: "›"
+                    text: qsTr("›")
                     onClicked: control.shiftMonth(1)
                 }
             }
@@ -187,7 +187,8 @@ Item {
                 rowSpacing: 3
 
                 Repeater {
-                    model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    model: [qsTr("Mon"), qsTr("Tue"), qsTr("Wed"), qsTr("Thu"),
+                        qsTr("Fri"), qsTr("Sat"), qsTr("Sun")]
 
                     delegate: Text {
                         required property var modelData
@@ -270,7 +271,7 @@ Item {
                 AppButton {
                     theme: control.theme
                     quiet: true
-                    text: "Clear"
+                    text: qsTr("Clear")
                     onClicked: {
                         control.clear()
                         calendarPopup.close()
@@ -281,7 +282,7 @@ Item {
 
                 AppButton {
                     theme: control.theme
-                    text: "Today"
+                    text: qsTr("Today")
                     onClicked: control.selectDate(new Date())
                 }
             }

@@ -56,7 +56,7 @@ Item {
                         spacing: 4
 
                         Text {
-                            text: "Long-term goals"
+                            text: qsTr("Long-term goals")
                             color: root.theme.textPrimary
                             font.pixelSize: 28
                             font.weight: Font.DemiBold
@@ -64,7 +64,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Turn distant outcomes into smaller milestones with clear target dates."
+                            text: qsTr("Turn distant outcomes into smaller milestones with clear target dates.")
                             color: root.theme.textSecondary
                             font.pixelSize: 12
                             wrapMode: Text.WordWrap
@@ -74,7 +74,7 @@ Item {
                     AppButton {
                         theme: root.theme
                         primary: true
-                        text: "+  Add goal"
+                        text: qsTr("+  Add goal")
                         onClicked: goalDialog.open()
                     }
                 }
@@ -87,7 +87,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
                         theme: root.theme
-                        label: "ACTIVE GOALS"
+                        label: qsTr("ACTIVE GOALS")
                         value: root.goalModel.goalCount.toString()
                     }
 
@@ -95,7 +95,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
                         theme: root.theme
-                        label: "MILESTONES"
+                        label: qsTr("MILESTONES")
                         value: root.goalModel.totalMilestoneCount.toString()
                         accent: root.theme.secondaryAccent
                     }
@@ -104,7 +104,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
                         theme: root.theme
-                        label: "COMPLETED STEPS"
+                        label: qsTr("COMPLETED STEPS")
                         value: root.goalModel.completedMilestoneCount.toString()
                         accent: root.theme.success
                     }
@@ -157,7 +157,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "◇"
+                                text: qsTr("◇")
                                 color: root.theme.accent
                                 font.pixelSize: 22
                             }
@@ -165,7 +165,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Choose an outcome worth working toward"
+                            text: qsTr("Choose an outcome worth working toward")
                             color: root.theme.textPrimary
                             font.pixelSize: 17
                             font.weight: Font.DemiBold
@@ -174,7 +174,7 @@ Item {
 
                         Text {
                             Layout.fillWidth: true
-                            text: "Add a goal, then break it into milestones small enough to see and finish."
+                            text: qsTr("Add a goal, then break it into milestones small enough to see and finish.")
                             color: root.theme.textMuted
                             font.pixelSize: 11
                             wrapMode: Text.WordWrap
@@ -249,7 +249,7 @@ Item {
                                         id: targetLabel
                                         anchors.centerIn: parent
                                         text: goalCard.targetText
-                                        color: goalCard.targetText.startsWith("Overdue")
+                                        color: goalCard.targetText.startsWith(qsTr("Overdue"))
                                             ? root.theme.danger
                                             : root.theme.textSecondary
                                         font.pixelSize: 10
@@ -294,7 +294,7 @@ Item {
                             }
 
                             Text {
-                                text: "MILESTONES"
+                                text: qsTr("MILESTONES")
                                 color: root.theme.textMuted
                                 font.pixelSize: 9
                                 font.weight: Font.Bold
@@ -304,7 +304,7 @@ Item {
                             Text {
                                 Layout.fillWidth: true
                                 visible: goalCard.milestones.length === 0
-                                text: "No milestones yet. Add the first smaller checkpoint."
+                                text: qsTr("No milestones yet. Add the first smaller checkpoint.")
                                 color: root.theme.textMuted
                                 font.pixelSize: 11
                                 font.italic: true
@@ -355,7 +355,7 @@ Item {
 
                                         Text {
                                             text: milestoneRow.modelData.targetText
-                                            color: milestoneRow.modelData.targetText.startsWith("Overdue")
+                                            color: milestoneRow.modelData.targetText.startsWith(qsTr("Overdue"))
                                                 && !milestoneCheck.checked
                                                 ? root.theme.danger
                                                 : root.theme.textMuted
@@ -372,7 +372,7 @@ Item {
 
                                 AppButton {
                                     theme: root.theme
-                                    text: "+  Add milestone"
+                                    text: qsTr("+  Add milestone")
                                     onClicked: root.openMilestoneDialog(
                                         goalCard.index,
                                         goalCard.title)
@@ -383,7 +383,7 @@ Item {
                                 AppButton {
                                     theme: root.theme
                                     quiet: true
-                                    text: "Mark goal achieved"
+                                    text: qsTr("Mark goal achieved")
                                     onClicked: root.openCompletionDialog(
                                         goalCard.index,
                                         goalCard.title)
@@ -417,7 +417,7 @@ Item {
             spacing: 13
 
             Text {
-                text: "Add a long-term goal"
+                text: qsTr("Add a long-term goal")
                 color: root.theme.textPrimary
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
@@ -426,7 +426,7 @@ Item {
             TextField {
                 id: goalTitleField
                 Layout.fillWidth: true
-                placeholderText: "What outcome are you working toward?"
+                placeholderText: qsTr("What outcome are you working toward?")
                 selectByMouse: true
             }
 
@@ -434,7 +434,7 @@ Item {
                 id: goalDescriptionField
                 Layout.fillWidth: true
                 Layout.preferredHeight: 90
-                placeholderText: "Why does it matter? (optional)"
+                placeholderText: qsTr("Why does it matter? (optional)")
                 wrapMode: TextEdit.Wrap
                 selectByMouse: true
             }
@@ -444,7 +444,7 @@ Item {
                 spacing: 5
 
                 Text {
-                    text: "Target date"
+                    text: qsTr("Target date")
                     color: root.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -453,7 +453,7 @@ Item {
                     id: goalDateField
                     Layout.fillWidth: true
                     theme: root.theme
-                    placeholderText: "YYYY-MM-DD (optional)"
+                    placeholderText: qsTr("YYYY-MM-DD (optional)")
                 }
             }
 
@@ -466,14 +466,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: goalDialog.close()
                 }
 
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Add goal"
+                    text: qsTr("Add goal")
                     enabled: goalTitleField.text.trim().length > 0
                     onClicked: {
                         if (root.goalModel.addGoal(
@@ -516,7 +516,7 @@ Item {
             spacing: 13
 
             Text {
-                text: "Add a milestone"
+                text: qsTr("Add a milestone")
                 color: root.theme.textPrimary
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
@@ -533,7 +533,7 @@ Item {
             TextField {
                 id: milestoneTitleField
                 Layout.fillWidth: true
-                placeholderText: "What smaller checkpoint comes next?"
+                placeholderText: qsTr("What smaller checkpoint comes next?")
                 selectByMouse: true
             }
 
@@ -541,7 +541,7 @@ Item {
                 id: milestoneDateField
                 Layout.fillWidth: true
                 theme: root.theme
-                placeholderText: "Target date · YYYY-MM-DD (optional)"
+                placeholderText: qsTr("Target date · YYYY-MM-DD (optional)")
             }
 
             RowLayout {
@@ -553,14 +553,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: milestoneDialog.close()
                 }
 
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Add milestone"
+                    text: qsTr("Add milestone")
                     enabled: milestoneTitleField.text.trim().length > 0
                     onClicked: {
                         if (root.goalModel.addMilestone(
@@ -604,7 +604,7 @@ Item {
             spacing: 13
 
             Text {
-                text: "Mark this goal achieved?"
+                text: qsTr("Mark this goal achieved?")
                 color: root.theme.textPrimary
                 font.pixelSize: 19
                 font.weight: Font.DemiBold
@@ -620,7 +620,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "The goal will leave the active list. It remains in exports and your local history."
+                text: qsTr("The goal will leave the active list. It remains in exports and your local history.")
                 color: root.theme.textMuted
                 font.pixelSize: 10
                 wrapMode: Text.WordWrap
@@ -634,14 +634,14 @@ Item {
                 AppButton {
                     theme: root.theme
                     quiet: true
-                    text: "Cancel"
+                    text: qsTr("Cancel")
                     onClicked: completionDialog.close()
                 }
 
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Mark achieved"
+                    text: qsTr("Mark achieved")
                     onClicked: {
                         root.goalModel.completeGoal(root.selectedGoalRow)
                         completionDialog.close()
