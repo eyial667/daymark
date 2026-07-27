@@ -15,11 +15,15 @@ The QML layer owns presentation and interaction only. C++ owns validation,
 persistence, priority decisions, integration coordination, and operating-system
 services. QML must not contain business rules or direct SQL access.
 
-`TaskListModel` converts persisted tasks into a sorted queue for the interface.
-`CategoryListModel` owns reusable category metadata and notes, `GoalListModel`
-owns goal and milestone presentation state, and `DataTransferService`
-coordinates validated portable exports and imports. These objects translate
-user actions into repository operations without exposing SQL to QML.
+`TaskListModel` converts persisted tasks into either the full sorted queue or a
+Today-scoped queue. The Today scope includes tasks planned for the current date
+and tasks whose deadlines are due or overdue, then uses the same priority engine
+to propose the best remaining backlog item when the scope is empty.
+`CategoryListModel` owns reusable category metadata and notes, while
+`GoalListModel` owns goal and milestone presentation state and deterministically
+proposes the earliest unfinished milestone. `DataTransferService` coordinates
+validated portable exports and imports. These objects translate user actions
+into repository operations without exposing SQL to QML.
 
 ## Persistence
 
@@ -28,7 +32,9 @@ and transactional migrations. Timestamps are stored as UTC ISO-8601 strings and
 converted to local time at the presentation boundary. Tasks refer to categories
 and optional child subcategories through nullable stable IDs; names and notes
 are stored once, and assignments are cleared safely if their category is removed
-in a future version. The former free-text project field is migrated into
+in a future version. A task's nullable planning date is a local calendar date
+separate from its deadline; moving work into Today never changes when it is due.
+The former free-text project field is migrated into
 categories and is no longer part of the product interface. Goal and milestone
 target dates are calendar dates stored in ISO-8601 form without a timezone.
 

@@ -4,6 +4,8 @@
 
 #include <QTest>
 
+#include <algorithm>
+
 class TaskListModelTest : public QObject
 {
     Q_OBJECT
@@ -81,6 +83,63 @@ private slots:
             {}));
         QCOMPARE(model.activeCount(), 0);
         QCOMPARE(model.statusMessage(), QStringLiteral("Use YYYY-MM-DD for the due date."));
+    }
+
+    void separatesTodayFromTodoAndPlansTheBestSuggestion()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel todoModel(repository);
+        TaskListModel todayModel(repository, TaskListModel::Today);
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Low priority backlog task"), {}, 1, 60, {}, {}, false));
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("High priority backlog task"), {}, 5, 25, {}, {}, false));
+
+        todayModel.reload();
+        QCOMPARE(todoModel.activeCount(), 2);
+        QCOMPARE(todayModel.activeCount(), 0);
+        QVERIFY(todayModel.hasBacklogSuggestion());
+        QCOMPARE(
+            todayModel.backlogSuggestionTitle(),
+            QStringLiteral("High priority backlog task"));
+
+        QVERIFY(todayModel.planSuggestedTaskForToday());
+        QCOMPARE(todayModel.activeCount(), 1);
+        QCOMPARE(todayModel.topTaskTitle(), QStringLiteral("High priority backlog task"));
+
+        const QVector<Task> tasks = repository.openTasks(&error);
+        const auto plannedTask = std::find_if(
+            tasks.cbegin(),
+            tasks.cend(),
+            [](const Task &task) {
+                return task.title == QStringLiteral("High priority backlog task");
+            });
+        QVERIFY(plannedTask != tasks.cend());
+        QCOMPARE(plannedTask->plannedDate, QDate::currentDate());
+    }
+
+    void keepsDueTasksVisibleWithoutPlanningThem()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel todoModel(repository);
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Due today"),
+            QDate::currentDate().toString(Qt::ISODate),
+            3,
+            30,
+            {},
+            {},
+            false));
+
+        TaskListModel todayModel(repository, TaskListModel::Today);
+        QCOMPARE(todayModel.activeCount(), 1);
+        QCOMPARE(todayModel.topTaskTitle(), QStringLiteral("Due today"));
     }
 };
 

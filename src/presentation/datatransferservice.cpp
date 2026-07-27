@@ -59,6 +59,7 @@ QJsonObject taskToJson(const Task &task)
         {QStringLiteral("categoryId"), task.categoryId},
         {QStringLiteral("subcategoryId"), task.subcategoryId},
         {QStringLiteral("dueAt"), serializedDateTime(task.dueAt)},
+        {QStringLiteral("plannedDate"), serializedDate(task.plannedDate)},
         {QStringLiteral("createdAt"), serializedDateTime(task.createdAt)},
         {QStringLiteral("completedAt"), serializedDateTime(task.completedAt)},
         {QStringLiteral("importance"), task.importance},
@@ -265,6 +266,19 @@ bool readDate(
     return true;
 }
 
+bool readOptionalDate(
+    const QJsonObject &object,
+    const QString &key,
+    QDate *target,
+    QString *errorMessage)
+{
+    if (!object.contains(key)) {
+        *target = {};
+        return true;
+    }
+    return readDate(object, key, target, errorMessage);
+}
+
 bool taskFromJson(
     const QJsonValue &value,
     Task *task,
@@ -292,6 +306,11 @@ bool taskFromJson(
             errorMessage,
             128)
         && readDateTime(object, QStringLiteral("dueAt"), &task->dueAt, errorMessage, false)
+        && readOptionalDate(
+            object,
+            QStringLiteral("plannedDate"),
+            &task->plannedDate,
+            errorMessage)
         && readDateTime(object, QStringLiteral("createdAt"), &task->createdAt, errorMessage, true)
         && readDateTime(object, QStringLiteral("completedAt"), &task->completedAt, errorMessage, false)
         && readBoundedInt(object, QStringLiteral("importance"), 1, 5, &task->importance, errorMessage)

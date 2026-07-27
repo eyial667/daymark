@@ -25,6 +25,11 @@ and releases will use semantic versioning.
 - One-level category nesting with subcategory notes and hierarchical task
   assignment.
 - A dedicated To-do page for the complete open-task queue.
+- Per-user Windows installation wizard with Start-menu integration, an optional
+  desktop shortcut, and uninstall support.
+- Empty-day planning that can pull the highest-ranked To-do task into Today or
+  create today's work from the earliest unfinished goal milestone.
+- A separate local planning date for Today, independent of task deadlines.
 
 ### Changed
 

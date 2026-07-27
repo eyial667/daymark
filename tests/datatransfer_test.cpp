@@ -140,6 +140,7 @@ private slots:
             importedTasks.cend(),
             [](const Task &task) { return task.title == QStringLiteral("Open task"); });
         QVERIFY(assignedTask != importedTasks.cend());
+        QCOMPARE(assignedTask->plannedDate, QDate::currentDate());
         QCOMPARE(assignedTask->categoryId, sourceCategoryId);
         QCOMPARE(assignedTask->categoryName, QStringLiteral("Portable category"));
         QCOMPARE(assignedTask->subcategoryId, sourceSubcategoryId);

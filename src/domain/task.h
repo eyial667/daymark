@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <QDate>
 #include <QDateTime>
 #include <QString>
 
@@ -16,6 +17,7 @@ struct Task
     QString subcategoryId;
     QString subcategoryName;
     QDateTime dueAt;
+    QDate plannedDate;
     QDateTime createdAt;
     QDateTime completedAt;
     int importance = 3;

@@ -10,9 +10,10 @@
 
 #include <algorithm>
 
-TaskListModel::TaskListModel(TaskRepository &repository, QObject *parent)
+TaskListModel::TaskListModel(TaskRepository &repository, Scope scope, QObject *parent)
     : QAbstractListModel(parent)
     , m_repository(repository)
+    , m_scope(scope)
 {
     reload();
 }
@@ -111,6 +112,21 @@ QString TaskListModel::topTaskTitle() const
     return m_items.isEmpty() ? QStringLiteral("Nothing queued") : m_items.first().task.title;
 }
 
+bool TaskListModel::hasBacklogSuggestion() const
+{
+    return !m_backlogSuggestionTaskId.isEmpty();
+}
+
+QString TaskListModel::backlogSuggestionTitle() const
+{
+    return m_backlogSuggestionTitle;
+}
+
+QString TaskListModel::backlogSuggestionDetail() const
+{
+    return m_backlogSuggestionDetail;
+}
+
 QString TaskListModel::statusMessage() const
 {
     return m_statusMessage;
@@ -122,7 +138,8 @@ bool TaskListModel::addTask(
     int importance,
     int estimatedMinutes,
     const QString &categoryId,
-    const QString &subcategoryId)
+    const QString &subcategoryId,
+    bool planForToday)
 {
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
@@ -146,6 +163,7 @@ bool TaskListModel::addTask(
     task.categoryId = categoryId.trimmed();
     task.subcategoryId = subcategoryId.trimmed();
     task.dueAt = dueAt;
+    task.plannedDate = planForToday ? QDate::currentDate() : QDate();
     task.createdAt = QDateTime::currentDateTime();
     task.importance = std::clamp(importance, 1, 5);
     task.estimatedMinutes = std::clamp(estimatedMinutes, 5, 480);
@@ -157,6 +175,7 @@ bool TaskListModel::addTask(
     }
 
     reload();
+    emit tasksChanged();
     setStatusMessage(QStringLiteral("Task added."));
     return true;
 }
@@ -185,6 +204,7 @@ bool TaskListModel::assignTaskCategory(
         return false;
     }
     reload();
+    emit tasksChanged();
     setStatusMessage(categoryId.trimmed().isEmpty()
             ? QStringLiteral("Category removed from task.")
             : QStringLiteral("Task category updated."));
@@ -205,7 +225,31 @@ bool TaskListModel::completeTask(int row)
     }
 
     reload();
+    emit tasksChanged();
     setStatusMessage(QStringLiteral("Task completed."));
+    return true;
+}
+
+bool TaskListModel::planSuggestedTaskForToday()
+{
+    if (m_backlogSuggestionTaskId.isEmpty()) {
+        setStatusMessage(QStringLiteral("There is no To-do task available to plan."));
+        return false;
+    }
+
+    const QString suggestionTitle = m_backlogSuggestionTitle;
+    QString errorMessage;
+    if (!m_repository.setTaskPlannedDate(
+            m_backlogSuggestionTaskId,
+            QDate::currentDate(),
+            &errorMessage)) {
+        setStatusMessage(QStringLiteral("Could not plan the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    reload();
+    emit tasksChanged();
+    setStatusMessage(QStringLiteral("Added “%1” to Today.").arg(suggestionTitle));
     return true;
 }
 
@@ -219,14 +263,14 @@ void TaskListModel::reload()
     QString errorMessage;
     const QVector<Task> tasks = m_repository.openTasks(&errorMessage);
 
-    QVector<Item> refreshed;
-    refreshed.reserve(tasks.size());
+    QVector<Item> ranked;
+    ranked.reserve(tasks.size());
     const QDateTime now = QDateTime::currentDateTime();
     for (const Task &task : tasks) {
-        refreshed.append({task, PriorityEngine::evaluate(task, now)});
+        ranked.append({task, PriorityEngine::evaluate(task, now)});
     }
 
-    std::stable_sort(refreshed.begin(), refreshed.end(), [](const Item &left, const Item &right) {
+    std::stable_sort(ranked.begin(), ranked.end(), [](const Item &left, const Item &right) {
         if (left.priority.score != right.priority.score) {
             return left.priority.score > right.priority.score;
         }
@@ -239,6 +283,31 @@ void TaskListModel::reload()
         return left.task.createdAt < right.task.createdAt;
     });
 
+    QVector<Item> refreshed;
+    m_backlogSuggestionTaskId.clear();
+    m_backlogSuggestionTitle.clear();
+    m_backlogSuggestionDetail.clear();
+    if (m_scope == Today) {
+        refreshed.reserve(ranked.size());
+        const QDate today = QDate::currentDate();
+        for (const Item &item : ranked) {
+            if (belongsToToday(item.task, today)) {
+                refreshed.append(item);
+                continue;
+            }
+            if (m_backlogSuggestionTaskId.isEmpty()) {
+                m_backlogSuggestionTaskId = item.task.id;
+                m_backlogSuggestionTitle = item.task.title;
+                m_backlogSuggestionDetail = QStringLiteral("%1 · %2")
+                    .arg(
+                        formatDueDate(item.task.dueAt),
+                        item.priority.reasons.join(QStringLiteral(" · ")));
+            }
+        }
+    } else {
+        refreshed = std::move(ranked);
+    }
+
     beginResetModel();
     m_items = std::move(refreshed);
     endResetModel();
@@ -247,6 +316,12 @@ void TaskListModel::reload()
     if (!errorMessage.isEmpty()) {
         setStatusMessage(QStringLiteral("Could not load tasks: %1").arg(errorMessage));
     }
+}
+
+bool TaskListModel::belongsToToday(const Task &task, const QDate &today)
+{
+    return task.plannedDate == today
+        || (task.dueAt.isValid() && task.dueAt.date() <= today);
 }
 
 void TaskListModel::setStatusMessage(const QString &message)

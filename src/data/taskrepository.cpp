@@ -82,6 +82,7 @@ Task taskFromQuery(const QSqlQuery &query)
     task.categoryName = query.value(11).toString();
     task.subcategoryId = query.value(12).toString();
     task.subcategoryName = query.value(13).toString();
+    task.plannedDate = deserializeDate(query.value(14).toString());
     return task;
 }
 
@@ -103,6 +104,7 @@ void bindTask(QSqlQuery &query, const Task &task)
     bindNullableDateTime(query, QStringLiteral(":completed_at"), task.completedAt);
     bindNullableString(query, QStringLiteral(":category_id"), task.categoryId);
     bindNullableString(query, QStringLiteral(":subcategory_id"), task.subcategoryId);
+    bindNullableDate(query, QStringLiteral(":planned_date"), task.plannedDate);
 }
 
 void bindCategory(QSqlQuery &query, const Category &category)
@@ -238,7 +240,7 @@ QVector<Task> TaskRepository::loadTasks(
             "SELECT t.id, t.title, t.notes, t.project, t.due_at, t.created_at, "
             "t.importance, t.estimated_minutes, t.is_completed, t.completed_at, "
             "t.category_id, COALESCE(c.name, ''), t.subcategory_id, "
-            "COALESCE(s.name, '') FROM tasks t "
+            "COALESCE(s.name, ''), t.planned_date FROM tasks t "
             "LEFT JOIN categories c ON c.id = t.category_id "
             "LEFT JOIN subcategories s ON s.id = t.subcategory_id")
             + whereClause
@@ -280,10 +282,10 @@ bool TaskRepository::addTask(const Task &task, QString *errorMessage)
     query.prepare(QStringLiteral(
         "INSERT INTO tasks "
         "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
-        "is_completed, completed_at, category_id, subcategory_id) "
+        "is_completed, completed_at, category_id, subcategory_id, planned_date) "
         "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
         ":estimated_minutes, :is_completed, :completed_at, :category_id, "
-        ":subcategory_id)"));
+        ":subcategory_id, :planned_date)"));
     bindTask(query, task);
 
     if (!query.exec()) {
@@ -355,6 +357,28 @@ bool TaskRepository::setTaskCategory(
         "WHERE id = :id"));
     bindNullableString(query, QStringLiteral(":category_id"), categoryId);
     bindNullableString(query, QStringLiteral(":subcategory_id"), subcategoryId);
+    query.bindValue(QStringLiteral(":id"), taskId);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected task no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::setTaskPlannedDate(
+    const QString &taskId,
+    const QDate &plannedDate,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE tasks SET planned_date = :planned_date WHERE id = :id"));
+    bindNullableDate(query, QStringLiteral(":planned_date"), plannedDate);
     query.bindValue(QStringLiteral(":id"), taskId);
 
     if (!query.exec()) {
@@ -689,16 +713,17 @@ bool TaskRepository::mergeImportedData(
     taskQuery.prepare(QStringLiteral(
         "INSERT INTO tasks "
         "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
-        "is_completed, completed_at, category_id, subcategory_id) "
+        "is_completed, completed_at, category_id, subcategory_id, planned_date) "
         "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
         ":estimated_minutes, :is_completed, :completed_at, :category_id, "
-        ":subcategory_id) "
+        ":subcategory_id, :planned_date) "
         "ON CONFLICT(id) DO UPDATE SET title = excluded.title, notes = excluded.notes, "
         "project = excluded.project, due_at = excluded.due_at, "
         "created_at = excluded.created_at, importance = excluded.importance, "
         "estimated_minutes = excluded.estimated_minutes, "
         "is_completed = excluded.is_completed, completed_at = excluded.completed_at, "
-        "category_id = excluded.category_id, subcategory_id = excluded.subcategory_id"));
+        "category_id = excluded.category_id, subcategory_id = excluded.subcategory_id, "
+        "planned_date = excluded.planned_date"));
 
     for (const Task &task : tasks) {
         bindTask(taskQuery, task);
@@ -769,13 +794,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 4) {
+    if (version > 5) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-    if (version == 4) {
+    if (version == 5) {
         return true;
     }
 
@@ -888,6 +913,15 @@ bool TaskRepository::migrate(QString *errorMessage)
             && execute(QStringLiteral(
                 "UPDATE tasks SET project = '' WHERE length(project) > 0"), errorMessage)
             && execute(QStringLiteral("PRAGMA user_version = 4"), errorMessage);
+    }
+
+    if (migrated && version < 5) {
+        migrated = execute(QStringLiteral(
+            "ALTER TABLE tasks ADD COLUMN planned_date TEXT"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX tasks_open_planned_index "
+                "ON tasks(is_completed, planned_date)"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 5"), errorMessage);
     }
 
     if (!migrated) {

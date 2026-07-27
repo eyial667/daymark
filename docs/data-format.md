@@ -18,17 +18,18 @@ system's SQLite and settings locations.
 | `settings` | object | Portable appearance, planning, and behavior preferences. |
 
 Task records contain their stable ID, title, notes, optional category and
-subcategory IDs, due and creation timestamps, completion state and timestamp,
-importance, and estimate. Category and nested subcategory records contain a
-stable ID, name, notes, and creation timestamp. The `project` task field remains
-as an empty compatibility field for older Daymark builds; old imports with a
-project value convert it into a category. Goal and milestone records contain
-stable IDs, titles, descriptions where applicable, target dates, creation
-timestamps, and completion state.
+subcategory IDs, optional `plannedDate`, due and creation timestamps, completion
+state and timestamp, importance, and estimate. Category and nested subcategory
+records contain a stable ID, name, notes, and creation timestamp. The `project`
+task field remains as an empty compatibility field for older Daymark builds; old
+imports with a project value convert it into a category. Goal and milestone
+records contain stable IDs, titles, descriptions where applicable, target dates,
+creation timestamps, and completion state.
 
-Timestamps are written in UTC with ISO-8601 millisecond precision. Goal and
-milestone targets are calendar dates in `YYYY-MM-DD` form and do not carry a
-timezone. An empty date or timestamp string means that value was not set.
+Timestamps are written in UTC with ISO-8601 millisecond precision. Task planning
+dates and goal and milestone targets are calendar dates in `YYYY-MM-DD` form and
+do not carry a timezone. An empty date or timestamp string means that value was
+not set.
 
 ## Import behavior
 
@@ -49,4 +50,6 @@ until the destination computer has been checked.
 The `categories` list and each task's `categoryId` and `subcategoryId` were added
 as backward-compatible optional fields in format version 1. Imports created by
 earlier Daymark builds therefore remain valid; legacy project labels become
-categories automatically.
+categories automatically. A task's `plannedDate` is also optional in version 1,
+so backups from builds that predate Today planning remain valid and import those
+tasks into To-do without assigning them to a day.

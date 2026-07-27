@@ -34,10 +34,27 @@ private slots:
             QStringLiteral("2030-01-15")));
         QCOMPARE(model.totalMilestoneCount(), 2);
         QCOMPARE(model.completedMilestoneCount(), 0);
+        QCOMPARE(
+            model.suggestedMilestoneTitle(),
+            QStringLiteral("Complete the portable backup"));
 
         QVERIFY(model.setMilestoneCompleted(0, 0, true));
         QCOMPARE(model.completedMilestoneCount(), 1);
         QCOMPARE(model.data(model.index(0), GoalListModel::ProgressRole).toDouble(), 0.5);
+        QVERIFY(model.hasMilestoneSuggestion());
+        QCOMPARE(
+            model.suggestedMilestoneTitle(),
+            QStringLiteral("Ship signed installers"));
+        QCOMPARE(model.suggestedMilestoneGoal(), QStringLiteral("Publish Daymark 1.0"));
+
+        QVERIFY(model.planSuggestedMilestone(4, 45));
+        const QVector<Task> plannedTasks = repository.openTasks(&error);
+        QCOMPARE(plannedTasks.size(), 1);
+        QCOMPARE(plannedTasks.first().title, QStringLiteral("Ship signed installers"));
+        QCOMPARE(plannedTasks.first().plannedDate, QDate::currentDate());
+        QCOMPARE(plannedTasks.first().importance, 4);
+        QCOMPARE(plannedTasks.first().estimatedMinutes, 45);
+        QVERIFY(plannedTasks.first().notes.contains(QStringLiteral("Publish Daymark 1.0")));
 
         const QVariantList milestones = model.data(
             model.index(0),

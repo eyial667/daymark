@@ -42,6 +42,7 @@ private slots:
         task.subcategoryId = subcategory.id;
         task.createdAt = QDateTime::currentDateTime();
         task.dueAt = task.createdAt.addDays(1);
+        task.plannedDate = QDate::currentDate();
         task.importance = 4;
         task.estimatedMinutes = 25;
 
@@ -55,6 +56,12 @@ private slots:
         QCOMPARE(tasks.first().subcategoryId, subcategory.id);
         QCOMPARE(tasks.first().subcategoryName, subcategory.name);
         QCOMPARE(tasks.first().importance, 4);
+        QCOMPARE(tasks.first().plannedDate, QDate::currentDate());
+
+        const QDate replannedDate = QDate::currentDate().addDays(2);
+        QVERIFY2(repository.setTaskPlannedDate(task.id, replannedDate, &error), qPrintable(error));
+        tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.first().plannedDate, replannedDate);
 
         QVector<Category> categories = repository.categories(&error);
         QCOMPARE(categories.size(), 1);
@@ -226,6 +233,12 @@ private slots:
         QCOMPARE(tasks.first().categoryId, categories.first().id);
         QCOMPARE(tasks.first().categoryName, QStringLiteral("Client work"));
         QVERIFY(tasks.first().project.isEmpty());
+
+        const QDate plannedDate(2026, 2, 3);
+        QVERIFY2(
+            repository.setTaskPlannedDate(tasks.first().id, plannedDate, &error),
+            qPrintable(error));
+        QCOMPARE(repository.openTasks(&error).first().plannedDate, plannedDate);
     }
 };
 

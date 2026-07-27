@@ -16,6 +16,7 @@ concurrency:
 
 env:
   QT_VERSION: 6.8.3
+  INNO_SETUP_VERSION: 6.7.1
 
 jobs:
   build-test-package:
@@ -46,6 +47,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes ninja-build libgl1-mesa-dev
+
+      - name: Install Windows packaging dependencies
+        if: runner.os == 'Windows'
+        run: >-
+          choco install innosetup
+          --version ${{ env.INNO_SETUP_VERSION }}
+          --no-progress --yes
 
       - name: Install Qt
         uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1

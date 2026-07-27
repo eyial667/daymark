@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     }
 
     TaskListModel taskModel(repository);
+    TaskListModel todayTaskModel(repository, TaskListModel::Today);
     CategoryListModel categoryModel(repository);
     GoalListModel goalModel(repository);
     AppSettings appSettings(dataDirectory);
@@ -48,6 +49,22 @@ int main(int argc, char *argv[])
         appSettings);
 
     QObject::connect(
+        &taskModel,
+        &QAbstractItemModel::modelReset,
+        &todayTaskModel,
+        &TaskListModel::reload);
+    QObject::connect(
+        &todayTaskModel,
+        &TaskListModel::tasksChanged,
+        &taskModel,
+        &TaskListModel::reload);
+    QObject::connect(
+        &goalModel,
+        &GoalListModel::taskCreated,
+        &taskModel,
+        &TaskListModel::reload);
+
+    QObject::connect(
         &categoryModel,
         &CategoryListModel::categoriesChanged,
         &taskModel,
@@ -56,6 +73,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
         {QStringLiteral("taskModel"), QVariant::fromValue(&taskModel)},
+        {QStringLiteral("todayTaskModel"), QVariant::fromValue(&todayTaskModel)},
         {QStringLiteral("categoryModel"), QVariant::fromValue(&categoryModel)},
         {QStringLiteral("goalModel"), QVariant::fromValue(&goalModel)},
         {QStringLiteral("appSettings"), QVariant::fromValue(&appSettings)},

@@ -69,6 +69,7 @@ qt_add_qml_module(daymark
         qml/AppButton.qml
         qml/CategoriesView.qml
         qml/DateField.qml
+        qml/DayPlanningPrompt.qml
         qml/EmptyState.qml
         qml/GoalsView.qml
         qml/HybridView.qml
@@ -179,7 +180,24 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 
 if(WIN32)
-    set(CPACK_GENERATOR "ZIP")
+    # Build a real per-user installer instead of a portable archive. Inno
+    # Setup's lowest privilege level keeps the default destination under the
+    # current user's local application data and avoids an elevation prompt.
+    set(CPACK_GENERATOR "INNOSETUP")
+    set(CPACK_PACKAGE_FILE_NAME
+        "Daymark-${PROJECT_VERSION}-win64-setup"
+    )
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "Daymark")
+    set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "org.daymark.dashboard")
+    set(CPACK_PACKAGE_EXECUTABLES "daymark" "Daymark")
+    set(CPACK_CREATE_DESKTOP_LINKS "daymark")
+
+    set(CPACK_INNOSETUP_INSTALL_ROOT "{localappdata}/Programs")
+    set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest")
+    set(CPACK_INNOSETUP_USE_MODERN_WIZARD ON)
+    set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER "Daymark")
+    set(CPACK_INNOSETUP_CREATE_UNINSTALL_LINK ON)
+    set(CPACK_INNOSETUP_RUN_EXECUTABLES "daymark")
 elseif(APPLE)
     set(CPACK_GENERATOR "DragNDrop")
 else()

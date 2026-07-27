@@ -8,6 +8,7 @@ ApplicationWindow {
     id: window
 
     required property var taskModel
+    required property var todayTaskModel
     required property var categoryModel
     required property var goalModel
     required property var appSettings
@@ -16,16 +17,18 @@ ApplicationWindow {
     property int currentPage: 0
     property int pendingCompletionIndex: -1
     property string pendingCompletionTitle: ""
+    property var pendingCompletionModel: null
     property string pendingCategoryTaskId: ""
     property string pendingCategoryTitle: ""
     property string pendingCategoryId: ""
     property string pendingSubcategoryId: ""
 
-    function requestTaskCompletion(taskIndex, taskTitle) {
+    function requestTaskCompletion(model, taskIndex, taskTitle) {
         if (!appSettings.confirmTaskCompletion) {
-            taskModel.completeTask(taskIndex)
+            model.completeTask(taskIndex)
             return
         }
+        pendingCompletionModel = model
         pendingCompletionIndex = taskIndex
         pendingCompletionTitle = taskTitle
         completionDialog.open()
@@ -185,55 +188,72 @@ ApplicationWindow {
                 anchors.fill: parent
                 currentIndex: window.currentPage
 
-                StackLayout {
-                    currentIndex: Number(window.appSettings.interfaceStyle)
+                Item {
+                    StackLayout {
+                        anchors.fill: parent
+                        currentIndex: Number(window.appSettings.interfaceStyle)
 
-                    MidnightCommandView {
-                        taskModel: window.taskModel
-                        appSettings: window.appSettings
-                        theme: interfaceTheme
-                        onAddRequested: quickAdd.open()
-                        onCompletionRequested: (taskIndex, taskTitle) =>
-                            window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                            window.requestTaskCategory(
-                                taskId, taskTitle, categoryId, subcategoryId)
+                        MidnightCommandView {
+                            taskModel: window.todayTaskModel
+                            appSettings: window.appSettings
+                            theme: interfaceTheme
+                            onAddRequested: quickAdd.open()
+                            onCompletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskCompletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
+                            onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                                window.requestTaskCategory(
+                                    taskId, taskTitle, categoryId, subcategoryId)
+                        }
+
+                        SpatialMapView {
+                            taskModel: window.todayTaskModel
+                            appSettings: window.appSettings
+                            theme: interfaceTheme
+                            onAddRequested: quickAdd.open()
+                            onCompletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskCompletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
+                            onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                                window.requestTaskCategory(
+                                    taskId, taskTitle, categoryId, subcategoryId)
+                        }
+
+                        QuietFocusView {
+                            taskModel: window.todayTaskModel
+                            appSettings: window.appSettings
+                            theme: interfaceTheme
+                            onAddRequested: quickAdd.open()
+                            onCompletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskCompletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
+                            onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                                window.requestTaskCategory(
+                                    taskId, taskTitle, categoryId, subcategoryId)
+                        }
+
+                        HybridView {
+                            taskModel: window.todayTaskModel
+                            appSettings: window.appSettings
+                            theme: interfaceTheme
+                            onAddRequested: quickAdd.open()
+                            onCompletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskCompletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
+                            onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                                window.requestTaskCategory(
+                                    taskId, taskTitle, categoryId, subcategoryId)
+                        }
                     }
 
-                    SpatialMapView {
-                        taskModel: window.taskModel
+                    DayPlanningPrompt {
+                        anchors.fill: parent
+                        visible: window.todayTaskModel.activeCount === 0
+                        todayTaskModel: window.todayTaskModel
+                        goalModel: window.goalModel
                         appSettings: window.appSettings
                         theme: interfaceTheme
                         onAddRequested: quickAdd.open()
-                        onCompletionRequested: (taskIndex, taskTitle) =>
-                            window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                            window.requestTaskCategory(
-                                taskId, taskTitle, categoryId, subcategoryId)
-                    }
-
-                    QuietFocusView {
-                        taskModel: window.taskModel
-                        appSettings: window.appSettings
-                        theme: interfaceTheme
-                        onAddRequested: quickAdd.open()
-                        onCompletionRequested: (taskIndex, taskTitle) =>
-                            window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                            window.requestTaskCategory(
-                                taskId, taskTitle, categoryId, subcategoryId)
-                    }
-
-                    HybridView {
-                        taskModel: window.taskModel
-                        appSettings: window.appSettings
-                        theme: interfaceTheme
-                        onAddRequested: quickAdd.open()
-                        onCompletionRequested: (taskIndex, taskTitle) =>
-                            window.requestTaskCompletion(taskIndex, taskTitle)
-                        onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                            window.requestTaskCategory(
-                                taskId, taskTitle, categoryId, subcategoryId)
                     }
                 }
 
@@ -243,7 +263,8 @@ ApplicationWindow {
                     theme: interfaceTheme
                     onAddRequested: quickAdd.open()
                     onCompletionRequested: (taskIndex, taskTitle) =>
-                        window.requestTaskCompletion(taskIndex, taskTitle)
+                        window.requestTaskCompletion(
+                            window.taskModel, taskIndex, taskTitle)
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)
@@ -255,7 +276,8 @@ ApplicationWindow {
                     theme: interfaceTheme
                     onAddRequested: quickAdd.open()
                     onCompletionRequested: (taskIndex, taskTitle) =>
-                        window.requestTaskCompletion(taskIndex, taskTitle)
+                        window.requestTaskCompletion(
+                            window.taskModel, taskIndex, taskTitle)
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)
@@ -439,7 +461,9 @@ ApplicationWindow {
                     primary: true
                     text: "Mark complete"
                     onClicked: {
-                        window.taskModel.completeTask(window.pendingCompletionIndex)
+                        if (window.pendingCompletionModel)
+                            window.pendingCompletionModel.completeTask(
+                                window.pendingCompletionIndex)
                         completionDialog.close()
                     }
                 }
@@ -449,6 +473,7 @@ ApplicationWindow {
         onClosed: {
             window.pendingCompletionIndex = -1
             window.pendingCompletionTitle = ""
+            window.pendingCompletionModel = null
         }
     }
 }

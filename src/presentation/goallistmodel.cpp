@@ -8,6 +8,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include <algorithm>
+
 GoalListModel::GoalListModel(TaskRepository &repository, QObject *parent)
     : QAbstractListModel(parent)
     , m_repository(repository)
@@ -100,6 +102,26 @@ int GoalListModel::completedMilestoneCount() const
         total += completedCount(goal);
     }
     return total;
+}
+
+bool GoalListModel::hasMilestoneSuggestion() const
+{
+    return !m_suggestedMilestoneTitle.isEmpty();
+}
+
+QString GoalListModel::suggestedMilestoneTitle() const
+{
+    return m_suggestedMilestoneTitle;
+}
+
+QString GoalListModel::suggestedMilestoneGoal() const
+{
+    return m_suggestedMilestoneGoal;
+}
+
+QString GoalListModel::suggestedMilestoneTarget() const
+{
+    return m_suggestedMilestoneTarget;
 }
 
 QString GoalListModel::statusMessage() const
@@ -228,6 +250,33 @@ bool GoalListModel::completeGoal(int goalRow)
     return true;
 }
 
+bool GoalListModel::planSuggestedMilestone(int importance, int estimatedMinutes)
+{
+    if (!hasMilestoneSuggestion()) {
+        setStatusMessage(QStringLiteral("There is no unfinished milestone to suggest."));
+        return false;
+    }
+
+    Task task;
+    task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    task.title = m_suggestedMilestoneTitle;
+    task.notes = QStringLiteral("Milestone for goal: %1").arg(m_suggestedMilestoneGoal);
+    task.plannedDate = QDate::currentDate();
+    task.createdAt = QDateTime::currentDateTime();
+    task.importance = std::clamp(importance, 1, 5);
+    task.estimatedMinutes = std::clamp(estimatedMinutes, 5, 480);
+
+    QString errorMessage;
+    if (!m_repository.addTask(task, &errorMessage)) {
+        setStatusMessage(QStringLiteral("Could not plan the milestone: %1").arg(errorMessage));
+        return false;
+    }
+
+    emit taskCreated();
+    setStatusMessage(QStringLiteral("Added “%1” to Today.").arg(task.title));
+    return true;
+}
+
 void GoalListModel::clearStatus()
 {
     setStatusMessage({});
@@ -247,11 +296,44 @@ void GoalListModel::reload()
 
     beginResetModel();
     m_goals = std::move(activeGoals);
+    refreshMilestoneSuggestion();
     endResetModel();
     emit summaryChanged();
 
     if (!errorMessage.isEmpty()) {
         setStatusMessage(QStringLiteral("Could not load goals: %1").arg(errorMessage));
+    }
+}
+
+void GoalListModel::refreshMilestoneSuggestion()
+{
+    m_suggestedMilestoneTitle.clear();
+    m_suggestedMilestoneGoal.clear();
+    m_suggestedMilestoneTarget.clear();
+
+    QDate selectedTarget;
+    bool found = false;
+    for (const Goal &goal : m_goals) {
+        for (const Milestone &milestone : goal.milestones) {
+            if (milestone.completed) {
+                continue;
+            }
+
+            const QDate effectiveTarget = milestone.targetDate.isValid()
+                ? milestone.targetDate
+                : goal.targetDate;
+            if (found
+                && (!effectiveTarget.isValid()
+                    || (selectedTarget.isValid() && effectiveTarget >= selectedTarget))) {
+                continue;
+            }
+
+            found = true;
+            selectedTarget = effectiveTarget;
+            m_suggestedMilestoneTitle = milestone.title;
+            m_suggestedMilestoneGoal = goal.title;
+            m_suggestedMilestoneTarget = formatTargetDate(effectiveTarget);
+        }
     }
 }
 

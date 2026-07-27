@@ -156,6 +156,24 @@ Dialog {
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: 8
+
+            CheckBox {
+                id: planTodayField
+                text: "Add to Today"
+                checked: true
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Turn this off to keep the task in To-do until you choose it."
+                color: dialog.theme.textMuted
+                font.pixelSize: 10
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
             Layout.topMargin: 6
             spacing: 10
 
@@ -187,7 +205,8 @@ Dialog {
                             categoryField.currentIndex > 0
                                 ? dialog.categoryModel.subcategoryIdForAssignment(
                                     categoryField.currentIndex - 1)
-                                : "")) {
+                                : "",
+                            planTodayField.checked)) {
                         dialog.categoryModel.reload()
                         dialog.close()
                     }
@@ -199,6 +218,7 @@ Dialog {
     onOpened: {
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
         estimateField.value = dialog.appSettings.defaultEstimatedMinutes
+        planTodayField.checked = true
         titleField.forceActiveFocus()
     }
     onClosed: {
@@ -207,5 +227,6 @@ Dialog {
         dueField.clear()
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
         estimateField.value = dialog.appSettings.defaultEstimatedMinutes
+        planTodayField.checked = true
     }
 }

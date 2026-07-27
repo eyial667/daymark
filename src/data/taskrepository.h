@@ -33,6 +33,10 @@ public:
         const QString &categoryId,
         const QString &subcategoryId,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool setTaskPlannedDate(
+        const QString &taskId,
+        const QDate &plannedDate,
+        QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Category> categories(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addCategory(
         const Category &category,

@@ -15,6 +15,10 @@ embedded webview, Node.js, or a local web server.
 - Create reusable categories and nested subcategories with notes, assign them
   during capture, and change a task's placement from any task list.
 - Work through every open task in a dedicated native To-do page.
+- Keep Today deliberate: new tasks can go straight into today's plan or remain
+  in To-do, while due and overdue work stays visible automatically.
+- Fill an empty day by accepting the highest-ranked To-do task or an unfinished
+  goal milestone proposed by Daymark.
 - Store all data locally in SQLite.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
@@ -95,22 +99,15 @@ launch.
 
 ### Windows
 
-Extract `daymark-windows.zip`, then extract the contained
-`Daymark-0.1.0-win64.zip`. Move or rename the resulting
-`Daymark-0.1.0-win64` directory to a permanent location such as
-`%LOCALAPPDATA%\Programs\Daymark`. Keep the complete directory together because
-it contains the Qt runtime and plugins required by Daymark.
+Extract `daymark-windows.zip`, then run
+`Daymark-0.1.0-win64-setup.exe`. The installation wizard installs Daymark for
+the current user under `%LOCALAPPDATA%\Programs\Daymark`, so administrator
+access is not required. It creates a Start-menu entry, offers an optional
+desktop shortcut, and registers an uninstaller in Windows **Settings → Apps**.
 
-Launch `bin\daymark.exe` from that directory. From PowerShell, the suggested
-location can be launched with:
-
-```powershell
-& "$env:LOCALAPPDATA\Programs\Daymark\bin\daymark.exe"
-```
-
-The Windows package is currently portable: it does not modify the registry or
-create Start-menu and terminal shortcuts. Windows may display a SmartScreen
-warning because the development snapshot is not code-signed.
+Launch Daymark from the Start menu, the optional desktop shortcut, or the
+wizard's final page. Windows may display a SmartScreen warning because the
+development snapshot is not code-signed.
 
 Package filenames above use the current `0.1.0` version; substitute the version
 shown in a newer artifact when it changes.
@@ -141,6 +138,8 @@ sudo apt install build-essential cmake ninja-build \
 
 On macOS and Windows, install Qt 6 through the open-source Qt installer and use
 the platform compiler supplied by Xcode or Visual Studio respectively.
+Creating the Windows installer additionally requires CMake 3.27 or newer and
+Inno Setup 6; these packaging tools are not needed for a normal source build.
 
 ### Configure, build, test, and launch
 
@@ -172,6 +171,15 @@ the Today layout. `Ctrl+1`, `Ctrl+2`, `Ctrl+3`, and `Ctrl+4` switch directly
 between the four interfaces; `Ctrl+N` opens task capture, `Ctrl+,` opens
 Settings, and `Ctrl+Shift+L` toggles light or dark mode.
 
+Task capture selects **Add to Today** by default. Clear it to keep a task in the
+full To-do queue without committing it to the current day. Tasks with a deadline
+today or earlier still appear in Today so urgent work is not hidden. When Today
+is empty, every Today interface shows the same planning prompt: the first option
+pulls in the highest-ranked backlog task, and the second proposes the earliest
+unfinished milestone across active goals. Accepting a milestone creates a normal
+task for today; mark the milestone itself complete from Goals when its outcome is
+actually finished.
+
 ## Create a package
 
 ```bash
@@ -185,7 +193,8 @@ installer, desktop assets, and license texts. It deliberately uses the host
 distribution's complete Qt runtime, including its Wayland, GLX, EGL, and SQLite
 plugins. The distribution-independent Linux release will be an AppImage produced
 in an older Linux CI container so its glibc baseline works across supported
-distributions.
+distributions. On Windows it creates the per-user installation wizard described
+above rather than a portable archive.
 
 Generated packages are written to `build/packages`. Follow the matching Linux,
 macOS, or Windows installation instructions above; locally generated packages
