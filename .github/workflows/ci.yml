@@ -31,7 +31,7 @@ jobs:
             os: ubuntu-24.04
             artifact: daymark-linux
           - name: Windows
-            os: windows-2025
+            os: windows-2022
             artifact: daymark-windows
           - name: macOS
             os: macos-15
