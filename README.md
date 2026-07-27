@@ -47,7 +47,7 @@ embedded webview, Node.js, or a local web server.
   merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
 - Check the official GitHub Releases feed after launch, offer newer native
-  packages, and verify GitHub's SHA-256 digest before installation.
+  packages, and verify the release manifest's SHA-256 digest before installation.
 - Navigate the initial desktop application shell.
 
 The working product name is **Daymark** and can be changed before the first
@@ -58,13 +58,15 @@ public release.
 Daymark publishes native packages on its
 [GitHub Releases page](https://github.com/eyial667/daymark/releases). Packages
 are not code-signed or notarized yet. Daymark nevertheless verifies the
-SHA-256 digest recorded by GitHub before it opens any downloaded installer.
+SHA-256 digest generated alongside each release package before it opens any
+downloaded installer.
 
-Installed copies check that Releases feed shortly after launch without blocking
-the rest of the application. When a newer semantic version has a package for
-the current operating system, Daymark shows its release notes and size. Nothing
-is downloaded or installed until the user explicitly approves each step. The
-same controls remain available under **Settings → Software updates**.
+Installed copies fetch a small, platform-specific release manifest shortly
+after launch without blocking the rest of the application or consuming GitHub
+REST API quota. When a newer semantic version has a package for the current
+operating system, Daymark shows its release notes and size. Nothing is
+downloaded or installed until the user explicitly approves each step. The same
+controls remain available under **Settings → Software updates**.
 
 ### Linux
 
@@ -215,8 +217,8 @@ notes are not included in portable exports.
 
 Use **Focus** to select a Today task and start, pause, or reset its countdown.
 
-On launch, Daymark makes one HTTPS request to the public GitHub Releases API to
-look for a newer version. This request contains the app version and the normal
+On launch, Daymark makes one HTTPS request for the current platform's public
+GitHub Release manifest. This request contains the app version and the normal
 network metadata visible to GitHub; it never includes tasks, notes, preferences,
 or database contents. A failed check does not interrupt offline use. Windows
 updates hand off to the per-user setup wizard, macOS updates open the verified
@@ -257,8 +259,9 @@ revisions.
 Pushing a semantic-version tag that matches the CMake project version, such as
 `v0.2.0`, runs the separate release workflow. It creates a draft, repeats the
 complete build, lint, and test matrix, attaches the native Linux, Windows, and
-macOS packages directly to GitHub Releases, and publishes only after all three
-jobs succeed. GitHub records the SHA-256 digest consumed by the in-app updater.
+macOS packages and their generated update manifests directly to GitHub Releases,
+and publishes only after all three jobs succeed. Each manifest records the
+package's exact name, size, download URL, and SHA-256 digest for the in-app updater.
 
 ## Architecture
 

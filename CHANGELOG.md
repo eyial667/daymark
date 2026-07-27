@@ -7,6 +7,13 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-07-28
+
+### Fixed
+
+- Update checks now use per-platform GitHub Release manifests instead of the
+  rate-limited unauthenticated REST API while retaining SHA-256 verification.
+
 ## [0.2.2] - 2026-07-28
 
 ### Added

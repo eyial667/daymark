@@ -2779,8 +2779,8 @@
     </message>
     <message>
         <location filename="../src/presentation/updateservice.cpp" line="202"/>
-        <source>No published Daymark release is available yet.</source>
-        <translation>Aucune version publiée de Daymark n’est encore disponible.</translation>
+        <source>The latest Daymark release does not provide update metadata.</source>
+        <translation>La dernière version de Daymark ne fournit pas de métadonnées de mise à jour.</translation>
     </message>
     <message>
         <location filename="../src/presentation/updateservice.cpp" line="203"/>

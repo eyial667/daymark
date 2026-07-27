@@ -36,12 +36,13 @@ to QML. These objects translate user actions into repository operations without
 exposing SQL to QML.
 
 `UpdateService` is the single network and installer boundary. It performs a
-non-blocking startup request to the public GitHub Releases API, accepts only a
-strictly newer semantic version and the exact package name for the running
-platform, streams the package into the application cache, and checks GitHub's
-SHA-256 digest before any operating-system installer handoff. Downloads and
-installation are always explicit user actions. Update failures do not affect
-the database or offline task workflows.
+non-blocking startup request for a platform-specific manifest attached to the
+latest public GitHub Release. This avoids unauthenticated REST API quotas while
+still accepting only a strictly newer semantic version and the exact package
+name for the running platform. It streams the package into the application cache
+and checks the manifest's SHA-256 digest before any operating-system installer
+handoff. Downloads and installation are always explicit user actions. Update
+failures do not affect the database or offline task workflows.
 
 `LanguageManager` installs the bundled French Qt translation catalog before
 models are constructed and retranslates the QML engine immediately when the

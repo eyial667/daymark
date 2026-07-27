@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     Daymark
-    VERSION 0.2.2
+    VERSION 0.2.3
     DESCRIPTION "A local-first daily command center"
     LANGUAGES CXX
 )
@@ -206,6 +206,15 @@ if(BUILD_TESTING)
     qt_add_executable(updateservice_tests tests/updateservice_test.cpp)
     target_link_libraries(updateservice_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME updateservice_tests COMMAND updateservice_tests)
+
+    add_test(
+        NAME update_manifest_tests
+        COMMAND ${CMAKE_COMMAND}
+            -DDAYMARK_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -DDAYMARK_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            -DDAYMARK_VERSION=${PROJECT_VERSION}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/update_manifest_test.cmake
+    )
 
     qt_add_executable(languagemanager_tests tests/languagemanager_test.cpp)
     target_link_libraries(languagemanager_tests PRIVATE daymark_core Qt6::Test)

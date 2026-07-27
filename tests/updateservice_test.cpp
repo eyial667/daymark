@@ -2,36 +2,36 @@
 
 #include "presentation/updateservice.h"
 
-#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtTest>
 
 namespace {
 QByteArray releasePayload(
-    const QString &tag,
+    const QString &version,
+    const QString &platform,
     const QString &assetName = {},
     const QString &digest = QString(64, QLatin1Char('a')),
     const QString &urlHost = QStringLiteral("github.com"))
 {
     QJsonObject root{
-        {QStringLiteral("tag_name"), tag},
-        {QStringLiteral("body"), QStringLiteral("A focused new release.")},
+        {QStringLiteral("schemaVersion"), 1},
+        {QStringLiteral("version"), version},
+        {QStringLiteral("platform"), platform},
+        {QStringLiteral("notes"), QStringLiteral("A focused new release.")},
     };
     if (!assetName.isEmpty()) {
+        QString tag = version;
+        if (!tag.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
+            tag.prepend(QLatin1Char('v'));
+        }
+        root.insert(QStringLiteral("assetName"), assetName);
+        root.insert(QStringLiteral("size"), 4096);
+        root.insert(QStringLiteral("sha256"), digest);
         root.insert(
-            QStringLiteral("assets"),
-            QJsonArray{
-                QJsonObject{
-                    {QStringLiteral("name"), assetName},
-                    {QStringLiteral("state"), QStringLiteral("uploaded")},
-                    {QStringLiteral("size"), 4096},
-                    {QStringLiteral("digest"), QStringLiteral("sha256:") + digest},
-                    {QStringLiteral("browser_download_url"),
-                     QStringLiteral("https://%1/eyial667/daymark/releases/download/%2/%3")
-                         .arg(urlHost, tag, assetName)},
-                },
-            });
+            QStringLiteral("downloadUrl"),
+            QStringLiteral("https://%1/eyial667/daymark/releases/download/%2/%3")
+                .arg(urlHost, tag, assetName));
     }
     return QJsonDocument(root).toJson(QJsonDocument::Compact);
 }
@@ -44,7 +44,9 @@ class UpdateServiceTest final : public QObject
 private slots:
     void acceptsVerifiedPlatformRelease();
     void treatsCurrentAndOlderReleasesAsUpToDate();
-    void rejectsMissingPlatformPackage();
+    void usesTokenFreeReleaseManifests();
+    void rejectsAnotherPlatformManifest();
+    void rejectsUnexpectedPlatformPackage();
     void rejectsMissingDigest();
     void rejectsUntrustedDownloadHost();
     void rejectsInvalidVersions();
@@ -55,7 +57,8 @@ void UpdateServiceTest::acceptsVerifiedPlatformRelease()
     UpdateService::Release release;
     QString error;
     const QByteArray payload = releasePayload(
-        QStringLiteral("v0.2.0"),
+        QStringLiteral("0.2.0"),
+        QStringLiteral("linux"),
         QStringLiteral("Daymark-0.2.0-Linux.tar.gz"));
 
     QVERIFY(UpdateService::parseRelease(
@@ -74,11 +77,11 @@ void UpdateServiceTest::acceptsVerifiedPlatformRelease()
 
 void UpdateServiceTest::treatsCurrentAndOlderReleasesAsUpToDate()
 {
-    for (const QString &tag : {QStringLiteral("v0.2.0"), QStringLiteral("0.1.9")}) {
+    for (const QString &version : {QStringLiteral("0.2.0"), QStringLiteral("0.1.9")}) {
         UpdateService::Release release;
         QString error;
         QVERIFY(UpdateService::parseRelease(
-            releasePayload(tag),
+            releasePayload(version, QStringLiteral("windows")),
             QStringLiteral("0.2.0"),
             QStringLiteral("windows"),
             &release,
@@ -88,12 +91,22 @@ void UpdateServiceTest::treatsCurrentAndOlderReleasesAsUpToDate()
     }
 }
 
-void UpdateServiceTest::rejectsMissingPlatformPackage()
+void UpdateServiceTest::usesTokenFreeReleaseManifests()
+{
+    const QUrl linuxUrl = UpdateService::releaseManifestUrl(QStringLiteral("linux"));
+    QCOMPARE(linuxUrl.host(), QStringLiteral("github.com"));
+    QVERIFY(!linuxUrl.host().startsWith(QStringLiteral("api.")));
+    QVERIFY(linuxUrl.path().endsWith(QStringLiteral("Daymark-update-linux.json")));
+    QVERIFY(UpdateService::releaseManifestUrl(QStringLiteral("freebsd")).isEmpty());
+}
+
+void UpdateServiceTest::rejectsAnotherPlatformManifest()
 {
     UpdateService::Release release;
     QString error;
     const QByteArray payload = releasePayload(
-        QStringLiteral("v0.3.0"),
+        QStringLiteral("0.3.0"),
+        QStringLiteral("windows"),
         QStringLiteral("Daymark-0.3.0-win64-setup.exe"));
 
     QVERIFY(!UpdateService::parseRelease(
@@ -102,7 +115,25 @@ void UpdateServiceTest::rejectsMissingPlatformPackage()
         QStringLiteral("linux"),
         &release,
         &error));
-    QVERIFY(error.contains(QStringLiteral("linux")));
+    QVERIFY(error.contains(QStringLiteral("metadata")));
+}
+
+void UpdateServiceTest::rejectsUnexpectedPlatformPackage()
+{
+    UpdateService::Release release;
+    QString error;
+    const QByteArray payload = releasePayload(
+        QStringLiteral("0.3.0"),
+        QStringLiteral("linux"),
+        QStringLiteral("Daymark-0.3.0-win64-setup.exe"));
+
+    QVERIFY(!UpdateService::parseRelease(
+        payload,
+        QStringLiteral("0.2.0"),
+        QStringLiteral("linux"),
+        &release,
+        &error));
+    QVERIFY(error.contains(QStringLiteral("integrity")));
 }
 
 void UpdateServiceTest::rejectsMissingDigest()
@@ -110,7 +141,8 @@ void UpdateServiceTest::rejectsMissingDigest()
     UpdateService::Release release;
     QString error;
     const QByteArray payload = releasePayload(
-        QStringLiteral("v0.3.0"),
+        QStringLiteral("0.3.0"),
+        QStringLiteral("macos"),
         QStringLiteral("Daymark-0.3.0-Darwin.dmg"),
         QString());
 
@@ -128,7 +160,8 @@ void UpdateServiceTest::rejectsUntrustedDownloadHost()
     UpdateService::Release release;
     QString error;
     const QByteArray payload = releasePayload(
-        QStringLiteral("v0.3.0"),
+        QStringLiteral("0.3.0"),
+        QStringLiteral("windows"),
         QStringLiteral("Daymark-0.3.0-win64-setup.exe"),
         QString(64, QLatin1Char('b')),
         QStringLiteral("example.com"));
@@ -147,7 +180,7 @@ void UpdateServiceTest::rejectsInvalidVersions()
     UpdateService::Release release;
     QString error;
     QVERIFY(!UpdateService::parseRelease(
-        releasePayload(QStringLiteral("nightly")),
+        releasePayload(QStringLiteral("nightly"), QStringLiteral("linux")),
         QStringLiteral("0.2.0"),
         QStringLiteral("linux"),
         &release,

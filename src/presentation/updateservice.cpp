@@ -8,7 +8,6 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -22,8 +21,7 @@
 
 namespace {
 constexpr qint64 maximumPackageSize = 1024LL * 1024LL * 1024LL;
-const QUrl latestReleaseUrl(
-    QStringLiteral("https://api.github.com/repos/eyial667/daymark/releases/latest"));
+constexpr qint64 maximumManifestSize = 256LL * 1024LL;
 
 QString expectedAssetName(const QString &version, const QString &platform)
 {
@@ -54,6 +52,21 @@ bool parseVersion(const QString &value, QVersionNumber *version)
 
     *version = QVersionNumber::fromString(normalized);
     return !version->isNull();
+}
+
+bool isExpectedReleaseAssetUrl(
+    const QUrl &url,
+    const QString &version,
+    const QString &assetName)
+{
+    return url.isValid()
+        && url.scheme() == QStringLiteral("https")
+        && url.host().compare(QStringLiteral("github.com"), Qt::CaseInsensitive) == 0
+        && (url.port() == -1 || url.port() == 443)
+        && url.path() == QStringLiteral("/eyial667/daymark/releases/download/v%1/%2")
+            .arg(version, assetName)
+        && !url.hasQuery()
+        && !url.hasFragment();
 }
 
 QString cacheRoot()
@@ -174,9 +187,8 @@ void UpdateService::checkForUpdates()
     setState(Checking);
     setStatusMessage(tr("Checking GitHub for updates…"));
 
-    QNetworkRequest request(latestReleaseUrl);
-    request.setRawHeader("Accept", "application/vnd.github+json");
-    request.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
+    QNetworkRequest request(releaseManifestUrl(platformKey()));
+    request.setRawHeader("Accept", "application/json");
     request.setRawHeader(
         "User-Agent",
         QStringLiteral("Daymark/%1").arg(currentVersion()).toUtf8());
@@ -199,15 +211,13 @@ void UpdateService::finishCheck(QNetworkReply *reply)
     if (reply->error() != QNetworkReply::NoError) {
         const QString detail = reply->attribute(
             QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404
-            ? tr("No published Daymark release is available yet.")
+            ? tr("The latest Daymark release does not provide update metadata.")
             : tr("The update check could not reach GitHub: %1").arg(reply->errorString());
         reply->deleteLater();
         fail(detail);
         return;
     }
-    if (reply->url().scheme() != QStringLiteral("https")
-        || reply->url().host().compare(
-            QStringLiteral("api.github.com"), Qt::CaseInsensitive) != 0) {
+    if (!isTrustedDownloadUrl(reply->url())) {
         reply->deleteLater();
         fail(tr("The release check was redirected outside GitHub."));
         return;
@@ -217,6 +227,10 @@ void UpdateService::finishCheck(QNetworkReply *reply)
     QString parseError;
     const QByteArray payload = reply->readAll();
     reply->deleteLater();
+    if (payload.size() > maximumManifestSize) {
+        fail(tr("GitHub returned invalid release metadata."));
+        return;
+    }
     if (!parseRelease(payload, currentVersion(), platformKey(), &release, &parseError)) {
         fail(parseError);
         return;
@@ -538,19 +552,20 @@ bool UpdateService::parseRelease(
     QVersionNumber current;
     QVersionNumber latest;
     const QJsonObject root = document.object();
-    if (root.value(QStringLiteral("draft")).toBool()
-        || root.value(QStringLiteral("prerelease")).toBool()) {
+    if (root.value(QStringLiteral("schemaVersion")).toInt() != 1
+        || root.value(QStringLiteral("platform")).toString() != platform) {
         if (errorMessage) {
-            *errorMessage = tr("GitHub returned an unpublished Daymark release.");
+            *errorMessage = tr("GitHub returned invalid release metadata.");
         }
         return false;
     }
-    QString tag = root.value(QStringLiteral("tag_name")).toString();
-    QString normalizedTag = tag.trimmed();
+    const QString versionValue = root.value(QStringLiteral("version")).toString();
+    QString normalizedTag = versionValue.trimmed();
     if (normalizedTag.startsWith(QLatin1Char('v'), Qt::CaseInsensitive)) {
         normalizedTag.remove(0, 1);
     }
-    if (!parseVersion(currentVersion, &current) || !parseVersion(tag, &latest)) {
+    if (!parseVersion(currentVersion, &current)
+        || !parseVersion(versionValue, &latest)) {
         if (errorMessage) {
             *errorMessage = tr("The installed or published Daymark version is invalid.");
         }
@@ -559,54 +574,54 @@ bool UpdateService::parseRelease(
 
     Release parsed;
     parsed.version = normalizedTag;
-    parsed.notes = root.value(QStringLiteral("body")).toString().left(12000).trimmed();
+    parsed.notes = root.value(QStringLiteral("notes")).toString().left(12000).trimmed();
     parsed.isNewer = QVersionNumber::compare(latest, current) > 0;
     if (!parsed.isNewer) {
         *release = parsed;
         return true;
     }
 
-    parsed.assetName = expectedAssetName(parsed.version, platform);
-    if (parsed.assetName.isEmpty()) {
+    const QString expectedName = expectedAssetName(parsed.version, platform);
+    if (expectedName.isEmpty()) {
         if (errorMessage) {
             *errorMessage = tr("This operating system does not have a Daymark updater package.");
         }
         return false;
     }
 
-    const QJsonArray assets = root.value(QStringLiteral("assets")).toArray();
-    for (const QJsonValue &value : assets) {
-        const QJsonObject asset = value.toObject();
-        if (asset.value(QStringLiteral("name")).toString() != parsed.assetName
-            || asset.value(QStringLiteral("state")).toString() != QStringLiteral("uploaded")) {
-            continue;
+    parsed.assetName = root.value(QStringLiteral("assetName")).toString();
+    parsed.downloadUrl = QUrl(root.value(QStringLiteral("downloadUrl")).toString());
+    parsed.size = root.value(QStringLiteral("size")).toInteger();
+    const QString digest = root.value(QStringLiteral("sha256")).toString();
+    static const QRegularExpression digestPattern(
+        QStringLiteral("^[0-9a-fA-F]{64}$"));
+    if (parsed.assetName != expectedName
+        || !isExpectedReleaseAssetUrl(
+            parsed.downloadUrl,
+            parsed.version,
+            parsed.assetName)
+        || parsed.size <= 0 || parsed.size > maximumPackageSize
+        || !digestPattern.match(digest).hasMatch()) {
+        if (errorMessage) {
+            *errorMessage = tr("The matching GitHub package has invalid integrity metadata.");
         }
-
-        parsed.downloadUrl = QUrl(
-            asset.value(QStringLiteral("browser_download_url")).toString());
-        parsed.size = asset.value(QStringLiteral("size")).toInteger();
-        const QString digest = asset.value(QStringLiteral("digest")).toString();
-        static const QRegularExpression digestPattern(
-            QStringLiteral("^sha256:([0-9a-fA-F]{64})$"));
-        const QRegularExpressionMatch match = digestPattern.match(digest);
-        if (!isTrustedDownloadUrl(parsed.downloadUrl)
-            || parsed.size <= 0 || parsed.size > maximumPackageSize
-            || !match.hasMatch()) {
-            if (errorMessage) {
-                *errorMessage = tr("The matching GitHub package has invalid integrity metadata.");
-            }
-            return false;
-        }
-        parsed.sha256 = QByteArray::fromHex(match.captured(1).toLatin1());
-        *release = parsed;
-        return true;
+        return false;
     }
+    parsed.sha256 = QByteArray::fromHex(digest.toLatin1());
+    *release = parsed;
+    return true;
+}
 
-    if (errorMessage) {
-        *errorMessage = tr("GitHub does not contain a %1 update package for this release.")
-            .arg(platform);
+QUrl UpdateService::releaseManifestUrl(const QString &platform)
+{
+    if (platform != QStringLiteral("linux")
+        && platform != QStringLiteral("windows")
+        && platform != QStringLiteral("macos")) {
+        return {};
     }
-    return false;
+    return QUrl(QStringLiteral(
+        "https://github.com/eyial667/daymark/releases/latest/download/"
+        "Daymark-update-%1.json").arg(platform));
 }
 
 void UpdateService::setState(State state)

@@ -86,6 +86,7 @@ public:
         const QString &platform,
         Release *release,
         QString *errorMessage);
+    [[nodiscard]] static QUrl releaseManifestUrl(const QString &platform);
 
 signals:
     void stateChanged();
