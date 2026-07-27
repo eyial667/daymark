@@ -299,8 +299,9 @@ Item {
                                         }
                                         Text {
                                             text: timelineRow.estimatedMinutes + " min"
-                                            color: root.theme.textMuted
-                                            font.pixelSize: 9
+                                            color: root.theme.accent
+                                            font.pixelSize: 11
+                                            font.weight: Font.DemiBold
                                         }
                                     }
                                 }

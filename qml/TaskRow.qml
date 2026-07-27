@@ -115,10 +115,21 @@ Rectangle {
                     font.weight: Font.Medium
                 }
 
-                Text {
-                    text: row.estimatedMinutes + " min"
-                    color: row.theme.textMuted
-                    font.pixelSize: 11
+                Rectangle {
+                    implicitWidth: durationText.implicitWidth + 16
+                    implicitHeight: 24
+                    radius: 12
+                    color: row.theme.accentSoft
+                    border.color: row.theme.borderStrong
+
+                    Text {
+                        id: durationText
+                        anchors.centerIn: parent
+                        text: row.estimatedMinutes + " min"
+                        color: row.theme.accent
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
                 }
 
                 Text {

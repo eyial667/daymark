@@ -13,7 +13,7 @@ Dialog {
 
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: 470
+    width: 550
     modal: true
     focus: true
     padding: 24
@@ -79,7 +79,7 @@ Dialog {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 110
+                Layout.preferredWidth: 120
                 spacing: 5
 
                 Text {
@@ -97,11 +97,11 @@ Dialog {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 100
+                Layout.preferredWidth: 150
                 spacing: 5
 
                 Text {
-                    text: "Minutes"
+                    text: "Estimate"
                     color: dialog.theme.textSecondary
                     font.pixelSize: 11
                 }
@@ -114,6 +114,12 @@ Dialog {
                     stepSize: 5
                     value: 30
                     editable: true
+                    font.pixelSize: 14
+                    textFromValue: (value, locale) => value + " min"
+                    valueFromText: (text, locale) => {
+                        const parsed = parseInt(text)
+                        return Number.isNaN(parsed) ? estimateField.value : parsed
+                    }
                 }
             }
         }

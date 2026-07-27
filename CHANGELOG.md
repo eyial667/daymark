@@ -20,3 +20,8 @@ and releases will use semantic versioning.
   milestones.
 - Versioned portable data export and merge import for tasks, completed history,
   goals, milestones, and preferences.
+
+### Changed
+
+- Enlarged task-estimate input and duration labels for better readability across
+  capture, queues, and compact timelines.

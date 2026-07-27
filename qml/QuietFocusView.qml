@@ -241,8 +241,9 @@ Item {
                                 }
                                 Text {
                                     text: agendaRow.estimatedMinutes + "m"
-                                    color: root.theme.textMuted
-                                    font.pixelSize: 10
+                                    color: root.theme.accent
+                                    font.pixelSize: 11
+                                    font.weight: Font.DemiBold
                                 }
                             }
                         }

@@ -302,7 +302,7 @@ Item {
                                         color: root.theme.textPrimary
                                         elide: Text.ElideRight
                                         verticalAlignment: Text.AlignVCenter
-                                        font.pixelSize: 9
+                                        font.pixelSize: 10
                                     }
                                 }
                             }
