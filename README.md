@@ -186,7 +186,9 @@ Settings, and `Ctrl+Shift+L` toggles light or dark mode.
 Task capture keeps new work in the full To-do queue by default. Select **Add
 directly to Today** only when making an explicit commitment. An unplanned task
 appears in Today naturally when its deadline is today or overdue, so urgent work
-is not hidden.
+is not hidden. To commit any existing task, open **To-do** and select **Add to
+Today** on that task; it appears immediately in every Today interface without
+changing its deadline.
 
 Every Today interface has a **Give me something to do** button. It opens the same
 chooser whether Today is empty or already has work: add the highest-ranked

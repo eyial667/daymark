@@ -346,6 +346,8 @@ ApplicationWindow {
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(
                             window.taskModel, taskIndex, taskTitle)
+                    onPlanRequested: taskId =>
+                        window.taskModel.planTaskForToday(taskId)
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)

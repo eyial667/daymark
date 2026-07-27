@@ -15,12 +15,14 @@ Rectangle {
     required property string categoryName
     required property string subcategoryId
     required property string subcategoryName
+    required property bool isInToday
     required property string dueText
     required property int estimatedMinutes
     required property int priorityScore
     required property string priorityReason
     property bool compact: false
     property bool showReason: true
+    property bool showPlanAction: false
     readonly property string categoryPath: subcategoryName.length > 0
         ? categoryName + " / " + subcategoryName : categoryName
 
@@ -29,6 +31,7 @@ Rectangle {
         string taskId,
         string currentCategoryId,
         string currentSubcategoryId)
+    signal planRequested(string taskId)
 
     implicitHeight: compact ? 68 : 84
     radius: theme.radius
@@ -177,6 +180,18 @@ Rectangle {
                         row.subcategoryId)
                 }
             }
+        }
+
+        AppButton {
+            visible: row.showPlanAction && !row.isInToday
+            Layout.preferredWidth: visible ? 102 : 0
+            implicitHeight: 32
+            leftPadding: 10
+            rightPadding: 10
+            theme: row.theme
+            primary: true
+            text: qsTr("Add to Today")
+            onClicked: row.planRequested(row.taskId)
         }
     }
 

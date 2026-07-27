@@ -13,6 +13,7 @@ Item {
     required property var theme
     signal addRequested()
     signal completionRequested(int taskIndex, string taskTitle)
+    signal planRequested(string taskId)
     signal categoryRequested(
         string taskId,
         string taskTitle,
@@ -91,8 +92,10 @@ Item {
                         width: ListView.view.width
                         theme: root.theme
                         showReason: root.appSettings.showPriorityReasons
+                        showPlanAction: true
                         onCompletionRequested: rowIndex =>
                             root.completionRequested(rowIndex, taskRow.title)
+                        onPlanRequested: taskId => root.planRequested(taskId)
                         onCategoryRequested: (taskId, categoryId, subcategoryId) =>
                             root.categoryRequested(
                                 taskId, taskRow.title, categoryId, subcategoryId)

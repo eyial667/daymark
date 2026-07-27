@@ -2639,6 +2639,11 @@
         <source>Change category</source>
         <translation>Changer de catégorie</translation>
     </message>
+    <message>
+        <location filename="../qml/TaskRow.qml" line="199"/>
+        <source>Add to Today</source>
+        <translation>Ajouter à Aujourd’hui</translation>
+    </message>
 </context>
 <context>
     <name>Theme</name>

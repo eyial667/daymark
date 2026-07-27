@@ -171,6 +171,37 @@ private slots:
         QVERIFY(todayTitles.contains(QStringLiteral("Overdue")));
         QVERIFY(!todayTitles.contains(QStringLiteral("Due tomorrow")));
     }
+
+    void plansAnySelectedTodoTaskForToday()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel todoModel(repository);
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Higher priority task"), {}, 5, 30, {}, {}, false));
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Chosen lower priority task"), {}, 1, 30, {}, {}, false));
+
+        const QModelIndex chosenIndex = todoModel.index(1);
+        const QString chosenId =
+            todoModel.data(chosenIndex, TaskListModel::IdRole).toString();
+        QVERIFY(!todoModel.data(chosenIndex, TaskListModel::IsInTodayRole).toBool());
+
+        QVERIFY(todoModel.planTaskForToday(chosenId));
+
+        TaskListModel todayModel(repository, TaskListModel::Today);
+        QCOMPARE(todayModel.activeCount(), 1);
+        QCOMPARE(todayModel.topTaskTitle(), QStringLiteral("Chosen lower priority task"));
+
+        const auto refreshedIndex = todoModel.index(1);
+        QVERIFY(todoModel.data(refreshedIndex, TaskListModel::IsInTodayRole).toBool());
+        QCOMPARE(
+            todoModel.statusMessage(),
+            QStringLiteral("Added “Chosen lower priority task” to Today."));
+        QVERIFY(!todoModel.planTaskForToday(QStringLiteral("missing-task")));
+    }
 };
 
 QTEST_GUILESS_MAIN(TaskListModelTest)

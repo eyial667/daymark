@@ -7,6 +7,12 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-28
+
+### Added
+
+- A per-task To-do action for adding any chosen open task directly to Today.
+
 ## [0.2.1] - 2026-07-28
 
 ### Added

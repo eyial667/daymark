@@ -55,6 +55,8 @@ QVariant TaskListModel::data(const QModelIndex &index, int role) const
         return item.task.subcategoryId;
     case SubcategoryNameRole:
         return item.task.subcategoryName;
+    case IsInTodayRole:
+        return belongsToToday(item.task, QDate::currentDate());
     default:
         return {};
     }
@@ -75,6 +77,7 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
         {CategoryNameRole, "categoryName"},
         {SubcategoryIdRole, "subcategoryId"},
         {SubcategoryNameRole, "subcategoryName"},
+        {IsInTodayRole, "isInToday"},
     };
 }
 
@@ -254,6 +257,30 @@ bool TaskListModel::completeTask(int row)
     reload();
     emit tasksChanged();
     setStatusMessage(tr("Task completed."));
+    return true;
+}
+
+bool TaskListModel::planTaskForToday(const QString &taskId)
+{
+    const auto item = std::find_if(
+        m_items.cbegin(),
+        m_items.cend(),
+        [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
+    if (item == m_items.cend()) {
+        setStatusMessage(tr("That task is no longer in the list."));
+        return false;
+    }
+
+    const QString taskTitle = item->task.title;
+    QString errorMessage;
+    if (!m_repository.setTaskPlannedDate(taskId, QDate::currentDate(), &errorMessage)) {
+        setStatusMessage(tr("Could not plan the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    reload();
+    emit tasksChanged();
+    setStatusMessage(tr("Added “%1” to Today.").arg(taskTitle));
     return true;
 }
 

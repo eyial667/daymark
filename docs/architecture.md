@@ -18,8 +18,9 @@ services. QML must not contain business rules or direct SQL access.
 `TaskListModel` converts persisted tasks into either the full sorted queue or a
 Today-scoped queue. The Today scope includes tasks planned for the current date
 and tasks whose deadlines are due or overdue, then uses the same priority engine
-to propose the best remaining backlog item on request. New task capture leaves
-the planning date empty unless the user explicitly adds the task to Today.
+to propose the best remaining backlog item on request. Any task in the full
+To-do queue can also be planned directly by its stable ID. New task capture
+leaves the planning date empty unless the user explicitly adds the task to Today.
 `CategoryListModel` owns reusable category metadata and notes and derives a
 deterministic work-area proposal from open task counts, while `GoalListModel`
 owns goal and milestone presentation state and deterministically proposes the
