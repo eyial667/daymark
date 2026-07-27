@@ -449,11 +449,11 @@ Item {
                     font.pixelSize: 11
                 }
 
-                TextField {
+                DateField {
                     id: goalDateField
                     Layout.fillWidth: true
+                    theme: root.theme
                     placeholderText: "YYYY-MM-DD (optional)"
-                    selectByMouse: true
                 }
             }
 
@@ -537,11 +537,11 @@ Item {
                 selectByMouse: true
             }
 
-            TextField {
+            DateField {
                 id: milestoneDateField
                 Layout.fillWidth: true
+                theme: root.theme
                 placeholderText: "Target date · YYYY-MM-DD (optional)"
-                selectByMouse: true
             }
 
             RowLayout {

@@ -25,3 +25,5 @@ and releases will use semantic versioning.
 
 - Enlarged task-estimate input and duration labels for better readability across
   capture, queues, and compact timelines.
+- Added a themed calendar picker alongside manual `YYYY-MM-DD` entry for task,
+  goal, and milestone dates.

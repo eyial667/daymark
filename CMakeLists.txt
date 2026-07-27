@@ -64,6 +64,7 @@ qt_add_qml_module(daymark
     QML_FILES
         qml/Main.qml
         qml/AppButton.qml
+        qml/DateField.qml
         qml/EmptyState.qml
         qml/GoalsView.qml
         qml/HybridView.qml

@@ -70,11 +70,12 @@ Dialog {
                     font.pixelSize: 11
                 }
 
-                TextField {
+                DateField {
                     id: dueField
                     Layout.fillWidth: true
+                    theme: dialog.theme
                     placeholderText: "YYYY-MM-DD"
-                    selectByMouse: true
+                    onAccepted: saveButton.clicked()
                 }
             }
 

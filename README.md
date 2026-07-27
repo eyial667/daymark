@@ -25,6 +25,8 @@ embedded webview, Node.js, or a local web server.
   from a native Settings page.
 - Create long-term goals, break them into dated milestones, track their progress,
   and keep achieved goals in local history.
+- Choose task, goal, and milestone dates from a calendar or enter them manually
+  as `YYYY-MM-DD`.
 - Export tasks, completed history, goals, milestones, and preferences to a
   portable `.daymark.json` file, then merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
