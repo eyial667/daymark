@@ -12,6 +12,8 @@ Item {
     required property var appSettings
     required property var theme
     signal addRequested()
+    signal suggestionRequested()
+    signal focusRequested()
     signal completionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
@@ -49,20 +51,11 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: "⌕"
-                        color: root.theme.textMuted
-                        font.pixelSize: 18
-                    }
-                    Text {
                         Layout.fillWidth: true
-                        text: "Jump to anything…"
-                        color: root.theme.textMuted
+                        text: "MIDNIGHT COMMAND  ·  TODAY’S PRIORITY QUEUE"
+                        color: root.theme.textSecondary
                         font.pixelSize: 12
-                    }
-                    Text {
-                        text: "Ctrl K"
-                        color: root.theme.textMuted
-                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
                     }
                 }
             }
@@ -76,6 +69,12 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
+                text: "Give me something to do"
+                onClicked: root.suggestionRequested()
+            }
+
+            AppButton {
+                theme: root.theme
                 text: "+ Add task"
                 onClicked: root.addRequested()
             }
@@ -166,8 +165,9 @@ Item {
                             AppButton {
                                 theme: root.theme
                                 primary: true
-                                text: "Start now  →"
+                                text: "Open focus  →"
                                 enabled: root.taskModel.activeCount > 0
+                                onClicked: root.focusRequested()
                             }
                         }
                     }
@@ -224,7 +224,8 @@ Item {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 286
+                visible: root.appSettings.showTimeline
+                Layout.preferredWidth: visible ? 286 : 0
                 Layout.fillHeight: true
                 spacing: 12
 
@@ -250,7 +251,7 @@ Item {
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: "⋮"
+                                text: root.taskModel.activeCount + " items"
                                 color: root.theme.textMuted
                             }
                         }

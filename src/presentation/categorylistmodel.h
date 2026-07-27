@@ -16,6 +16,12 @@ class CategoryListModel final : public QAbstractListModel
     Q_PROPERTY(int subcategoryCount READ subcategoryCount NOTIFY categoriesChanged)
     Q_PROPERTY(QStringList names READ names NOTIFY categoriesChanged)
     Q_PROPERTY(QStringList assignmentNames READ assignmentNames NOTIFY categoriesChanged)
+    Q_PROPERTY(bool hasWorkSuggestion READ hasWorkSuggestion NOTIFY workSuggestionChanged)
+    Q_PROPERTY(int workSuggestionCount READ workSuggestionCount NOTIFY workSuggestionChanged)
+    Q_PROPERTY(QString workSuggestionName READ workSuggestionName NOTIFY workSuggestionChanged)
+    Q_PROPERTY(QString workSuggestionDetail READ workSuggestionDetail NOTIFY workSuggestionChanged)
+    Q_PROPERTY(QString workSuggestionCategoryId READ workSuggestionCategoryId NOTIFY workSuggestionChanged)
+    Q_PROPERTY(QString workSuggestionSubcategoryId READ workSuggestionSubcategoryId NOTIFY workSuggestionChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY statusMessageChanged)
 
 public:
@@ -39,6 +45,12 @@ public:
     [[nodiscard]] int subcategoryCount() const;
     [[nodiscard]] QStringList names() const;
     [[nodiscard]] QStringList assignmentNames() const;
+    [[nodiscard]] bool hasWorkSuggestion() const;
+    [[nodiscard]] int workSuggestionCount() const;
+    [[nodiscard]] QString workSuggestionName() const;
+    [[nodiscard]] QString workSuggestionDetail() const;
+    [[nodiscard]] QString workSuggestionCategoryId() const;
+    [[nodiscard]] QString workSuggestionSubcategoryId() const;
     [[nodiscard]] QString statusMessage() const;
 
     Q_INVOKABLE bool addCategory(const QString &name, const QString &notes);
@@ -60,15 +72,26 @@ public:
         const QString &categoryId,
         const QString &subcategoryId) const;
     Q_INVOKABLE QVariantList subcategoriesAt(int categoryRow) const;
+    Q_INVOKABLE void advanceWorkSuggestion();
     Q_INVOKABLE void clearStatus();
     Q_INVOKABLE void reload();
 
 signals:
     void categoriesChanged();
+    void workSuggestionChanged();
     void statusMessageChanged();
 
 private:
+    struct WorkSuggestion {
+        QString name;
+        QString detail;
+        QString categoryId;
+        QString subcategoryId;
+        int openTaskCount = 0;
+    };
+
     void setStatusMessage(const QString &message);
+    void rebuildWorkSuggestions();
     [[nodiscard]] bool hasDuplicateName(const QString &name, int excludedRow) const;
     [[nodiscard]] bool hasDuplicateSubcategoryName(
         int categoryRow,
@@ -77,5 +100,7 @@ private:
 
     TaskRepository &m_repository;
     QVector<Category> m_categories;
+    QVector<WorkSuggestion> m_workSuggestions;
+    qsizetype m_workSuggestionIndex = 0;
     QString m_statusMessage;
 };

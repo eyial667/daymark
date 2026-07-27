@@ -12,6 +12,9 @@ Item {
     required property var appSettings
     required property var theme
     signal addRequested()
+    signal suggestionRequested()
+    signal focusRequested()
+    signal reviewRequested()
     signal completionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
@@ -41,7 +44,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 28
+            spacing: 12
 
             Text {
                 text: root.taskModel.totalEstimatedMinutes
@@ -67,6 +70,12 @@ Item {
                 font.pixelSize: 13
             }
             Item { Layout.fillWidth: true }
+            AppButton {
+                theme: root.theme
+                primary: true
+                text: "Give me something to do"
+                onClicked: root.suggestionRequested()
+            }
             AppButton {
                 theme: root.theme
                 text: "+ Add task"
@@ -109,8 +118,9 @@ Item {
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Start focus  →"
+                    text: "Open focus  →"
                     enabled: root.taskModel.activeCount > 0
+                    onClicked: root.focusRequested()
                 }
             }
         }
@@ -182,7 +192,8 @@ Item {
             }
 
             Rectangle {
-                Layout.preferredWidth: 390
+                visible: root.appSettings.showTimeline
+                Layout.preferredWidth: visible ? 390 : 0
                 Layout.fillHeight: true
                 radius: root.theme.radius
                 color: root.theme.surface
@@ -295,8 +306,8 @@ Item {
                 }
                 AppButton {
                     theme: root.theme
-                    text: "Begin review  →"
-                    enabled: false
+                    text: "Open review  →"
+                    onClicked: root.reviewRequested()
                 }
             }
         }

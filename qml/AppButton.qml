@@ -11,8 +11,14 @@ Button {
     property bool quiet: false
 
     implicitHeight: 36
+    focusPolicy: Qt.StrongFocus
     leftPadding: 14
     rightPadding: 14
+    scale: pressed ? 0.98 : 1
+
+    Behavior on scale {
+        NumberAnimation { duration: 70 }
+    }
 
     contentItem: Text {
         text: control.text
@@ -34,9 +40,14 @@ Button {
             : control.hovered ? control.theme.surfaceHover
             : control.quiet ? "transparent"
             : control.theme.surfaceRaised
-        border.color: control.primary ? control.theme.accent
+        border.color: control.activeFocus ? control.theme.accent
+            : control.primary ? control.theme.accent
             : control.quiet ? "transparent"
             : control.theme.border
-        border.width: 1
+        border.width: control.activeFocus ? 2 : 1
+    }
+
+    HoverHandler {
+        cursorShape: control.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
 }

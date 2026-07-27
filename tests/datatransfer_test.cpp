@@ -68,7 +68,8 @@ private slots:
             4,
             45,
             sourceCategoryId,
-            sourceSubcategoryId));
+            sourceSubcategoryId,
+            true));
 
         Task completedTask;
         completedTask.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -95,6 +96,7 @@ private slots:
         sourceSettings.setDefaultEstimatedMinutes(50);
         sourceSettings.setDefaultImportance(4);
         sourceSettings.setUse24HourClock(true);
+        sourceSettings.setShowTimeline(true);
         sourceSettings.setShowPriorityReasons(false);
         sourceSettings.setConfirmTaskCompletion(true);
 
@@ -157,6 +159,7 @@ private slots:
         QCOMPARE(targetSettings.defaultEstimatedMinutes(), 50);
         QCOMPARE(targetSettings.defaultImportance(), 4);
         QVERIFY(targetSettings.use24HourClock());
+        QVERIFY(targetSettings.showTimeline());
         QVERIFY(!targetSettings.showPriorityReasons());
         QVERIFY(targetSettings.confirmTaskCompletion());
         QVERIFY(targetTransfer.statusMessage().contains(QStringLiteral("Existing records were kept")));
@@ -219,6 +222,9 @@ private slots:
         QVERIFY(exportFile.open(QIODevice::ReadOnly));
         QJsonObject root = QJsonDocument::fromJson(exportFile.readAll()).object();
         exportFile.close();
+        QJsonObject settings = root.value(QStringLiteral("settings")).toObject();
+        settings.remove(QStringLiteral("showTimeline"));
+        root.insert(QStringLiteral("settings"), settings);
         QJsonArray tasks = root.value(QStringLiteral("tasks")).toArray();
         tasks.append(QJsonObject {
             {QStringLiteral("id"), QStringLiteral("legacy-project-task")},
@@ -259,6 +265,7 @@ private slots:
         QCOMPARE(importedTasks.size(), 1);
         QCOMPARE(importedTasks.first().categoryName, QStringLiteral("Client work"));
         QVERIFY(importedTasks.first().project.isEmpty());
+        QVERIFY(!targetSettings.showTimeline());
     }
 };
 

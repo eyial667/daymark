@@ -11,7 +11,15 @@ Dialog {
     required property var categoryModel
     required property var appSettings
     required property var theme
+    property string initialCategoryId: ""
+    property string initialSubcategoryId: ""
     signal manageCategoriesRequested()
+
+    function openForAssignment(categoryId, subcategoryId) {
+        initialCategoryId = categoryId
+        initialSubcategoryId = subcategoryId
+        open()
+    }
 
     parent: Overlay.overlay
     anchors.centerIn: parent
@@ -83,6 +91,15 @@ Dialog {
                     dialog.manageCategoriesRequested()
                 }
             }
+        }
+
+        Text {
+            Layout.fillWidth: true
+            visible: dialog.taskModel.statusMessage.length > 0
+            text: dialog.taskModel.statusMessage
+            color: dialog.theme.danger
+            font.pixelSize: 11
+            wrapMode: Text.WordWrap
         }
 
         RowLayout {
@@ -160,12 +177,12 @@ Dialog {
 
             CheckBox {
                 id: planTodayField
-                text: "Add to Today"
-                checked: true
+                text: "Add directly to Today"
+                checked: false
             }
             Text {
                 Layout.fillWidth: true
-                text: "Turn this off to keep the task in To-do until you choose it."
+                text: "Leave this off for To-do. A task appears in Today automatically when its deadline arrives."
                 color: dialog.theme.textMuted
                 font.pixelSize: 10
                 wrapMode: Text.WordWrap
@@ -207,7 +224,6 @@ Dialog {
                                     categoryField.currentIndex - 1)
                                 : "",
                             planTodayField.checked)) {
-                        dialog.categoryModel.reload()
                         dialog.close()
                     }
                 }
@@ -218,7 +234,11 @@ Dialog {
     onOpened: {
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
         estimateField.value = dialog.appSettings.defaultEstimatedMinutes
-        planTodayField.checked = true
+        planTodayField.checked = false
+        dialog.taskModel.clearStatus()
+        const assignmentIndex = dialog.categoryModel.indexOfAssignment(
+            dialog.initialCategoryId, dialog.initialSubcategoryId)
+        categoryField.currentIndex = assignmentIndex >= 0 ? assignmentIndex + 1 : 0
         titleField.forceActiveFocus()
     }
     onClosed: {
@@ -227,6 +247,8 @@ Dialog {
         dueField.clear()
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
         estimateField.value = dialog.appSettings.defaultEstimatedMinutes
-        planTodayField.checked = true
+        planTodayField.checked = false
+        dialog.initialCategoryId = ""
+        dialog.initialSubcategoryId = ""
     }
 }

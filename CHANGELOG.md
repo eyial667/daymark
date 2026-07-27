@@ -30,6 +30,10 @@ and releases will use semantic versioning.
 - Empty-day planning that can pull the highest-ranked To-do task into Today or
   create today's work from the earliest unfinished goal milestone.
 - A separate local planning date for Today, independent of task deadlines.
+- An optional, persistent Today timeline setting with a list-first default.
+- An always-available “Give me something to do” chooser for To-do tasks, work
+  areas, and goal milestones.
+- Deterministic category and subcategory work-area proposals based on open tasks.
 
 ### Changed
 
@@ -39,3 +43,7 @@ and releases will use semantic versioning.
   capture, queues, and compact timelines.
 - Added a themed calendar picker alongside manual `YYYY-MM-DD` entry for task,
   goal, and milestone dates.
+- New task capture now defaults to To-do; tasks still enter Today automatically
+  when their deadline arrives or becomes overdue.
+- Replaced inert Today controls with working navigation and added click, focus,
+  success, and validation feedback throughout task interactions.

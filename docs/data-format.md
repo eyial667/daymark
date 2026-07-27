@@ -26,6 +26,11 @@ imports with a project value convert it into a category. Goal and milestone
 records contain stable IDs, titles, descriptions where applicable, target dates,
 creation timestamps, and completion state.
 
+Settings include the selected interface and palette, planning and capture
+defaults, and behavior preferences such as timeline visibility. The
+`showTimeline` setting is optional for compatibility with earlier version 1
+exports and defaults to `false` when absent.
+
 Timestamps are written in UTC with ISO-8601 millisecond precision. Task planning
 dates and goal and milestone targets are calendar dates in `YYYY-MM-DD` form and
 do not carry a timezone. An empty date or timestamp string means that value was

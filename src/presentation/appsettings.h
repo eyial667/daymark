@@ -16,6 +16,7 @@ class AppSettings final : public QObject
     Q_PROPERTY(int defaultEstimatedMinutes READ defaultEstimatedMinutes WRITE setDefaultEstimatedMinutes NOTIFY defaultEstimatedMinutesChanged)
     Q_PROPERTY(int defaultImportance READ defaultImportance WRITE setDefaultImportance NOTIFY defaultImportanceChanged)
     Q_PROPERTY(bool use24HourClock READ use24HourClock WRITE setUse24HourClock NOTIFY use24HourClockChanged)
+    Q_PROPERTY(bool showTimeline READ showTimeline WRITE setShowTimeline NOTIFY showTimelineChanged)
     Q_PROPERTY(bool showPriorityReasons READ showPriorityReasons WRITE setShowPriorityReasons NOTIFY showPriorityReasonsChanged)
     Q_PROPERTY(bool confirmTaskCompletion READ confirmTaskCompletion WRITE setConfirmTaskCompletion NOTIFY confirmTaskCompletionChanged)
     Q_PROPERTY(QString dataDirectory READ dataDirectory CONSTANT)
@@ -69,6 +70,9 @@ public:
     [[nodiscard]] bool use24HourClock() const;
     void setUse24HourClock(bool enabled);
 
+    [[nodiscard]] bool showTimeline() const;
+    void setShowTimeline(bool enabled);
+
     [[nodiscard]] bool showPriorityReasons() const;
     void setShowPriorityReasons(bool enabled);
 
@@ -88,6 +92,7 @@ signals:
     void defaultEstimatedMinutesChanged();
     void defaultImportanceChanged();
     void use24HourClockChanged();
+    void showTimelineChanged();
     void showPriorityReasonsChanged();
     void confirmTaskCompletionChanged();
     void settingsReset();
@@ -100,6 +105,7 @@ private:
     static constexpr auto DefaultEstimateKey = "tasks/defaultEstimatedMinutes";
     static constexpr auto DefaultImportanceKey = "tasks/defaultImportance";
     static constexpr auto Use24HourClockKey = "behavior/use24HourClock";
+    static constexpr auto ShowTimelineKey = "behavior/showTimeline";
     static constexpr auto ShowPriorityReasonsKey = "behavior/showPriorityReasons";
     static constexpr auto ConfirmCompletionKey = "behavior/confirmTaskCompletion";
 
@@ -118,6 +124,7 @@ private:
     int m_defaultEstimatedMinutes = DefaultTaskEstimateMinutes;
     int m_defaultImportance = DefaultTaskImportance;
     bool m_use24HourClock = false;
+    bool m_showTimeline = false;
     bool m_showPriorityReasons = true;
     bool m_confirmTaskCompletion = false;
 };

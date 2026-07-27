@@ -84,6 +84,9 @@ AppSettings::AppSettings(const QString &dataDirectory, QObject *parent)
     m_use24HourClock = m_settings.value(
         QString::fromLatin1(Use24HourClockKey),
         localeUses24HourClock()).toBool();
+    m_showTimeline = m_settings.value(
+        QString::fromLatin1(ShowTimelineKey),
+        false).toBool();
     m_showPriorityReasons = m_settings.value(
         QString::fromLatin1(ShowPriorityReasonsKey),
         true).toBool();
@@ -203,6 +206,21 @@ void AppSettings::setUse24HourClock(bool enabled)
     emit use24HourClockChanged();
 }
 
+bool AppSettings::showTimeline() const
+{
+    return m_showTimeline;
+}
+
+void AppSettings::setShowTimeline(bool enabled)
+{
+    if (m_showTimeline == enabled) {
+        return;
+    }
+    m_showTimeline = enabled;
+    m_settings.setValue(QString::fromLatin1(ShowTimelineKey), enabled);
+    emit showTimelineChanged();
+}
+
 bool AppSettings::showPriorityReasons() const
 {
     return m_showPriorityReasons;
@@ -255,6 +273,7 @@ void AppSettings::resetDefaults()
     m_settings.remove(QString::fromLatin1(DefaultEstimateKey));
     m_settings.remove(QString::fromLatin1(DefaultImportanceKey));
     m_settings.remove(QString::fromLatin1(Use24HourClockKey));
+    m_settings.remove(QString::fromLatin1(ShowTimelineKey));
     m_settings.remove(QString::fromLatin1(ShowPriorityReasonsKey));
     m_settings.remove(QString::fromLatin1(ConfirmCompletionKey));
 
@@ -265,6 +284,7 @@ void AppSettings::resetDefaults()
     setDefaultEstimatedMinutes(DefaultTaskEstimateMinutes);
     setDefaultImportance(DefaultTaskImportance);
     setUse24HourClock(localeUses24HourClock());
+    setShowTimeline(false);
     setShowPriorityReasons(true);
     setConfirmTaskCompletion(false);
     m_settings.sync();

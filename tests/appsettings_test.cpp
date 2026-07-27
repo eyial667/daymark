@@ -44,6 +44,7 @@ void AppSettingsTest::persistsSelectedSettings()
         QCOMPARE(settings.dailyCapacityMinutes(), 480);
         QCOMPARE(settings.defaultEstimatedMinutes(), 30);
         QCOMPARE(settings.defaultImportance(), 3);
+        QVERIFY(!settings.showTimeline());
         QVERIFY(settings.showPriorityReasons());
         QVERIFY(!settings.confirmTaskCompletion());
 
@@ -55,6 +56,7 @@ void AppSettingsTest::persistsSelectedSettings()
         settings.setDefaultEstimatedMinutes(45);
         settings.setDefaultImportance(5);
         settings.setUse24HourClock(true);
+        settings.setShowTimeline(true);
         settings.setShowPriorityReasons(false);
         settings.setConfirmTaskCompletion(true);
         QCOMPARE(changedSpy.count(), 1);
@@ -68,6 +70,7 @@ void AppSettingsTest::persistsSelectedSettings()
     QCOMPARE(restoredSettings.defaultEstimatedMinutes(), 45);
     QCOMPARE(restoredSettings.defaultImportance(), 5);
     QVERIFY(restoredSettings.use24HourClock());
+    QVERIFY(restoredSettings.showTimeline());
     QVERIFY(!restoredSettings.showPriorityReasons());
     QVERIFY(restoredSettings.confirmTaskCompletion());
 }
@@ -116,6 +119,7 @@ void AppSettingsTest::resetsPreferencesWithoutTouchingData()
     settings.setColorMode(AppSettings::Light);
     settings.setDailyCapacityMinutes(240);
     settings.setDefaultImportance(5);
+    settings.setShowTimeline(true);
 
     QSignalSpy resetSpy(&settings, &AppSettings::settingsReset);
     settings.resetDefaults();
@@ -125,6 +129,7 @@ void AppSettingsTest::resetsPreferencesWithoutTouchingData()
     QCOMPARE(settings.colorMode(), AppSettings::Dark);
     QCOMPARE(settings.dailyCapacityMinutes(), 480);
     QCOMPARE(settings.defaultImportance(), 3);
+    QVERIFY(!settings.showTimeline());
     QCOMPARE(settings.dataDirectory(), QDir::cleanPath(settingsDirectory.path()));
 }
 

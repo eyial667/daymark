@@ -11,7 +11,9 @@ Item {
     required property var taskModel
     required property var appSettings
     required property var theme
+    property bool showSuggestionAction: false
     signal addRequested()
+    signal suggestionRequested()
     signal completionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
@@ -82,8 +84,15 @@ Item {
             Item { Layout.fillWidth: true }
 
             AppButton {
+                visible: root.showSuggestionAction
                 theme: root.theme
                 primary: true
+                text: "Give me something to do"
+                onClicked: root.suggestionRequested()
+            }
+
+            AppButton {
+                theme: root.theme
                 text: "+ Add task"
                 onClicked: root.addRequested()
             }
@@ -305,13 +314,6 @@ Item {
                     }
 
                     Item { Layout.fillHeight: true }
-
-                    AppButton {
-                        Layout.fillWidth: true
-                        theme: root.theme
-                        text: "Add dependency"
-                        enabled: false
-                    }
                 }
             }
         }

@@ -35,6 +35,7 @@ struct ImportedSettings
     int defaultEstimatedMinutes = 30;
     int defaultImportance = 3;
     bool use24HourClock = false;
+    bool showTimeline = false;
     bool showPriorityReasons = true;
     bool confirmTaskCompletion = false;
 };
@@ -132,6 +133,7 @@ QJsonObject settingsToJson(const AppSettings &settings)
         {QStringLiteral("defaultEstimatedMinutes"), settings.defaultEstimatedMinutes()},
         {QStringLiteral("defaultImportance"), settings.defaultImportance()},
         {QStringLiteral("use24HourClock"), settings.use24HourClock()},
+        {QStringLiteral("showTimeline"), settings.showTimeline()},
         {QStringLiteral("showPriorityReasons"), settings.showPriorityReasons()},
         {QStringLiteral("confirmTaskCompletion"), settings.confirmTaskCompletion()},
     };
@@ -187,6 +189,18 @@ bool readBool(
     }
     *target = value.toBool();
     return true;
+}
+
+bool readOptionalBool(
+    const QJsonObject &object,
+    const QString &key,
+    bool *target,
+    QString *errorMessage)
+{
+    if (!object.contains(key)) {
+        return true;
+    }
+    return readBool(object, key, target, errorMessage);
 }
 
 bool readBoundedInt(
@@ -554,6 +568,11 @@ bool settingsFromJson(
             QStringLiteral("use24HourClock"),
             &settings->use24HourClock,
             errorMessage)
+        && readOptionalBool(
+            object,
+            QStringLiteral("showTimeline"),
+            &settings->showTimeline,
+            errorMessage)
         && readBool(
             object,
             QStringLiteral("showPriorityReasons"),
@@ -575,6 +594,7 @@ void applySettings(const ImportedSettings &source, AppSettings &target)
     target.setDefaultEstimatedMinutes(source.defaultEstimatedMinutes);
     target.setDefaultImportance(source.defaultImportance);
     target.setUse24HourClock(source.use24HourClock);
+    target.setShowTimeline(source.showTimeline);
     target.setShowPriorityReasons(source.showPriorityReasons);
     target.setConfirmTaskCompletion(source.confirmTaskCompletion);
 }

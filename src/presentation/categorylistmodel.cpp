@@ -3,9 +3,12 @@
 #include "presentation/categorylistmodel.h"
 
 #include <QDateTime>
+#include <QHash>
 #include <QUuid>
 #include <QVariantList>
 #include <QVariantMap>
+
+#include <algorithm>
 
 CategoryListModel::CategoryListModel(TaskRepository &repository, QObject *parent)
     : QAbstractListModel(parent)
@@ -101,6 +104,40 @@ QStringList CategoryListModel::assignmentNames() const
         }
     }
     return result;
+}
+
+bool CategoryListModel::hasWorkSuggestion() const
+{
+    return !m_workSuggestions.isEmpty();
+}
+
+int CategoryListModel::workSuggestionCount() const
+{
+    return m_workSuggestions.size();
+}
+
+QString CategoryListModel::workSuggestionName() const
+{
+    return hasWorkSuggestion() ? m_workSuggestions.at(m_workSuggestionIndex).name : QString();
+}
+
+QString CategoryListModel::workSuggestionDetail() const
+{
+    return hasWorkSuggestion() ? m_workSuggestions.at(m_workSuggestionIndex).detail : QString();
+}
+
+QString CategoryListModel::workSuggestionCategoryId() const
+{
+    return hasWorkSuggestion()
+        ? m_workSuggestions.at(m_workSuggestionIndex).categoryId
+        : QString();
+}
+
+QString CategoryListModel::workSuggestionSubcategoryId() const
+{
+    return hasWorkSuggestion()
+        ? m_workSuggestions.at(m_workSuggestionIndex).subcategoryId
+        : QString();
 }
 
 QString CategoryListModel::statusMessage() const
@@ -348,6 +385,15 @@ QVariantList CategoryListModel::subcategoriesAt(int categoryRow) const
     return result;
 }
 
+void CategoryListModel::advanceWorkSuggestion()
+{
+    if (m_workSuggestions.size() < 2) {
+        return;
+    }
+    m_workSuggestionIndex = (m_workSuggestionIndex + 1) % m_workSuggestions.size();
+    emit workSuggestionChanged();
+}
+
 void CategoryListModel::clearStatus()
 {
     setStatusMessage({});
@@ -360,9 +406,105 @@ void CategoryListModel::reload()
     beginResetModel();
     m_categories = std::move(categories);
     endResetModel();
+    rebuildWorkSuggestions();
     emit categoriesChanged();
     if (!errorMessage.isEmpty()) {
         setStatusMessage(QStringLiteral("Could not load categories: %1").arg(errorMessage));
+    }
+}
+
+void CategoryListModel::rebuildWorkSuggestions()
+{
+    QString errorMessage;
+    const QVector<Task> openTasks = m_repository.openTasks(&errorMessage);
+    QHash<QString, int> categoryCounts;
+    QHash<QString, int> subcategoryCounts;
+    for (const Task &task : openTasks) {
+        if (!task.categoryId.isEmpty()) {
+            ++categoryCounts[task.categoryId];
+        }
+        if (!task.subcategoryId.isEmpty()) {
+            ++subcategoryCounts[task.subcategoryId];
+        }
+    }
+
+    QVector<WorkSuggestion> suggestions;
+    for (const Category &category : m_categories) {
+        int nestedTaskCount = 0;
+        for (const Subcategory &subcategory : category.subcategories) {
+            const int openTaskCount = subcategoryCounts.value(subcategory.id);
+            nestedTaskCount += openTaskCount;
+            if (openTaskCount > 0) {
+                suggestions.append({
+                    QStringLiteral("%1 / %2").arg(category.name, subcategory.name),
+                    QStringLiteral("%1 open %2 in this area.")
+                        .arg(openTaskCount)
+                        .arg(openTaskCount == 1 ? QStringLiteral("task") : QStringLiteral("tasks")),
+                    category.id,
+                    subcategory.id,
+                    openTaskCount,
+                });
+            }
+        }
+
+        const int directTaskCount = categoryCounts.value(category.id) - nestedTaskCount;
+        if (directTaskCount > 0) {
+            const int openTaskCount = directTaskCount;
+            suggestions.append({
+                category.name,
+                QStringLiteral("%1 open %2 in this area.")
+                    .arg(openTaskCount)
+                    .arg(openTaskCount == 1 ? QStringLiteral("task") : QStringLiteral("tasks")),
+                category.id,
+                {},
+                openTaskCount,
+            });
+        }
+    }
+
+    if (suggestions.isEmpty()) {
+        for (const Category &category : m_categories) {
+            if (category.subcategories.isEmpty()) {
+                suggestions.append({
+                    category.name,
+                    category.notes.isEmpty()
+                        ? QStringLiteral("Create a concrete next action in this area.")
+                        : category.notes,
+                    category.id,
+                    {},
+                    0,
+                });
+                continue;
+            }
+            for (const Subcategory &subcategory : category.subcategories) {
+                suggestions.append({
+                    QStringLiteral("%1 / %2").arg(category.name, subcategory.name),
+                    subcategory.notes.isEmpty()
+                        ? QStringLiteral("Create a concrete next action in this area.")
+                        : subcategory.notes,
+                    category.id,
+                    subcategory.id,
+                    0,
+                });
+            }
+        }
+    }
+
+    std::stable_sort(
+        suggestions.begin(),
+        suggestions.end(),
+        [](const WorkSuggestion &left, const WorkSuggestion &right) {
+            if (left.openTaskCount != right.openTaskCount) {
+                return left.openTaskCount > right.openTaskCount;
+            }
+            return left.name.compare(right.name, Qt::CaseInsensitive) < 0;
+        });
+    m_workSuggestions = std::move(suggestions);
+    m_workSuggestionIndex = 0;
+    emit workSuggestionChanged();
+
+    if (!errorMessage.isEmpty()) {
+        setStatusMessage(QStringLiteral("Could not load category suggestions: %1").arg(errorMessage));
     }
 }
 

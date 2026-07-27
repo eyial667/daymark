@@ -94,12 +94,14 @@ private slots:
         TaskListModel todoModel(repository);
         TaskListModel todayModel(repository, TaskListModel::Today);
         QVERIFY(todoModel.addTask(
+            QStringLiteral("Default backlog task"), {}, 3, 30, {}, {}));
+        QVERIFY(todoModel.addTask(
             QStringLiteral("Low priority backlog task"), {}, 1, 60, {}, {}, false));
         QVERIFY(todoModel.addTask(
             QStringLiteral("High priority backlog task"), {}, 5, 25, {}, {}, false));
 
         todayModel.reload();
-        QCOMPARE(todoModel.activeCount(), 2);
+        QCOMPARE(todoModel.activeCount(), 3);
         QCOMPARE(todayModel.activeCount(), 0);
         QVERIFY(todayModel.hasBacklogSuggestion());
         QCOMPARE(
@@ -136,10 +138,33 @@ private slots:
             {},
             {},
             false));
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Overdue"),
+            QDate::currentDate().addDays(-1).toString(Qt::ISODate),
+            3,
+            30,
+            {},
+            {},
+            false));
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Due tomorrow"),
+            QDate::currentDate().addDays(1).toString(Qt::ISODate),
+            3,
+            30,
+            {},
+            {},
+            false));
 
         TaskListModel todayModel(repository, TaskListModel::Today);
-        QCOMPARE(todayModel.activeCount(), 1);
-        QCOMPARE(todayModel.topTaskTitle(), QStringLiteral("Due today"));
+        QCOMPARE(todayModel.activeCount(), 2);
+        QStringList todayTitles;
+        for (int row = 0; row < todayModel.rowCount(); ++row) {
+            todayTitles.append(
+                todayModel.data(todayModel.index(row), TaskListModel::TitleRole).toString());
+        }
+        QVERIFY(todayTitles.contains(QStringLiteral("Due today")));
+        QVERIFY(todayTitles.contains(QStringLiteral("Overdue")));
+        QVERIFY(!todayTitles.contains(QStringLiteral("Due tomorrow")));
     }
 };
 

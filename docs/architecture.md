@@ -18,12 +18,14 @@ services. QML must not contain business rules or direct SQL access.
 `TaskListModel` converts persisted tasks into either the full sorted queue or a
 Today-scoped queue. The Today scope includes tasks planned for the current date
 and tasks whose deadlines are due or overdue, then uses the same priority engine
-to propose the best remaining backlog item when the scope is empty.
-`CategoryListModel` owns reusable category metadata and notes, while
-`GoalListModel` owns goal and milestone presentation state and deterministically
-proposes the earliest unfinished milestone. `DataTransferService` coordinates
-validated portable exports and imports. These objects translate user actions
-into repository operations without exposing SQL to QML.
+to propose the best remaining backlog item on request. New task capture leaves
+the planning date empty unless the user explicitly adds the task to Today.
+`CategoryListModel` owns reusable category metadata and notes and derives a
+deterministic work-area proposal from open task counts, while `GoalListModel`
+owns goal and milestone presentation state and deterministically proposes the
+earliest unfinished milestone. `DataTransferService` coordinates validated
+portable exports and imports. These objects translate user actions into
+repository operations without exposing SQL to QML.
 
 ## Persistence
 

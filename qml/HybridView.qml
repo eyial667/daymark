@@ -12,6 +12,9 @@ Item {
     required property var appSettings
     required property var theme
     signal addRequested()
+    signal suggestionRequested()
+    signal focusRequested()
+    signal mapRequested()
     signal completionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
@@ -63,6 +66,11 @@ Item {
             AppButton {
                 theme: root.theme
                 primary: true
+                text: "Give me something to do"
+                onClicked: root.suggestionRequested()
+            }
+            AppButton {
+                theme: root.theme
                 text: "+ Add task"
                 onClicked: root.addRequested()
             }
@@ -114,8 +122,9 @@ Item {
                 AppButton {
                     theme: root.theme
                     primary: true
-                    text: "Focus  →"
+                    text: "Open focus  →"
                     enabled: root.taskModel.activeCount > 0
+                    onClicked: root.focusRequested()
                 }
             }
         }
@@ -203,10 +212,11 @@ Item {
                                 font.weight: Font.DemiBold
                             }
                             Item { Layout.fillWidth: true }
-                            Text {
+                            AppButton {
+                                theme: root.theme
+                                quiet: true
                                 text: "Open map  ↗"
-                                color: root.theme.textMuted
-                                font.pixelSize: 9
+                                onClicked: root.mapRequested()
                             }
                         }
 
@@ -250,6 +260,7 @@ Item {
                 }
 
                 Rectangle {
+                    visible: root.appSettings.showTimeline
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     radius: root.theme.radius

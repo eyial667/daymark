@@ -68,7 +68,7 @@ public:
         int estimatedMinutes,
         const QString &categoryId = {},
         const QString &subcategoryId = {},
-        bool planForToday = true);
+        bool planForToday = false);
     Q_INVOKABLE bool assignTaskCategory(
         const QString &taskId,
         const QString &categoryId,

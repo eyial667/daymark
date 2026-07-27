@@ -17,8 +17,8 @@ embedded webview, Node.js, or a local web server.
 - Work through every open task in a dedicated native To-do page.
 - Keep Today deliberate: new tasks can go straight into today's plan or remain
   in To-do, while due and overdue work stays visible automatically.
-- Fill an empty day by accepting the highest-ranked To-do task or an unfinished
-  goal milestone proposed by Daymark.
+- Ask Daymark for something to do at any time: pull in the highest-ranked To-do
+  task, choose a proposed category or subcategory, or work on a goal milestone.
 - Store all data locally in SQLite.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
@@ -28,8 +28,8 @@ embedded webview, Node.js, or a local web server.
   Daymark Hybrid.
 - Keep the selected interface across application launches.
 - Configure light or dark mode, accent color, daily capacity, task-capture
-  defaults, clock format, priority explanations, and completion confirmation
-  from a native Settings page.
+  defaults, optional timeline panels, clock format, priority explanations, and
+  completion confirmation from a native Settings page.
 - Create long-term goals, break them into dated milestones, track their progress,
   and keep achieved goals in local history.
 - Choose task, goal, and milestone dates from a calendar or enter them manually
@@ -171,14 +171,20 @@ the Today layout. `Ctrl+1`, `Ctrl+2`, `Ctrl+3`, and `Ctrl+4` switch directly
 between the four interfaces; `Ctrl+N` opens task capture, `Ctrl+,` opens
 Settings, and `Ctrl+Shift+L` toggles light or dark mode.
 
-Task capture selects **Add to Today** by default. Clear it to keep a task in the
-full To-do queue without committing it to the current day. Tasks with a deadline
-today or earlier still appear in Today so urgent work is not hidden. When Today
-is empty, every Today interface shows the same planning prompt: the first option
-pulls in the highest-ranked backlog task, and the second proposes the earliest
-unfinished milestone across active goals. Accepting a milestone creates a normal
-task for today; mark the milestone itself complete from Goals when its outcome is
-actually finished.
+Task capture keeps new work in the full To-do queue by default. Select **Add
+directly to Today** only when making an explicit commitment. An unplanned task
+appears in Today naturally when its deadline is today or overdue, so urgent work
+is not hidden.
+
+Every Today interface has a **Give me something to do** button. It opens the same
+chooser whether Today is empty or already has work: add the highest-ranked
+backlog task to Today, create a task in a proposed category or subcategory, or
+turn the earliest unfinished goal milestone into today's task. Mark the milestone
+itself complete from Goals when its outcome is actually finished.
+
+Today defaults to a list-first layout without assigning tasks to clock times.
+Enable **Settings → Behavior → Show timeline** to restore the timeline, agenda,
+and day-shape panels; the choice is saved locally and included in exports.
 
 ## Create a package
 

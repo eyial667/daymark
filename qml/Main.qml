@@ -22,6 +22,8 @@ ApplicationWindow {
     property string pendingCategoryTitle: ""
     property string pendingCategoryId: ""
     property string pendingSubcategoryId: ""
+    property bool planningPromptOpen: false
+    property string feedbackMessage: ""
 
     function requestTaskCompletion(model, taskIndex, taskTitle) {
         if (!appSettings.confirmTaskCompletion) {
@@ -43,6 +45,18 @@ ApplicationWindow {
         categoryAssignmentField.currentIndex = assignmentIndex >= 0
             ? assignmentIndex + 1 : 0
         categoryAssignmentDialog.open()
+    }
+
+    function showFeedback(message) {
+        if (message.length === 0)
+            return
+        feedbackMessage = message
+        feedbackTimer.restart()
+    }
+
+    onCurrentPageChanged: {
+        if (currentPage !== 0)
+            planningPromptOpen = false
     }
 
     width: 1440
@@ -84,6 +98,38 @@ ApplicationWindow {
     Shortcut {
         sequence: "Ctrl+N"
         onActivated: quickAdd.open()
+    }
+
+    Connections {
+        target: window.taskModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.taskModel.statusMessage)
+        }
+    }
+
+    Connections {
+        target: window.todayTaskModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.todayTaskModel.statusMessage)
+        }
+    }
+
+    Connections {
+        target: window.goalModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.goalModel.statusMessage)
+        }
+    }
+
+    Timer {
+        id: feedbackTimer
+        interval: 2800
+        onTriggered: {
+            window.feedbackMessage = ""
+            window.taskModel.clearStatus()
+            window.todayTaskModel.clearStatus()
+            window.goalModel.clearStatus()
+        }
     }
 
     Shortcut {
@@ -198,6 +244,8 @@ ApplicationWindow {
                             appSettings: window.appSettings
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
+                            onSuggestionRequested: window.planningPromptOpen = true
+                            onFocusRequested: window.currentPage = 5
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -210,7 +258,9 @@ ApplicationWindow {
                             taskModel: window.todayTaskModel
                             appSettings: window.appSettings
                             theme: interfaceTheme
+                            showSuggestionAction: true
                             onAddRequested: quickAdd.open()
+                            onSuggestionRequested: window.planningPromptOpen = true
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -224,6 +274,9 @@ ApplicationWindow {
                             appSettings: window.appSettings
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
+                            onSuggestionRequested: window.planningPromptOpen = true
+                            onFocusRequested: window.currentPage = 5
+                            onReviewRequested: window.currentPage = 6
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -237,6 +290,9 @@ ApplicationWindow {
                             appSettings: window.appSettings
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
+                            onSuggestionRequested: window.planningPromptOpen = true
+                            onFocusRequested: window.currentPage = 5
+                            onMapRequested: window.currentPage = 2
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -248,12 +304,17 @@ ApplicationWindow {
 
                     DayPlanningPrompt {
                         anchors.fill: parent
-                        visible: window.todayTaskModel.activeCount === 0
+                        z: 20
+                        visible: window.planningPromptOpen
                         todayTaskModel: window.todayTaskModel
+                        categoryModel: window.categoryModel
                         goalModel: window.goalModel
                         appSettings: window.appSettings
                         theme: interfaceTheme
                         onAddRequested: quickAdd.open()
+                        onCategoryTaskRequested: (categoryId, subcategoryId) =>
+                            quickAdd.openForAssignment(categoryId, subcategoryId)
+                        onCloseRequested: window.planningPromptOpen = false
                     }
                 }
 
@@ -309,6 +370,42 @@ ApplicationWindow {
                     theme: interfaceTheme
                 }
             }
+        }
+    }
+
+    Rectangle {
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: 18
+        z: 100
+        width: Math.min(620, feedbackText.implicitWidth + 38)
+        implicitHeight: 42
+        radius: interfaceTheme.radius
+        color: interfaceTheme.surfaceRaised
+        border.color: interfaceTheme.accent
+        border.width: 1
+        opacity: window.feedbackMessage.length > 0 ? 1 : 0
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation { duration: 140 }
+        }
+
+        Text {
+            id: feedbackText
+            anchors.centerIn: parent
+            width: Math.min(580, implicitWidth)
+            text: window.feedbackMessage
+            color: interfaceTheme.textPrimary
+            font.pixelSize: 12
+            font.weight: Font.Medium
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: window.feedbackMessage = ""
         }
     }
 
@@ -396,7 +493,6 @@ ApplicationWindow {
                                 window.pendingCategoryTaskId,
                                 categoryId,
                                 subcategoryId)) {
-                            window.categoryModel.reload()
                             categoryAssignmentDialog.close()
                         }
                     }

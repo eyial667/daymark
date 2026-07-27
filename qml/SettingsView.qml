@@ -408,8 +408,26 @@ Item {
 
                             SettingCopy {
                                 Layout.fillWidth: true
+                                heading: "Show timeline"
+                                description: "Show time-based planning panels in Today. Leave this off for a task-list-first view."
+                            }
+
+                            SettingsSwitch {
+                                checked: root.appSettings.showTimeline
+                                onToggled: root.appSettings.showTimeline = checked
+                            }
+                        }
+
+                        SettingDivider { Layout.fillWidth: true }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 24
+
+                            SettingCopy {
+                                Layout.fillWidth: true
                                 heading: "24-hour clock"
-                                description: "Display agenda and timeline hours as 09:00 and 14:00."
+                                description: "When timeline panels are shown, display hours as 09:00 and 14:00."
                             }
 
                             SettingsSwitch {

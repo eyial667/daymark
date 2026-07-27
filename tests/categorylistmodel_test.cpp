@@ -60,11 +60,47 @@ private slots:
             0,
             QStringLiteral("Healthy routines"),
             QStringLiteral("Updated subcategory notes.")));
+
+        Task task;
+        task.id = QStringLiteral("routine-task");
+        task.title = QStringLiteral("Take a walk");
+        task.categoryId = model.idAt(0);
+        task.subcategoryId = model.subcategoryIdForAssignment(1);
+        task.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addTask(task, &error), qPrintable(error));
+        model.reload();
+        QVERIFY(model.hasWorkSuggestion());
+        QCOMPARE(model.workSuggestionCount(), 1);
+        QCOMPARE(
+            model.workSuggestionName(),
+            QStringLiteral("Wellbeing / Healthy routines"));
+        QCOMPARE(model.workSuggestionCategoryId(), task.categoryId);
+        QCOMPARE(model.workSuggestionSubcategoryId(), task.subcategoryId);
+        QVERIFY(model.workSuggestionDetail().contains(QStringLiteral("1 open task")));
+
         QVERIFY(!model.addSubcategory(0, QStringLiteral("healthy routines"), {}));
         QVERIFY(model.statusMessage().contains(QStringLiteral("already has")));
 
         QVERIFY(!model.addCategory(QStringLiteral("wellbeing"), {}));
         QVERIFY(model.statusMessage().contains(QStringLiteral("already exists")));
+    }
+
+    void cyclesAvailableWorkAreaSuggestions()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        CategoryListModel model(repository);
+        QVERIFY(model.addCategory(QStringLiteral("Home"), QStringLiteral("Household work.")));
+        QVERIFY(model.addCategory(QStringLiteral("Work"), QStringLiteral("Professional work.")));
+        QCOMPARE(model.workSuggestionCount(), 2);
+
+        const QString firstSuggestion = model.workSuggestionName();
+        model.advanceWorkSuggestion();
+        QVERIFY(model.workSuggestionName() != firstSuggestion);
+        model.advanceWorkSuggestion();
+        QCOMPARE(model.workSuggestionName(), firstSuggestion);
     }
 };
 

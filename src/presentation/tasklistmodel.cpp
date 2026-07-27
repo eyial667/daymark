@@ -176,7 +176,14 @@ bool TaskListModel::addTask(
 
     reload();
     emit tasksChanged();
-    setStatusMessage(QStringLiteral("Task added."));
+    if (planForToday) {
+        setStatusMessage(QStringLiteral("Task added to Today."));
+    } else if (dueAt.isValid() && dueAt.date() <= QDate::currentDate()) {
+        setStatusMessage(QStringLiteral(
+            "Task added to To-do and shown in Today because its deadline has arrived."));
+    } else {
+        setStatusMessage(QStringLiteral("Task added to To-do."));
+    }
     return true;
 }
 

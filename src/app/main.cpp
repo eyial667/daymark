@@ -12,6 +12,7 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QStandardPaths>
+#include <QTimer>
 #include <QVariant>
 
 int main(int argc, char *argv[])
@@ -59,6 +60,16 @@ int main(int argc, char *argv[])
         &taskModel,
         &TaskListModel::reload);
     QObject::connect(
+        &taskModel,
+        &TaskListModel::tasksChanged,
+        &categoryModel,
+        &CategoryListModel::reload);
+    QObject::connect(
+        &todayTaskModel,
+        &TaskListModel::tasksChanged,
+        &categoryModel,
+        &CategoryListModel::reload);
+    QObject::connect(
         &goalModel,
         &GoalListModel::taskCreated,
         &taskModel,
@@ -69,6 +80,15 @@ int main(int argc, char *argv[])
         &CategoryListModel::categoriesChanged,
         &taskModel,
         &TaskListModel::reload);
+
+    QTimer dayBoundaryRefresh;
+    dayBoundaryRefresh.setInterval(60 * 1000);
+    QObject::connect(
+        &dayBoundaryRefresh,
+        &QTimer::timeout,
+        &taskModel,
+        &TaskListModel::reload);
+    dayBoundaryRefresh.start();
 
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
