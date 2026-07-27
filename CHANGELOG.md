@@ -20,6 +20,8 @@ and releases will use semantic versioning.
   milestones.
 - Versioned portable data export and merge import for tasks, completed history,
   goals, milestones, and preferences.
+- Reusable task categories with notes, task-row reassignment, and portable
+  category assignments.
 
 ### Changed
 

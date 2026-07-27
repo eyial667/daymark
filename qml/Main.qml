@@ -8,6 +8,7 @@ ApplicationWindow {
     id: window
 
     required property var taskModel
+    required property var categoryModel
     required property var goalModel
     required property var appSettings
     required property var dataTransfer
@@ -15,6 +16,9 @@ ApplicationWindow {
     property int currentPage: 0
     property int pendingCompletionIndex: -1
     property string pendingCompletionTitle: ""
+    property string pendingCategoryTaskId: ""
+    property string pendingCategoryTitle: ""
+    property string pendingCategoryId: ""
 
     function requestTaskCompletion(taskIndex, taskTitle) {
         if (!appSettings.confirmTaskCompletion) {
@@ -24,6 +28,15 @@ ApplicationWindow {
         pendingCompletionIndex = taskIndex
         pendingCompletionTitle = taskTitle
         completionDialog.open()
+    }
+
+    function requestTaskCategory(taskId, taskTitle, categoryId) {
+        pendingCategoryTaskId = taskId
+        pendingCategoryTitle = taskTitle
+        pendingCategoryId = categoryId
+        categoryAssignmentField.currentIndex = categoryId.length > 0
+            ? categoryModel.indexOfId(categoryId) + 1 : 0
+        categoryAssignmentDialog.open()
     }
 
     width: 1440
@@ -89,7 +102,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Ctrl+,"
-        onActivated: window.currentPage = 7
+        onActivated: window.currentPage = 8
     }
 
     Shortcut {
@@ -179,6 +192,8 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
+                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
+                            window.requestTaskCategory(taskId, taskTitle, categoryId)
                     }
 
                     SpatialMapView {
@@ -188,6 +203,8 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
+                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
+                            window.requestTaskCategory(taskId, taskTitle, categoryId)
                     }
 
                     QuietFocusView {
@@ -197,6 +214,8 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
+                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
+                            window.requestTaskCategory(taskId, taskTitle, categoryId)
                     }
 
                     HybridView {
@@ -206,6 +225,8 @@ ApplicationWindow {
                         onAddRequested: quickAdd.open()
                         onCompletionRequested: (taskIndex, taskTitle) =>
                             window.requestTaskCompletion(taskIndex, taskTitle)
+                        onCategoryRequested: (taskId, taskTitle, categoryId) =>
+                            window.requestTaskCategory(taskId, taskTitle, categoryId)
                     }
                 }
 
@@ -221,11 +242,18 @@ ApplicationWindow {
                     onAddRequested: quickAdd.open()
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(taskIndex, taskTitle)
+                    onCategoryRequested: (taskId, taskTitle, categoryId) =>
+                        window.requestTaskCategory(taskId, taskTitle, categoryId)
                 }
 
                 PlaceholderPage {
                     pageTitle: "Projects"
                     detail: "Project progress, milestones, and the tasks holding each outcome together."
+                }
+
+                CategoriesView {
+                    categoryModel: window.categoryModel
+                    theme: interfaceTheme
                 }
 
                 GoalsView {
@@ -255,8 +283,93 @@ ApplicationWindow {
     QuickAddDialog {
         id: quickAdd
         taskModel: window.taskModel
+        categoryModel: window.categoryModel
         appSettings: window.appSettings
         theme: interfaceTheme
+        onManageCategoriesRequested: window.currentPage = 4
+    }
+
+    Dialog {
+        id: categoryAssignmentDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 440
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: interfaceTheme.radius + 3
+            color: interfaceTheme.surfaceRaised
+            border.color: interfaceTheme.borderStrong
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 13
+
+            Text {
+                text: "Assign a category"
+                color: interfaceTheme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: window.pendingCategoryTitle
+                color: interfaceTheme.textSecondary
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+            ComboBox {
+                id: categoryAssignmentField
+                Layout.fillWidth: true
+                model: ["No category"].concat(window.categoryModel.names)
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 5
+
+                AppButton {
+                    theme: interfaceTheme
+                    quiet: true
+                    text: "Manage categories"
+                    onClicked: {
+                        categoryAssignmentDialog.close()
+                        window.currentPage = 4
+                    }
+                }
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: interfaceTheme
+                    quiet: true
+                    text: "Cancel"
+                    onClicked: categoryAssignmentDialog.close()
+                }
+                AppButton {
+                    theme: interfaceTheme
+                    primary: true
+                    text: "Save"
+                    onClicked: {
+                        const categoryId = categoryAssignmentField.currentIndex > 0
+                            ? window.categoryModel.idAt(categoryAssignmentField.currentIndex - 1)
+                            : ""
+                        if (window.taskModel.assignTaskCategory(
+                                window.pendingCategoryTaskId, categoryId)) {
+                            window.categoryModel.reload()
+                            categoryAssignmentDialog.close()
+                        }
+                    }
+                }
+            }
+        }
+
+        onClosed: {
+            window.pendingCategoryTaskId = ""
+            window.pendingCategoryTitle = ""
+            window.pendingCategoryId = ""
+        }
     }
 
     Dialog {

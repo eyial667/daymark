@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "domain/category.h"
 #include "domain/goal.h"
 #include "domain/task.h"
 
@@ -27,6 +28,17 @@ public:
         const QString &taskId,
         bool completed,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool setTaskCategory(
+        const QString &taskId,
+        const QString &categoryId,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] QVector<Category> categories(QString *errorMessage = nullptr) const;
+    [[nodiscard]] bool addCategory(
+        const Category &category,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool updateCategory(
+        const Category &category,
+        QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Goal> goals(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addGoal(const Goal &goal, QString *errorMessage = nullptr);
     [[nodiscard]] bool addMilestone(
@@ -41,6 +53,7 @@ public:
         bool completed,
         QString *errorMessage = nullptr);
     [[nodiscard]] bool mergeImportedData(
+        const QVector<Category> &categories,
         const QVector<Task> &tasks,
         const QVector<Goal> &goals,
         QString *errorMessage = nullptr);

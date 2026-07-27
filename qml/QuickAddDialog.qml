@@ -8,8 +8,10 @@ Dialog {
     id: dialog
 
     required property var taskModel
+    required property var categoryModel
     required property var appSettings
     required property var theme
+    signal manageCategoriesRequested()
 
     parent: Overlay.overlay
     anchors.centerIn: parent
@@ -54,6 +56,40 @@ Dialog {
             Layout.fillWidth: true
             placeholderText: "Project (optional)"
             selectByMouse: true
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 5
+
+                Text {
+                    text: "Category"
+                    color: dialog.theme.textSecondary
+                    font.pixelSize: 11
+                }
+
+                ComboBox {
+                    id: categoryField
+                    Layout.fillWidth: true
+                    model: ["No category"].concat(dialog.categoryModel.names)
+                    currentIndex: 0
+                }
+            }
+
+            AppButton {
+                Layout.alignment: Qt.AlignBottom
+                theme: dialog.theme
+                quiet: true
+                text: "Manage"
+                onClicked: {
+                    dialog.close()
+                    dialog.manageCategoriesRequested()
+                }
+            }
         }
 
         RowLayout {
@@ -151,7 +187,11 @@ Dialog {
                             dueField.text,
                             importanceField.currentValue,
                             estimateField.value,
-                            projectField.text)) {
+                            projectField.text,
+                            categoryField.currentIndex > 0
+                                ? dialog.categoryModel.idAt(categoryField.currentIndex - 1)
+                                : "")) {
+                        dialog.categoryModel.reload()
                         dialog.close()
                     }
                 }
@@ -167,6 +207,7 @@ Dialog {
     onClosed: {
         titleField.clear()
         projectField.clear()
+        categoryField.currentIndex = 0
         dueField.clear()
         importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
         estimateField.value = dialog.appSettings.defaultEstimatedMinutes

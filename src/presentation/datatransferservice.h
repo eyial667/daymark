@@ -7,6 +7,7 @@
 #include <QUrl>
 
 class AppSettings;
+class CategoryListModel;
 class GoalListModel;
 class TaskListModel;
 class TaskRepository;
@@ -20,6 +21,7 @@ public:
     explicit DataTransferService(
         TaskRepository &repository,
         TaskListModel &taskModel,
+        CategoryListModel &categoryModel,
         GoalListModel &goalModel,
         AppSettings &appSettings,
         QObject *parent = nullptr);
@@ -38,6 +40,7 @@ private:
 
     TaskRepository &m_repository;
     TaskListModel &m_taskModel;
+    CategoryListModel &m_categoryModel;
     GoalListModel &m_goalModel;
     AppSettings &m_appSettings;
     QString m_statusMessage;

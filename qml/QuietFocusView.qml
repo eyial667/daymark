@@ -13,6 +13,7 @@ Item {
     required property var theme
     signal addRequested()
     signal completionRequested(int taskIndex, string taskTitle)
+    signal categoryRequested(string taskId, string taskTitle, string categoryId)
 
     function formattedHour(hour) {
         if (appSettings.use24HourClock)
@@ -153,6 +154,8 @@ Item {
                                 showReason: root.appSettings.showPriorityReasons
                                 onCompletionRequested: rowIndex =>
                                     root.completionRequested(rowIndex, taskRow.title)
+                                onCategoryRequested: (taskId, categoryId) =>
+                                    root.categoryRequested(taskId, taskRow.title, categoryId)
                             }
                         }
 

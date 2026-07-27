@@ -20,10 +20,18 @@ private slots:
         QString error;
         QVERIFY2(repository.open(&error), qPrintable(error));
 
+        Category category;
+        category.id = QStringLiteral("daymark-category");
+        category.name = QStringLiteral("Product");
+        category.notes = QStringLiteral("Tasks that improve the Daymark product.");
+        category.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addCategory(category, &error), qPrintable(error));
+
         Task task;
         task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
         task.title = QStringLiteral("Write the first test");
         task.project = QStringLiteral("Daymark");
+        task.categoryId = category.id;
         task.createdAt = QDateTime::currentDateTime();
         task.dueAt = task.createdAt.addDays(1);
         task.importance = 4;
@@ -35,7 +43,24 @@ private slots:
         QCOMPARE(tasks.size(), 1);
         QCOMPARE(tasks.first().title, task.title);
         QCOMPARE(tasks.first().project, task.project);
+        QCOMPARE(tasks.first().categoryId, category.id);
+        QCOMPARE(tasks.first().categoryName, category.name);
         QCOMPARE(tasks.first().importance, 4);
+
+        QVector<Category> categories = repository.categories(&error);
+        QCOMPARE(categories.size(), 1);
+        QCOMPARE(categories.first().notes, category.notes);
+        QCOMPARE(categories.first().taskCount, 1);
+
+        category.name = QStringLiteral("Daymark product");
+        category.notes = QStringLiteral("Updated category notes.");
+        QVERIFY2(repository.updateCategory(category, &error), qPrintable(error));
+        tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.first().categoryName, category.name);
+
+        QVERIFY2(repository.setTaskCategory(task.id, {}, &error), qPrintable(error));
+        tasks = repository.openTasks(&error);
+        QVERIFY(tasks.first().categoryId.isEmpty());
 
         QVERIFY2(repository.setCompleted(task.id, true, &error), qPrintable(error));
         tasks = repository.openTasks(&error);
@@ -121,6 +146,14 @@ private slots:
         goal.createdAt = QDateTime::currentDateTime();
         QVERIFY2(repository.addGoal(goal, &error), qPrintable(error));
         QCOMPARE(repository.goals(&error).size(), 1);
+
+        Category category;
+        category.id = QStringLiteral("post-migration-category");
+        category.name = QStringLiteral("Migrated data");
+        category.notes = QStringLiteral("Created after migrating a version-one database.");
+        category.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addCategory(category, &error), qPrintable(error));
+        QCOMPARE(repository.categories(&error).size(), 1);
     }
 };
 

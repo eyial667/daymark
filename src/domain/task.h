@@ -11,6 +11,8 @@ struct Task
     QString title;
     QString notes;
     QString project;
+    QString categoryId;
+    QString categoryName;
     QDateTime dueAt;
     QDateTime createdAt;
     QDateTime completedAt;

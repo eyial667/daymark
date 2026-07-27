@@ -4,6 +4,7 @@
 
 #include "data/taskrepository.h"
 #include "presentation/appsettings.h"
+#include "presentation/categorylistmodel.h"
 #include "presentation/goallistmodel.h"
 #include "presentation/tasklistmodel.h"
 
@@ -53,12 +54,23 @@ QJsonObject taskToJson(const Task &task)
         {QStringLiteral("title"), task.title},
         {QStringLiteral("notes"), task.notes},
         {QStringLiteral("project"), task.project},
+        {QStringLiteral("categoryId"), task.categoryId},
         {QStringLiteral("dueAt"), serializedDateTime(task.dueAt)},
         {QStringLiteral("createdAt"), serializedDateTime(task.createdAt)},
         {QStringLiteral("completedAt"), serializedDateTime(task.completedAt)},
         {QStringLiteral("importance"), task.importance},
         {QStringLiteral("estimatedMinutes"), task.estimatedMinutes},
         {QStringLiteral("completed"), task.completed},
+    };
+}
+
+QJsonObject categoryToJson(const Category &category)
+{
+    return {
+        {QStringLiteral("id"), category.id},
+        {QStringLiteral("name"), category.name},
+        {QStringLiteral("notes"), category.notes},
+        {QStringLiteral("createdAt"), serializedDateTime(category.createdAt)},
     };
 }
 
@@ -127,6 +139,20 @@ bool readString(
     }
     *target = text;
     return true;
+}
+
+bool readOptionalString(
+    const QJsonObject &object,
+    const QString &key,
+    QString *target,
+    QString *errorMessage,
+    qsizetype maximumLength = 10000)
+{
+    if (!object.contains(key)) {
+        target->clear();
+        return true;
+    }
+    return readString(object, key, target, errorMessage, true, maximumLength);
 }
 
 bool readBool(
@@ -235,6 +261,12 @@ bool taskFromJson(
         && readString(object, QStringLiteral("title"), &task->title, errorMessage, false)
         && readString(object, QStringLiteral("notes"), &task->notes, errorMessage)
         && readString(object, QStringLiteral("project"), &task->project, errorMessage)
+        && readOptionalString(
+            object,
+            QStringLiteral("categoryId"),
+            &task->categoryId,
+            errorMessage,
+            128)
         && readDateTime(object, QStringLiteral("dueAt"), &task->dueAt, errorMessage, false)
         && readDateTime(object, QStringLiteral("createdAt"), &task->createdAt, errorMessage, true)
         && readDateTime(object, QStringLiteral("completedAt"), &task->completedAt, errorMessage, false)
@@ -247,6 +279,38 @@ bool taskFromJson(
             &task->estimatedMinutes,
             errorMessage)
         && readBool(object, QStringLiteral("completed"), &task->completed, errorMessage);
+}
+
+bool categoryFromJson(
+    const QJsonValue &value,
+    Category *category,
+    QString *errorMessage)
+{
+    if (!value.isObject()) {
+        *errorMessage = QStringLiteral("Every category must be an object.");
+        return false;
+    }
+    const QJsonObject object = value.toObject();
+    if (!(readString(object, QStringLiteral("id"), &category->id, errorMessage, false, 128)
+        && readString(
+            object,
+            QStringLiteral("name"),
+            &category->name,
+            errorMessage,
+            false,
+            120)
+        && readString(object, QStringLiteral("notes"), &category->notes, errorMessage)
+        && readDateTime(
+            object,
+            QStringLiteral("createdAt"),
+            &category->createdAt,
+            errorMessage,
+            true))) {
+        return false;
+    }
+    category->name = category->name.trimmed();
+    category->notes = category->notes.trimmed();
+    return true;
 }
 
 bool milestoneFromJson(
@@ -411,12 +475,14 @@ void applySettings(const ImportedSettings &source, AppSettings &target)
 DataTransferService::DataTransferService(
     TaskRepository &repository,
     TaskListModel &taskModel,
+    CategoryListModel &categoryModel,
     GoalListModel &goalModel,
     AppSettings &appSettings,
     QObject *parent)
     : QObject(parent)
     , m_repository(repository)
     , m_taskModel(taskModel)
+    , m_categoryModel(categoryModel)
     , m_goalModel(goalModel)
     , m_appSettings(appSettings)
 {
@@ -440,6 +506,11 @@ bool DataTransferService::exportData(const QUrl &destination)
         setStatusMessage(QStringLiteral("Could not read tasks: %1").arg(errorMessage));
         return false;
     }
+    const QVector<Category> categories = m_repository.categories(&errorMessage);
+    if (!errorMessage.isEmpty()) {
+        setStatusMessage(QStringLiteral("Could not read categories: %1").arg(errorMessage));
+        return false;
+    }
     const QVector<Goal> goals = m_repository.goals(&errorMessage);
     if (!errorMessage.isEmpty()) {
         setStatusMessage(QStringLiteral("Could not read goals: %1").arg(errorMessage));
@@ -449,6 +520,10 @@ bool DataTransferService::exportData(const QUrl &destination)
     QJsonArray taskArray;
     for (const Task &task : tasks) {
         taskArray.append(taskToJson(task));
+    }
+    QJsonArray categoryArray;
+    for (const Category &category : categories) {
+        categoryArray.append(categoryToJson(category));
     }
     QJsonArray goalArray;
     for (const Goal &goal : goals) {
@@ -461,6 +536,7 @@ bool DataTransferService::exportData(const QUrl &destination)
         {QStringLiteral("exportedAt"), serializedDateTime(QDateTime::currentDateTime())},
         {QStringLiteral("applicationVersion"), QCoreApplication::applicationVersion()},
         {QStringLiteral("tasks"), taskArray},
+        {QStringLiteral("categories"), categoryArray},
         {QStringLiteral("goals"), goalArray},
         {QStringLiteral("settings"), settingsToJson(m_appSettings)},
     };
@@ -481,7 +557,7 @@ bool DataTransferService::exportData(const QUrl &destination)
         return false;
     }
 
-    setStatusMessage(QStringLiteral("Exported tasks, goals, and preferences to %1.")
+    setStatusMessage(QStringLiteral("Exported tasks, categories, goals, and preferences to %1.")
         .arg(QFileInfo(path).fileName()));
     return true;
 }
@@ -523,25 +599,50 @@ bool DataTransferService::importData(const QUrl &source)
     }
 
     const QJsonValue tasksValue = root.value(QStringLiteral("tasks"));
+    const QJsonValue categoriesValue = root.value(QStringLiteral("categories"));
     const QJsonValue goalsValue = root.value(QStringLiteral("goals"));
-    if (!tasksValue.isArray() || !goalsValue.isArray()) {
+    if (!tasksValue.isArray() || !goalsValue.isArray()
+        || (!categoriesValue.isUndefined() && !categoriesValue.isArray())) {
         setStatusMessage(QStringLiteral("The export is missing its task or goal list."));
         return false;
     }
 
     const QJsonArray taskArray = tasksValue.toArray();
+    const QJsonArray categoryArray = categoriesValue.isArray()
+        ? categoriesValue.toArray()
+        : QJsonArray();
     const QJsonArray goalArray = goalsValue.toArray();
-    if (taskArray.size() > MaximumRecords || goalArray.size() > MaximumRecords) {
+    if (taskArray.size() > MaximumRecords || categoryArray.size() > MaximumRecords
+        || goalArray.size() > MaximumRecords) {
         setStatusMessage(QStringLiteral("The export contains too many records."));
         return false;
     }
 
     QVector<Task> tasks;
+    QVector<Category> categories;
     QVector<Goal> goals;
     QSet<QString> taskIds;
+    QSet<QString> categoryIds;
+    QSet<QString> categoryNames;
     QSet<QString> goalIds;
     QSet<QString> milestoneIds;
     QString validationError;
+
+    for (const QJsonValue &value : categoryArray) {
+        Category category;
+        if (!categoryFromJson(value, &category, &validationError)) {
+            setStatusMessage(QStringLiteral("Could not import a category: %1").arg(validationError));
+            return false;
+        }
+        const QString normalizedName = category.name.trimmed().toCaseFolded();
+        if (categoryIds.contains(category.id) || categoryNames.contains(normalizedName)) {
+            setStatusMessage(QStringLiteral("The export contains a duplicate category."));
+            return false;
+        }
+        categoryIds.insert(category.id);
+        categoryNames.insert(normalizedName);
+        categories.append(category);
+    }
 
     for (const QJsonValue &value : taskArray) {
         Task task;
@@ -551,6 +652,11 @@ bool DataTransferService::importData(const QUrl &source)
         }
         if (taskIds.contains(task.id)) {
             setStatusMessage(QStringLiteral("The export contains a duplicate task ID."));
+            return false;
+        }
+        if (!task.categoryId.isEmpty() && !categoryIds.contains(task.categoryId)) {
+            setStatusMessage(QStringLiteral(
+                "A task refers to a category that is missing from the export."));
             return false;
         }
         taskIds.insert(task.id);
@@ -581,17 +687,19 @@ bool DataTransferService::importData(const QUrl &source)
     }
 
     QString databaseError;
-    if (!m_repository.mergeImportedData(tasks, goals, &databaseError)) {
+    if (!m_repository.mergeImportedData(categories, tasks, goals, &databaseError)) {
         setStatusMessage(QStringLiteral("Could not merge the imported data: %1").arg(databaseError));
         return false;
     }
 
     applySettings(importedSettings, m_appSettings);
+    m_categoryModel.reload();
     m_taskModel.reload();
     m_goalModel.reload();
     setStatusMessage(QStringLiteral(
-        "Imported %1 tasks and %2 goals. Existing records were kept.")
+        "Imported %1 tasks, %2 categories, and %3 goals. Existing records were kept.")
         .arg(tasks.size())
+        .arg(categories.size())
         .arg(goals.size()));
     return true;
 }

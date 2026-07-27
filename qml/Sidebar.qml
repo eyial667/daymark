@@ -59,6 +59,7 @@ Rectangle {
                 { name: "Inbox", glyph: "▱" },
                 { name: "Map", glyph: "⌘" },
                 { name: "Projects", glyph: "□" },
+                { name: "Categories", glyph: "▤" },
                 { name: "Goals", glyph: "◇" },
                 { name: "Focus", glyph: "◎" },
                 { name: "Review", glyph: "✓" },

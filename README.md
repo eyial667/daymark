@@ -11,7 +11,9 @@ embedded webview, Node.js, or a local web server.
 
 ## Current vertical slice
 
-- Create tasks with a due date, importance, estimate, and project.
+- Create tasks with a due date, importance, estimate, project, and category.
+- Create reusable categories with notes, assign them during capture, and change a
+  task's category directly from any Today interface.
 - Store all data locally in SQLite.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
@@ -27,8 +29,9 @@ embedded webview, Node.js, or a local web server.
   and keep achieved goals in local history.
 - Choose task, goal, and milestone dates from a calendar or enter them manually
   as `YYYY-MM-DD`.
-- Export tasks, completed history, goals, milestones, and preferences to a
-  portable `.daymark.json` file, then merge it safely on another computer.
+- Export tasks, completed history, categories and their notes, goals, milestones,
+  and preferences to a portable `.daymark.json` file, then merge it safely on
+  another computer.
 - Open the local application-data folder directly from Settings.
 - Navigate the initial desktop application shell.
 

@@ -28,12 +28,15 @@ add_library(daymark_core STATIC
     src/core/priorityengine.h
     src/data/taskrepository.cpp
     src/data/taskrepository.h
+    src/domain/category.h
     src/domain/goal.h
     src/domain/task.h
     src/presentation/appsettings.cpp
     src/presentation/appsettings.h
     src/presentation/datatransferservice.cpp
     src/presentation/datatransferservice.h
+    src/presentation/categorylistmodel.cpp
+    src/presentation/categorylistmodel.h
     src/presentation/goallistmodel.cpp
     src/presentation/goallistmodel.h
     src/presentation/tasklistmodel.cpp
@@ -64,6 +67,7 @@ qt_add_qml_module(daymark
     QML_FILES
         qml/Main.qml
         qml/AppButton.qml
+        qml/CategoriesView.qml
         qml/DateField.qml
         qml/EmptyState.qml
         qml/GoalsView.qml
@@ -149,6 +153,10 @@ if(BUILD_TESTING)
     qt_add_executable(tasklistmodel_tests tests/tasklistmodel_test.cpp)
     target_link_libraries(tasklistmodel_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME tasklistmodel_tests COMMAND tasklistmodel_tests)
+
+    qt_add_executable(categorylistmodel_tests tests/categorylistmodel_test.cpp)
+    target_link_libraries(categorylistmodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME categorylistmodel_tests COMMAND categorylistmodel_tests)
 
     qt_add_executable(appsettings_tests tests/appsettings_test.cpp)
     target_link_libraries(appsettings_tests PRIVATE daymark_core Qt6::Test)

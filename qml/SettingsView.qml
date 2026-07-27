@@ -472,7 +472,7 @@ Item {
                         SectionHeading {
                             Layout.fillWidth: true
                             heading: "Local data & privacy"
-                            description: "Your tasks, goals, and preferences stay on this machine. Export a portable copy whenever you want."
+                            description: "Your tasks, categories, goals, and preferences stay on this machine. Export a portable copy whenever you want."
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -484,7 +484,7 @@ Item {
                             SettingCopy {
                                 Layout.fillWidth: true
                                 heading: "Portable Daymark data"
-                                description: "Export tasks, completed history, long-term goals, milestones, and preferences. Imports merge with data already on this computer."
+                                description: "Export tasks, categories and notes, completed history, long-term goals, milestones, and preferences. Imports merge with data already on this computer."
                             }
 
                             AppButton {
@@ -563,7 +563,7 @@ Item {
                             SettingCopy {
                                 Layout.fillWidth: true
                                 heading: "Reset preferences"
-                                description: "Restore settings only. Your tasks, goals, milestones, and local database will not be changed."
+                                description: "Restore settings only. Your tasks, categories, goals, milestones, and local database will not be changed."
                             }
 
                             AppButton {
@@ -629,7 +629,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "Tasks, goals, milestones, and preferences from the selected file will be merged into this computer. Existing records are kept."
+                text: "Tasks, categories, goals, milestones, and preferences from the selected file will be merged into this computer. Existing records are kept."
                 color: root.theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap

@@ -9,8 +9,11 @@ Rectangle {
 
     required property var theme
     required property int index
+    required property string taskId
     required property string title
     required property string project
+    required property string categoryId
+    required property string categoryName
     required property string dueText
     required property int estimatedMinutes
     required property int priorityScore
@@ -19,6 +22,7 @@ Rectangle {
     property bool showReason: true
 
     signal completionRequested(int taskIndex)
+    signal categoryRequested(string taskId, string currentCategoryId)
 
     implicitHeight: compact ? 68 : 84
     radius: theme.radius
@@ -130,6 +134,37 @@ Rectangle {
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
                     }
+                }
+
+                Button {
+                    id: categoryButton
+
+                    implicitWidth: Math.min(142, categoryText.implicitWidth + 18)
+                    implicitHeight: 24
+                    leftPadding: 9
+                    rightPadding: 9
+                    text: row.categoryName.length > 0 ? row.categoryName : "Uncategorized"
+
+                    contentItem: Text {
+                        id: categoryText
+                        text: categoryButton.text
+                        color: row.categoryName.length > 0
+                            ? row.theme.secondaryAccent : row.theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        elide: Text.ElideRight
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 12
+                        color: categoryButton.hovered
+                            ? row.theme.surfaceHover : row.theme.surfaceRaised
+                        border.color: row.categoryName.length > 0
+                            ? row.theme.secondaryAccent : row.theme.border
+                    }
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Change category"
+                    onClicked: row.categoryRequested(row.taskId, row.categoryId)
                 }
 
                 Text {

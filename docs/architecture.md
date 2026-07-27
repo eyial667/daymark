@@ -16,17 +16,20 @@ persistence, priority decisions, integration coordination, and operating-system
 services. QML must not contain business rules or direct SQL access.
 
 `TaskListModel` converts persisted tasks into a sorted queue for the interface.
-`GoalListModel` owns goal and milestone presentation state, and
-`DataTransferService` coordinates validated portable exports and imports. These
-objects translate user actions into repository operations without exposing SQL
-to QML.
+`CategoryListModel` owns reusable category metadata and notes, `GoalListModel`
+owns goal and milestone presentation state, and `DataTransferService`
+coordinates validated portable exports and imports. These objects translate
+user actions into repository operations without exposing SQL to QML.
 
 ## Persistence
 
 SQLite is the source of truth. Schema changes use SQLite's `user_version` value
 and transactional migrations. Timestamps are stored as UTC ISO-8601 strings and
-converted to local time at the presentation boundary. Goal and milestone target
-dates are calendar dates stored in ISO-8601 form without a timezone.
+converted to local time at the presentation boundary. Tasks refer to categories
+through nullable stable IDs; category names and notes are stored once and an
+assignment is cleared safely if a category is removed in a future version. Goal
+and milestone target dates are calendar dates stored in ISO-8601 form without a
+timezone.
 
 Portable data uses the versioned `org.daymark.backup` JSON format. Import fully
 validates a file before starting a database transaction, upserts matching record

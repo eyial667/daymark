@@ -27,7 +27,9 @@ public:
         ImportanceRole,
         EstimatedMinutesRole,
         PriorityScoreRole,
-        PriorityReasonRole
+        PriorityReasonRole,
+        CategoryIdRole,
+        CategoryNameRole
     };
     Q_ENUM(Role)
 
@@ -48,7 +50,11 @@ public:
         const QString &dueDate,
         int importance,
         int estimatedMinutes,
-        const QString &project);
+        const QString &project,
+        const QString &categoryId = {});
+    Q_INVOKABLE bool assignTaskCategory(
+        const QString &taskId,
+        const QString &categoryId);
     Q_INVOKABLE bool completeTask(int row);
     Q_INVOKABLE void clearStatus();
     Q_INVOKABLE void reload();

@@ -48,6 +48,10 @@ QVariant TaskListModel::data(const QModelIndex &index, int role) const
         return item.priority.score;
     case PriorityReasonRole:
         return item.priority.reasons.join(QStringLiteral(" · "));
+    case CategoryIdRole:
+        return item.task.categoryId;
+    case CategoryNameRole:
+        return item.task.categoryName;
     default:
         return {};
     }
@@ -65,6 +69,8 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
         {EstimatedMinutesRole, "estimatedMinutes"},
         {PriorityScoreRole, "priorityScore"},
         {PriorityReasonRole, "priorityReason"},
+        {CategoryIdRole, "categoryId"},
+        {CategoryNameRole, "categoryName"},
     };
 }
 
@@ -112,7 +118,8 @@ bool TaskListModel::addTask(
     const QString &dueDate,
     int importance,
     int estimatedMinutes,
-    const QString &project)
+    const QString &project,
+    const QString &categoryId)
 {
     const QString cleanTitle = title.trimmed();
     if (cleanTitle.isEmpty()) {
@@ -134,6 +141,7 @@ bool TaskListModel::addTask(
     task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     task.title = cleanTitle;
     task.project = project.trimmed();
+    task.categoryId = categoryId.trimmed();
     task.dueAt = dueAt;
     task.createdAt = QDateTime::currentDateTime();
     task.importance = std::clamp(importance, 1, 5);
@@ -147,6 +155,31 @@ bool TaskListModel::addTask(
 
     reload();
     setStatusMessage(QStringLiteral("Task added."));
+    return true;
+}
+
+bool TaskListModel::assignTaskCategory(
+    const QString &taskId,
+    const QString &categoryId)
+{
+    const auto item = std::find_if(
+        m_items.cbegin(),
+        m_items.cend(),
+        [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
+    if (item == m_items.cend()) {
+        setStatusMessage(QStringLiteral("That task is no longer in the list."));
+        return false;
+    }
+
+    QString errorMessage;
+    if (!m_repository.setTaskCategory(taskId, categoryId.trimmed(), &errorMessage)) {
+        setStatusMessage(QStringLiteral("Could not assign the category: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(categoryId.trimmed().isEmpty()
+            ? QStringLiteral("Category removed from task.")
+            : QStringLiteral("Task category updated."));
     return true;
 }
 
