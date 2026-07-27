@@ -23,10 +23,13 @@ embedded webview, Node.js, or a local web server.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
 - Complete tasks from the Today queue.
-- Browse the live task map by category or subcategory, and add work directly to
-  the selected area.
+- See every active work area, subcategory, task, goal, and unfinished milestone
+  in a shared mental map with recursive-cloud, arrow-flow, and constellation
+  views.
 - Run a countdown focus session for any task in Today and review work completed
   or still remaining for the current day.
+- Keep a rolling day note from Today and review yesterday’s note without
+  accumulating a permanent journal.
 - Switch between four interfaces, each with coordinated light and dark palettes,
   without changing task data: Midnight Command, Spatial Map, Quiet Focus, and
   Daymark Hybrid.
@@ -190,11 +193,20 @@ Today defaults to a list-first layout without assigning tasks to clock times.
 Enable **Settings → Behavior → Show timeline** to restore the timeline, agenda,
 and day-shape panels; the choice is saved locally and included in exports.
 
-Use **Map** to select All tasks, Uncategorized work, a category, or one of its
-subcategories. The task list and counts update from the local database, and
-**Add here** opens capture with the selected work area already chosen. Use
-**Focus** to select a Today task and start, pause, or reset its countdown. Use
-**Review** to see what was completed today alongside the tasks that remain.
+Use **Map** to move between three views of the same live hierarchy. **Recursive
+clouds** nests tasks inside their subcategories and work areas. **Arrow flow**
+shows the direction from an area or goal into its concrete next layers.
+**Constellation** places active work around a central working-world node with
+connected task and milestone satellites. Select any node for its details or to
+add a task directly to that work area.
+
+Use the floating **Day note** action on Today to capture decisions and context;
+the note saves locally as you type. **Review** shows only yesterday’s note next
+to completed and remaining work. Daymark retains the current and previous day
+only and prunes older day notes automatically. These intentionally ephemeral
+notes are not included in portable exports.
+
+Use **Focus** to select a Today task and start, pause, or reset its countdown.
 
 The main window supports compact layouts down to 640 pixels wide, including
 standard left- or right-half desktop window snapping. Secondary panels collapse

@@ -9,6 +9,7 @@ Item {
     id: root
 
     required property var todayTaskModel
+    required property var dailyNoteModel
     required property var appSettings
     required property var theme
     signal backRequested()
@@ -45,13 +46,71 @@ Item {
             AppButton {
                 theme: root.theme
                 text: "Refresh"
-                onClicked: root.todayTaskModel.reload()
+                onClicked: {
+                    root.todayTaskModel.reload()
+                    root.dailyNoteModel.refreshDay()
+                }
             }
             AppButton {
                 theme: root.theme
                 primary: true
                 text: "Back to Today"
                 onClicked: root.backRequested()
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 142
+            radius: root.theme.radius
+            color: root.theme.surface
+            border.color: root.dailyNoteModel.hasPreviousNote
+                ? root.theme.secondaryAccent : root.theme.border
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 8
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        Layout.fillWidth: true
+                        text: "YESTERDAY’S NOTE"
+                        color: root.theme.secondaryAccent
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                        font.letterSpacing: 1.1
+                    }
+                    Text {
+                        text: root.dailyNoteModel.previousDayLabel
+                        color: root.theme.textMuted
+                        font.pixelSize: 10
+                    }
+                }
+
+                Flickable {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: width
+                    contentHeight: previousNoteText.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    Text {
+                        id: previousNoteText
+
+                        width: parent.width
+                        text: root.dailyNoteModel.hasPreviousNote
+                            ? root.dailyNoteModel.previousText
+                            : "No note was left yesterday. Today’s dashboard note will appear here tomorrow."
+                        color: root.dailyNoteModel.hasPreviousNote
+                            ? root.theme.textPrimary : root.theme.textMuted
+                        font.pixelSize: 12
+                        lineHeight: 1.35
+                        wrapMode: Text.WordWrap
+                    }
+                }
             }
         }
 

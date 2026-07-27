@@ -11,6 +11,8 @@ ApplicationWindow {
     required property var todayTaskModel
     required property var categoryModel
     required property var goalModel
+    required property var mentalMapModel
+    required property var dailyNoteModel
     required property var focusSession
     required property var appSettings
     required property var dataTransfer
@@ -24,6 +26,7 @@ ApplicationWindow {
     property string pendingCategoryId: ""
     property string pendingSubcategoryId: ""
     property bool planningPromptOpen: false
+    property bool dailyNoteOpen: false
     property string feedbackMessage: ""
 
     function requestTaskCompletion(model, taskIndex, taskTitle) {
@@ -66,8 +69,12 @@ ApplicationWindow {
     }
 
     onCurrentPageChanged: {
-        if (currentPage !== 0)
+        if (currentPage !== 0) {
             planningPromptOpen = false
+            if (dailyNoteOpen)
+                dailyNoteModel.saveNow()
+            dailyNoteOpen = false
+        }
     }
 
     width: 1440
@@ -139,6 +146,20 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: window.mentalMapModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.mentalMapModel.statusMessage)
+        }
+    }
+
+    Connections {
+        target: window.dailyNoteModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.dailyNoteModel.statusMessage)
+        }
+    }
+
     Timer {
         id: feedbackTimer
         interval: 2800
@@ -148,6 +169,8 @@ ApplicationWindow {
             window.todayTaskModel.clearStatus()
             window.goalModel.clearStatus()
             window.focusSession.clearStatus()
+            window.mentalMapModel.clearStatus()
+            window.dailyNoteModel.clearStatus()
         }
     }
 
@@ -226,9 +249,7 @@ ApplicationWindow {
                         }
 
                         SpatialMapView {
-                            taskModel: window.todayTaskModel
-                            categoryModel: window.categoryModel
-                            appSettings: window.appSettings
+                            mapModel: window.mentalMapModel
                             theme: interfaceTheme
                             showSuggestionAction: true
                             onAddRequested: quickAdd.open()
@@ -236,12 +257,7 @@ ApplicationWindow {
                             onAddInCategoryRequested: (categoryId, subcategoryId) =>
                                 quickAdd.openForAssignment(categoryId, subcategoryId)
                             onManageCategoriesRequested: window.currentPage = 3
-                            onCompletionRequested: (taskIndex, taskTitle) =>
-                                window.requestTaskCompletion(
-                                    window.todayTaskModel, taskIndex, taskTitle)
-                            onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                                window.requestTaskCategory(
-                                    taskId, taskTitle, categoryId, subcategoryId)
+                            onManageGoalsRequested: window.currentPage = 4
                         }
 
                         QuietFocusView {
@@ -291,6 +307,27 @@ ApplicationWindow {
                             quickAdd.openForAssignment(categoryId, subcategoryId)
                         onCloseRequested: window.planningPromptOpen = false
                     }
+
+                    AppButton {
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 18
+                        z: 18
+                        visible: !window.planningPromptOpen && !window.dailyNoteOpen
+                        theme: interfaceTheme
+                        primary: window.dailyNoteModel.dirty
+                        text: "✎  Day note"
+                        onClicked: window.dailyNoteOpen = true
+                    }
+
+                    DailyNotePanel {
+                        anchors.fill: parent
+                        z: 30
+                        visible: window.dailyNoteOpen
+                        dailyNoteModel: window.dailyNoteModel
+                        theme: interfaceTheme
+                        onCloseRequested: window.dailyNoteOpen = false
+                    }
                 }
 
                 TodoListView {
@@ -307,20 +344,13 @@ ApplicationWindow {
                 }
 
                 SpatialMapView {
-                    taskModel: window.taskModel
-                    categoryModel: window.categoryModel
-                    appSettings: window.appSettings
+                    mapModel: window.mentalMapModel
                     theme: interfaceTheme
                     onAddRequested: quickAdd.open()
                     onAddInCategoryRequested: (categoryId, subcategoryId) =>
                         quickAdd.openForAssignment(categoryId, subcategoryId)
                     onManageCategoriesRequested: window.currentPage = 3
-                    onCompletionRequested: (taskIndex, taskTitle) =>
-                        window.requestTaskCompletion(
-                            window.taskModel, taskIndex, taskTitle)
-                    onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
-                        window.requestTaskCategory(
-                            taskId, taskTitle, categoryId, subcategoryId)
+                    onManageGoalsRequested: window.currentPage = 4
                 }
 
                 CategoriesView {
@@ -342,6 +372,7 @@ ApplicationWindow {
 
                 ReviewView {
                     todayTaskModel: window.todayTaskModel
+                    dailyNoteModel: window.dailyNoteModel
                     appSettings: window.appSettings
                     theme: interfaceTheme
                     onBackRequested: window.currentPage = 0

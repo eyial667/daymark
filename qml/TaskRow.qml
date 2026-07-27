@@ -21,7 +21,6 @@ Rectangle {
     required property string priorityReason
     property bool compact: false
     property bool showReason: true
-    property int taskIndex: index
     readonly property string categoryPath: subcategoryName.length > 0
         ? categoryName + " / " + subcategoryName : categoryName
 
@@ -63,7 +62,7 @@ Rectangle {
                     font.weight: Font.Bold
                 }
             }
-            onClicked: row.completionRequested(row.taskIndex)
+            onClicked: row.completionRequested(row.index)
         }
 
         ColumnLayout {

@@ -8,69 +8,84 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property var taskModel
-    required property var categoryModel
-    required property var appSettings
+    required property var mapModel
     required property var theme
     property bool showSuggestionAction: false
-    property bool selectedAll: true
-    property string selectedCategoryId: ""
-    property string selectedSubcategoryId: ""
-    property string selectedName: "All tasks"
-    property string selectedNotes: "Every task in this queue."
-    readonly property var visibleTasks: {
-        const currentRevision = root.taskModel.revision
-        return root.taskModel.tasksForAssignment(
-            root.selectedCategoryId,
-            root.selectedSubcategoryId,
-            root.selectedAll)
-    }
+    property int mapMode: 2
+    property var selectedNode: null
     signal addRequested()
     signal addInCategoryRequested(string categoryId, string subcategoryId)
     signal manageCategoriesRequested()
+    signal manageGoalsRequested()
     signal suggestionRequested()
-    signal completionRequested(int taskIndex, string taskTitle)
-    signal categoryRequested(
-        string taskId,
-        string taskTitle,
-        string categoryId,
-        string subcategoryId)
 
-    function selectArea(categoryId, subcategoryId, name, notes, allTasks) {
-        selectedCategoryId = categoryId
-        selectedSubcategoryId = subcategoryId
-        selectedName = name
-        selectedNotes = notes.length > 0
-            ? notes : "No notes for this work area yet."
-        selectedAll = allTasks
+    function selectNode(node) {
+        selectedNode = node
+    }
+
+    function kindLabel(kind) {
+        return kind === "category" ? "WORK AREA"
+            : kind === "subcategory" ? "SUBCATEGORY"
+            : kind === "goal" ? "GOAL"
+            : kind === "milestone" ? "MILESTONE"
+            : "TASK"
+    }
+
+    Component {
+        id: cloudMode
+        MentalMapClouds {
+            hierarchy: root.mapModel.hierarchy
+            theme: root.theme
+            onNodeSelected: node => root.selectNode(node)
+        }
+    }
+
+    Component {
+        id: flowMode
+        MentalMapFlow {
+            hierarchy: root.mapModel.hierarchy
+            theme: root.theme
+            onNodeSelected: node => root.selectNode(node)
+        }
+    }
+
+    Component {
+        id: constellationMode
+        MentalMapConstellation {
+            flatNodes: root.mapModel.flatNodes
+            mapRevision: root.mapModel.revision
+            theme: root.theme
+            onNodeSelected: node => root.selectNode(node)
+        }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: root.width < 720 ? 14 : 22
+        anchors.margins: root.width < 720 ? 12 : 20
         spacing: 12
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: 10
 
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 2
                 Text {
-                    text: "Work map"
+                    text: "Mental map"
                     color: root.theme.textPrimary
-                    font.pixelSize: 24
+                    font.pixelSize: 25
                     font.weight: Font.DemiBold
                 }
                 Text {
-                    visible: root.width >= 700
-                    text: "Browse real categories and subcategories, then act on their tasks."
+                    visible: root.width >= 720
+                    text: root.mapModel.itemCount + " active nodes · work areas, tasks, goals, and milestones"
                     color: root.theme.textMuted
-                    font.pixelSize: 11
+                    font.pixelSize: 10
                 }
             }
             AppButton {
-                visible: root.showSuggestionAction && root.width >= 620
+                visible: root.showSuggestionAction && root.width >= 800
                 theme: root.theme
                 primary: true
                 text: "Give me something to do"
@@ -83,250 +98,155 @@ Item {
             }
         }
 
-        GridLayout {
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 7
+
+            Text {
+                visible: root.width >= 700
+                text: "VIEW"
+                color: root.theme.textMuted
+                font.pixelSize: 9
+                font.weight: Font.Bold
+                font.letterSpacing: 1.2
+            }
+            AppButton {
+                theme: root.theme
+                primary: root.mapMode === 0
+                quiet: root.mapMode !== 0
+                text: root.width < 720 ? "☁  Clouds" : "☁  Recursive clouds"
+                onClicked: root.mapMode = 0
+            }
+            AppButton {
+                theme: root.theme
+                primary: root.mapMode === 1
+                quiet: root.mapMode !== 1
+                text: root.width < 720 ? "➜  Arrows" : "➜  Arrow flow"
+                onClicked: root.mapMode = 1
+            }
+            AppButton {
+                theme: root.theme
+                primary: root.mapMode === 2
+                quiet: root.mapMode !== 2
+                text: root.width < 720 ? "✦  Stars" : "✦  Constellation"
+                onClicked: root.mapMode = 2
+            }
+            Item { Layout.fillWidth: true }
+            AppButton {
+                visible: root.width >= 860
+                theme: root.theme
+                quiet: true
+                text: "Work areas"
+                onClicked: root.manageCategoriesRequested()
+            }
+            AppButton {
+                visible: root.width >= 860
+                theme: root.theme
+                quiet: true
+                text: "Goals"
+                onClicked: root.manageGoalsRequested()
+            }
+        }
+
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            columns: root.width < 760 ? 1 : 2
-            columnSpacing: 12
-            rowSpacing: 12
+            radius: root.theme.radius + 6
+            color: root.theme.background
+            border.color: root.theme.borderStrong
+            clip: true
+
+            Loader {
+                anchors.fill: parent
+                anchors.margins: 2
+                sourceComponent: root.mapMode === 0 ? cloudMode
+                    : root.mapMode === 1 ? flowMode : constellationMode
+            }
+
+            EmptyState {
+                anchors.centerIn: parent
+                visible: root.mapModel.itemCount === 0
+                theme: root.theme
+            }
 
             Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: root.width >= 760
-                Layout.preferredWidth: root.width >= 760 ? 290 : -1
-                Layout.preferredHeight: root.width < 760 ? 210 : -1
-                radius: root.theme.radius
-                color: root.theme.surface
-                border.color: root.theme.border
+                visible: root.selectedNode !== null
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 14
+                width: Math.min(350, parent.width - 28)
+                implicitHeight: inspectorColumn.implicitHeight + 28
+                radius: root.theme.radius + 6
+                color: root.theme.surfaceRaised
+                border.color: root.theme.accent
+                border.width: 1
 
                 ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 12
+                    id: inspectorColumn
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 14
                     spacing: 7
 
                     RowLayout {
                         Layout.fillWidth: true
                         Text {
                             Layout.fillWidth: true
-                            text: "WORK AREAS"
-                            color: root.theme.secondaryAccent
-                            font.pixelSize: 10
+                            text: root.selectedNode
+                                ? root.kindLabel(root.selectedNode.kind) : ""
+                            color: root.theme.accent
+                            font.pixelSize: 9
                             font.weight: Font.Bold
-                            font.letterSpacing: 1.1
+                            font.letterSpacing: 1.2
                         }
                         AppButton {
                             theme: root.theme
                             quiet: true
-                            text: "Manage"
-                            onClicked: root.manageCategoriesRequested()
+                            text: "×"
+                            onClicked: root.selectedNode = null
                         }
                     }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 6
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: root.theme
-                            primary: root.selectedAll
-                            text: "All tasks"
-                            onClicked: root.selectArea(
-                                "", "", "All tasks", "Every task in this queue.", true)
-                        }
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: root.theme
-                            primary: !root.selectedAll
-                                && root.selectedCategoryId.length === 0
-                            text: "Uncategorized"
-                            onClicked: root.selectArea(
-                                "", "", "Uncategorized", "Tasks without a work area.", false)
-                        }
-                    }
-
-                    ListView {
-                        id: areaList
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        spacing: 7
-                        clip: true
-                        model: root.categoryModel
-
-                        delegate: ColumnLayout {
-                            id: categoryNode
-
-                            required property string categoryId
-                            required property string name
-                            required property string notes
-                            required property int taskCount
-                            required property var subcategories
-
-                            width: ListView.view.width
-                            spacing: 4
-
-                            AppButton {
-                                Layout.fillWidth: true
-                                theme: root.theme
-                                primary: !root.selectedAll
-                                    && root.selectedCategoryId === categoryNode.categoryId
-                                    && root.selectedSubcategoryId.length === 0
-                                text: categoryNode.name + "  ·  " + categoryNode.taskCount
-                                onClicked: root.selectArea(
-                                    categoryNode.categoryId,
-                                    "",
-                                    categoryNode.name,
-                                    categoryNode.notes,
-                                    false)
-                            }
-
-                            Repeater {
-                                model: categoryNode.subcategories
-
-                                delegate: AppButton {
-                                    required property var modelData
-                                    Layout.fillWidth: true
-                                    Layout.leftMargin: 18
-                                    theme: root.theme
-                                    quiet: root.selectedSubcategoryId !== modelData.subcategoryId
-                                    primary: root.selectedSubcategoryId === modelData.subcategoryId
-                                    text: "↳ " + modelData.name + "  ·  " + modelData.taskCount
-                                    onClicked: root.selectArea(
-                                        categoryNode.categoryId,
-                                        modelData.subcategoryId,
-                                        categoryNode.name + " / " + modelData.name,
-                                        modelData.notes,
-                                        false)
-                                }
-                            }
-                        }
-                    }
-
                     Text {
-                        visible: root.categoryModel.categoryCount === 0
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        text: "No categories yet. Use Manage to create one."
-                        color: root.theme.textMuted
+                        text: root.selectedNode ? root.selectedNode.title : ""
+                        color: root.theme.textPrimary
+                        font.pixelSize: 18
+                        font.weight: Font.DemiBold
+                        wrapMode: Text.WordWrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.selectedNode ? root.selectedNode.detail : ""
+                        color: root.theme.textSecondary
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
                     }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                radius: root.theme.radius
-                color: root.theme.surface
-                border.color: root.theme.border
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 9
-
                     RowLayout {
                         Layout.fillWidth: true
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text {
-                                Layout.fillWidth: true
-                                text: root.selectedName
-                                color: root.theme.textPrimary
-                                font.pixelSize: 17
-                                font.weight: Font.DemiBold
-                                elide: Text.ElideRight
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: root.selectedNotes
-                                color: root.theme.textMuted
-                                font.pixelSize: 10
-                                elide: Text.ElideRight
-                            }
-                        }
-                        Rectangle {
-                            implicitWidth: taskCountText.implicitWidth + 18
-                            implicitHeight: 28
-                            radius: 14
-                            color: root.theme.accentSoft
-                            Text {
-                                id: taskCountText
-                                anchors.centerIn: parent
-                                text: root.visibleTasks.length + " tasks"
-                                color: root.theme.accent
-                                font.pixelSize: 10
-                                font.weight: Font.DemiBold
-                            }
+                        visible: root.selectedNode !== null
+                            && (root.selectedNode.categoryId.length > 0
+                                || root.selectedNode.kind === "goal"
+                                || root.selectedNode.kind === "milestone")
+                        AppButton {
+                            visible: root.selectedNode !== null
+                                && root.selectedNode.categoryId.length > 0
+                            theme: root.theme
+                            primary: true
+                            text: "+ Add in this area"
+                            onClicked: root.addInCategoryRequested(
+                                root.selectedNode.categoryId,
+                                root.selectedNode.subcategoryId)
                         }
                         AppButton {
-                            visible: !root.selectedAll
-                                && root.selectedCategoryId.length > 0
+                            visible: root.selectedNode !== null
+                                && (root.selectedNode.kind === "goal"
+                                    || root.selectedNode.kind === "milestone")
                             theme: root.theme
-                            text: "+ Add here"
-                            onClicked: root.addInCategoryRequested(
-                                root.selectedCategoryId,
-                                root.selectedSubcategoryId)
+                            text: "Open goals"
+                            onClicked: root.manageGoalsRequested()
                         }
-                    }
-
-                    ListView {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        spacing: 6
-                        clip: true
-                        model: root.visibleTasks
-
-                        delegate: Item {
-                            id: mappedTask
-
-                            required property int index
-                            required property var modelData
-                            width: ListView.view.width
-                            height: taskRow.implicitHeight
-
-                            TaskRow {
-                                id: taskRow
-                                anchors.fill: parent
-                                theme: root.theme
-                                index: mappedTask.index
-                                taskIndex: mappedTask.modelData.sourceRow
-                                taskId: mappedTask.modelData.taskId
-                                title: mappedTask.modelData.title
-                                categoryId: mappedTask.modelData.categoryId
-                                categoryName: mappedTask.modelData.categoryName
-                                subcategoryId: mappedTask.modelData.subcategoryId
-                                subcategoryName: mappedTask.modelData.subcategoryName
-                                dueText: mappedTask.modelData.dueText
-                                estimatedMinutes: mappedTask.modelData.estimatedMinutes
-                                priorityScore: mappedTask.modelData.priorityScore
-                                priorityReason: mappedTask.modelData.priorityReason
-                                compact: true
-                                showReason: root.appSettings.showPriorityReasons
-                                onCompletionRequested: rowIndex =>
-                                    root.completionRequested(rowIndex, taskRow.title)
-                                onCategoryRequested: (taskId, categoryId, subcategoryId) =>
-                                    root.categoryRequested(
-                                        taskId,
-                                        taskRow.title,
-                                        categoryId,
-                                        subcategoryId)
-                            }
-                        }
-                    }
-
-                    Text {
-                        visible: root.visibleTasks.length === 0
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        text: "No tasks in this area."
-                        color: root.theme.textMuted
-                        font.pixelSize: 12
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
                     }
                 }
             }

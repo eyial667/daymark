@@ -29,18 +29,23 @@ add_library(daymark_core STATIC
     src/data/taskrepository.cpp
     src/data/taskrepository.h
     src/domain/category.h
+    src/domain/dailynote.h
     src/domain/goal.h
     src/domain/task.h
     src/presentation/appsettings.cpp
     src/presentation/appsettings.h
     src/presentation/datatransferservice.cpp
     src/presentation/datatransferservice.h
+    src/presentation/dailynotemodel.cpp
+    src/presentation/dailynotemodel.h
     src/presentation/focussessionmodel.cpp
     src/presentation/focussessionmodel.h
     src/presentation/categorylistmodel.cpp
     src/presentation/categorylistmodel.h
     src/presentation/goallistmodel.cpp
     src/presentation/goallistmodel.h
+    src/presentation/mentalmapmodel.cpp
+    src/presentation/mentalmapmodel.h
     src/presentation/tasklistmodel.cpp
     src/presentation/tasklistmodel.h
 )
@@ -72,11 +77,15 @@ qt_add_qml_module(daymark
         qml/CategoriesView.qml
         qml/DateField.qml
         qml/DayPlanningPrompt.qml
+        qml/DailyNotePanel.qml
         qml/EmptyState.qml
         qml/FocusView.qml
         qml/GoalsView.qml
         qml/HybridView.qml
         qml/MetricCard.qml
+        qml/MentalMapClouds.qml
+        qml/MentalMapConstellation.qml
+        qml/MentalMapFlow.qml
         qml/MidnightCommandView.qml
         qml/QuickAddDialog.qml
         qml/QuietFocusView.qml
@@ -179,6 +188,14 @@ if(BUILD_TESTING)
     qt_add_executable(focussessionmodel_tests tests/focussessionmodel_test.cpp)
     target_link_libraries(focussessionmodel_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME focussessionmodel_tests COMMAND focussessionmodel_tests)
+
+    qt_add_executable(mentalmapmodel_tests tests/mentalmapmodel_test.cpp)
+    target_link_libraries(mentalmapmodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME mentalmapmodel_tests COMMAND mentalmapmodel_tests)
+
+    qt_add_executable(dailynotemodel_tests tests/dailynotemodel_test.cpp)
+    target_link_libraries(dailynotemodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME dailynotemodel_tests COMMAND dailynotemodel_tests)
 endif()
 
 set(CPACK_PACKAGE_NAME "Daymark")

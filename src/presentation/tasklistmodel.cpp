@@ -7,7 +7,6 @@
 #include <QTime>
 #include <QTimeZone>
 #include <QUuid>
-#include <QVariantMap>
 
 #include <algorithm>
 
@@ -82,11 +81,6 @@ QHash<int, QByteArray> TaskListModel::roleNames() const
 int TaskListModel::activeCount() const
 {
     return m_items.size();
-}
-
-int TaskListModel::revision() const
-{
-    return m_revision;
 }
 
 int TaskListModel::totalEstimatedMinutes() const
@@ -263,38 +257,6 @@ bool TaskListModel::completeTask(int row)
     return true;
 }
 
-QVariantList TaskListModel::tasksForAssignment(
-    const QString &categoryId,
-    const QString &subcategoryId,
-    bool includeAll) const
-{
-    QVariantList tasks;
-    for (qsizetype row = 0; row < m_items.size(); ++row) {
-        const Item &item = m_items.at(row);
-        const bool matches = includeAll
-            || (categoryId.isEmpty() && item.task.categoryId.isEmpty())
-            || (!categoryId.isEmpty() && item.task.categoryId == categoryId
-                && (subcategoryId.isEmpty() || item.task.subcategoryId == subcategoryId));
-        if (!matches) {
-            continue;
-        }
-        tasks.append(QVariantMap {
-            {QStringLiteral("sourceRow"), row},
-            {QStringLiteral("taskId"), item.task.id},
-            {QStringLiteral("title"), item.task.title},
-            {QStringLiteral("dueText"), formatDueDate(item.task.dueAt)},
-            {QStringLiteral("estimatedMinutes"), item.task.estimatedMinutes},
-            {QStringLiteral("priorityScore"), item.priority.score},
-            {QStringLiteral("priorityReason"), item.priority.reasons.join(QStringLiteral(" · "))},
-            {QStringLiteral("categoryId"), item.task.categoryId},
-            {QStringLiteral("categoryName"), item.task.categoryName},
-            {QStringLiteral("subcategoryId"), item.task.subcategoryId},
-            {QStringLiteral("subcategoryName"), item.task.subcategoryName},
-        });
-    }
-    return tasks;
-}
-
 bool TaskListModel::planSuggestedTaskForToday()
 {
     if (m_backlogSuggestionTaskId.isEmpty()) {
@@ -387,7 +349,6 @@ void TaskListModel::reload()
     beginResetModel();
     m_items = std::move(refreshed);
     m_completedTodayTitles = std::move(completedTodayTitles);
-    ++m_revision;
     endResetModel();
     emit summaryChanged();
 

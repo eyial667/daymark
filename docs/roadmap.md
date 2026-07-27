@@ -18,10 +18,11 @@
 ## Slice 3 — Connected mind map
 
 - Long-term goals and dated milestones (foundation complete)
-- Live category and subcategory task map (foundation complete)
+- Unified task, category, goal, and milestone mental map with cloud, flow, and
+  constellation renderers (foundation complete)
 - Deeper category relationships and links between goals and tasks
 - Task dependencies and blocked states
-- Zoomable native graphics scene
+- Pan and zoom controls for large native map scenes
 - Shared selection between the map and Today queue
 
 ## Slice 4 — Focus and review
@@ -29,6 +30,7 @@
 - Today-task focus sessions and countdown timer (foundation complete)
 - Planned versus actual time
 - Daily completion and remaining-work review (foundation complete)
+- Rolling today/yesterday review notes (foundation complete)
 - Evening and weekly review prompts
 - Postponement and estimation insights
 

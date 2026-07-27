@@ -24,11 +24,15 @@ the planning date empty unless the user explicitly adds the task to Today.
 deterministic work-area proposal from open task counts, while `GoalListModel`
 owns goal and milestone presentation state and deterministically proposes the
 earliest unfinished milestone. `DataTransferService` coordinates validated
-portable exports and imports. `TaskListModel` also exposes filtered task
-snapshots for the native category map and a completed-today summary for review.
+portable exports and imports. `TaskListModel` also exposes a completed-today
+summary for review.
 `FocusSessionModel` owns the deterministic countdown state used by the Focus
-screen; it does not persist or mutate tasks. These objects translate user
-actions into repository operations without exposing SQL to QML.
+screen; it does not persist or mutate tasks. `MentalMapModel` builds one
+read-only hierarchy and radial layout from open tasks, categories, active goals,
+and unfinished milestones so each native map renderer presents the same facts.
+`DailyNoteModel` debounces local note saves and exposes only today and yesterday
+to QML. These objects translate user actions into repository operations without
+exposing SQL to QML.
 
 ## Persistence
 
@@ -42,6 +46,12 @@ separate from its deadline; moving work into Today never changes when it is due.
 The former free-text project field is migrated into
 categories and is no longer part of the product interface. Goal and milestone
 target dates are calendar dates stored in ISO-8601 form without a timezone.
+
+Daily notes use a separate date-keyed table. On startup and across day
+boundaries, records older than yesterday are deleted. The current and previous
+day are the complete retention window; daily notes are deliberately excluded
+from portable exports because they are short-lived dashboard context rather
+than durable task or goal data.
 
 Portable data uses the versioned `org.daymark.backup` JSON format. Import fully
 validates a file before starting a database transaction, upserts matching record
@@ -72,7 +82,7 @@ will not silently replace the deterministic engine.
 ## Planned boundaries
 
 - Calendar adapters import events into a separate calendar domain.
-- A graph service owns goals, category relationships, dependencies, and mind-map
-  layout.
+- A future graph service extends the current visual hierarchy with explicit
+  dependencies and user-authored relationships.
 - Platform services wrap notifications, autostart, tray, and credential storage.
 - Export and backup operate on documented, versioned formats.

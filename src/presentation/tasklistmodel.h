@@ -7,14 +7,12 @@
 
 #include <QAbstractListModel>
 #include <QStringList>
-#include <QVariantList>
 #include <QVector>
 
 class TaskListModel final : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(int activeCount READ activeCount NOTIFY summaryChanged)
-    Q_PROPERTY(int revision READ revision NOTIFY summaryChanged)
     Q_PROPERTY(int totalEstimatedMinutes READ totalEstimatedMinutes NOTIFY summaryChanged)
     Q_PROPERTY(QString plannedDuration READ plannedDuration NOTIFY summaryChanged)
     Q_PROPERTY(QString topTaskId READ topTaskId NOTIFY summaryChanged)
@@ -60,7 +58,6 @@ public:
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
     [[nodiscard]] int activeCount() const;
-    [[nodiscard]] int revision() const;
     [[nodiscard]] int totalEstimatedMinutes() const;
     [[nodiscard]] QString plannedDuration() const;
     [[nodiscard]] QString topTaskId() const;
@@ -86,10 +83,6 @@ public:
         const QString &categoryId,
         const QString &subcategoryId = {});
     Q_INVOKABLE bool completeTask(int row);
-    Q_INVOKABLE QVariantList tasksForAssignment(
-        const QString &categoryId,
-        const QString &subcategoryId = {},
-        bool includeAll = false) const;
     Q_INVOKABLE bool planSuggestedTaskForToday();
     Q_INVOKABLE void clearStatus();
     Q_INVOKABLE void reload();
@@ -111,7 +104,6 @@ private:
 
     TaskRepository &m_repository;
     Scope m_scope;
-    int m_revision = 0;
     QVector<Item> m_items;
     QStringList m_completedTodayTitles;
     QString m_backlogSuggestionTaskId;

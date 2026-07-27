@@ -58,14 +58,6 @@ private slots:
         QCOMPARE(
             model.data(first, TaskListModel::SubcategoryNameRole).toString(),
             subcategory.name);
-        const QVariantList mappedTasks = model.tasksForAssignment(
-            category.id,
-            subcategory.id);
-        QCOMPARE(mappedTasks.size(), 1);
-        QCOMPARE(
-            mappedTasks.first().toMap().value(QStringLiteral("title")).toString(),
-            QStringLiteral("High priority"));
-
         QVERIFY(model.assignTaskCategory(
             model.data(first, TaskListModel::IdRole).toString(),
             {},

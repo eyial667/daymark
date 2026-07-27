@@ -3,12 +3,15 @@
 #pragma once
 
 #include "domain/category.h"
+#include "domain/dailynote.h"
 #include "domain/goal.h"
 #include "domain/task.h"
 
 #include <QSqlDatabase>
 #include <QString>
 #include <QVector>
+
+#include <optional>
 
 class TaskRepository
 {
@@ -36,6 +39,15 @@ public:
     [[nodiscard]] bool setTaskPlannedDate(
         const QString &taskId,
         const QDate &plannedDate,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] std::optional<DailyNote> dailyNote(
+        const QDate &date,
+        QString *errorMessage = nullptr) const;
+    [[nodiscard]] bool saveDailyNote(
+        const DailyNote &note,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool pruneDailyNotes(
+        const QDate &oldestDate,
         QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Category> categories(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addCategory(

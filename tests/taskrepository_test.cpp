@@ -185,6 +185,13 @@ private slots:
         category.createdAt = QDateTime::currentDateTime();
         QVERIFY2(repository.addCategory(category, &error), qPrintable(error));
         QCOMPARE(repository.categories(&error).size(), 1);
+
+        DailyNote note;
+        note.date = QDate::currentDate();
+        note.text = QStringLiteral("Migration kept working.");
+        note.updatedAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.saveDailyNote(note, &error), qPrintable(error));
+        QCOMPARE(repository.dailyNote(note.date, &error)->text, note.text);
     }
 
     void migratesLegacyProjectsIntoCategories()

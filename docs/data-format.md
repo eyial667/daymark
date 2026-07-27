@@ -31,6 +31,10 @@ defaults, and behavior preferences such as timeline visibility. The
 `showTimeline` setting is optional for compatibility with earlier version 1
 exports and defaults to `false` when absent.
 
+Rolling dashboard day notes are intentionally absent from this format. They are
+retained only for today and yesterday in the local database, then pruned, so an
+export cannot turn them into a permanent journal.
+
 Timestamps are written in UTC with ISO-8601 millisecond precision. Task planning
 dates and goal and milestone targets are calendar dates in `YYYY-MM-DD` form and
 do not carry a timezone. An empty date or timestamp string means that value was

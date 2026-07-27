@@ -3,9 +3,11 @@
 #include "data/taskrepository.h"
 #include "presentation/appsettings.h"
 #include "presentation/categorylistmodel.h"
+#include "presentation/dailynotemodel.h"
 #include "presentation/datatransferservice.h"
 #include "presentation/focussessionmodel.h"
 #include "presentation/goallistmodel.h"
+#include "presentation/mentalmapmodel.h"
 #include "presentation/tasklistmodel.h"
 
 #include <QGuiApplication>
@@ -42,6 +44,8 @@ int main(int argc, char *argv[])
     TaskListModel todayTaskModel(repository, TaskListModel::Today);
     CategoryListModel categoryModel(repository);
     GoalListModel goalModel(repository);
+    MentalMapModel mentalMapModel(repository);
+    DailyNoteModel dailyNoteModel(repository);
     FocusSessionModel focusSession;
     AppSettings appSettings(dataDirectory);
     DataTransferService dataTransfer(
@@ -82,6 +86,21 @@ int main(int argc, char *argv[])
         &CategoryListModel::categoriesChanged,
         &taskModel,
         &TaskListModel::reload);
+    QObject::connect(
+        &taskModel,
+        &QAbstractItemModel::modelReset,
+        &mentalMapModel,
+        &MentalMapModel::reload);
+    QObject::connect(
+        &categoryModel,
+        &CategoryListModel::categoriesChanged,
+        &mentalMapModel,
+        &MentalMapModel::reload);
+    QObject::connect(
+        &goalModel,
+        &QAbstractItemModel::modelReset,
+        &mentalMapModel,
+        &MentalMapModel::reload);
 
     QTimer dayBoundaryRefresh;
     dayBoundaryRefresh.setInterval(60 * 1000);
@@ -90,7 +109,18 @@ int main(int argc, char *argv[])
         &QTimer::timeout,
         &taskModel,
         &TaskListModel::reload);
+    QObject::connect(
+        &dayBoundaryRefresh,
+        &QTimer::timeout,
+        &dailyNoteModel,
+        &DailyNoteModel::refreshDay);
     dayBoundaryRefresh.start();
+
+    QObject::connect(
+        &application,
+        &QCoreApplication::aboutToQuit,
+        &dailyNoteModel,
+        &DailyNoteModel::saveNow);
 
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
@@ -98,6 +128,8 @@ int main(int argc, char *argv[])
         {QStringLiteral("todayTaskModel"), QVariant::fromValue(&todayTaskModel)},
         {QStringLiteral("categoryModel"), QVariant::fromValue(&categoryModel)},
         {QStringLiteral("goalModel"), QVariant::fromValue(&goalModel)},
+        {QStringLiteral("mentalMapModel"), QVariant::fromValue(&mentalMapModel)},
+        {QStringLiteral("dailyNoteModel"), QVariant::fromValue(&dailyNoteModel)},
         {QStringLiteral("focusSession"), QVariant::fromValue(&focusSession)},
         {QStringLiteral("appSettings"), QVariant::fromValue(&appSettings)},
         {QStringLiteral("dataTransfer"), QVariant::fromValue(&dataTransfer)},

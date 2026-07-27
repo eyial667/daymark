@@ -392,6 +392,82 @@ bool TaskRepository::setTaskPlannedDate(
     return true;
 }
 
+std::optional<DailyNote> TaskRepository::dailyNote(
+    const QDate &date,
+    QString *errorMessage) const
+{
+    if (!date.isValid()) {
+        assignError(errorMessage, QStringLiteral("A day note needs a valid date."));
+        return std::nullopt;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "SELECT note_date, body, updated_at FROM daily_notes WHERE note_date = :note_date"));
+    query.bindValue(QStringLiteral(":note_date"), serializeDate(date));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return std::nullopt;
+    }
+    if (!query.next()) {
+        return std::nullopt;
+    }
+
+    DailyNote note;
+    note.date = deserializeDate(query.value(0).toString());
+    note.text = query.value(1).toString();
+    note.updatedAt = deserializeDateTime(query.value(2).toString());
+    return note;
+}
+
+bool TaskRepository::saveDailyNote(
+    const DailyNote &note,
+    QString *errorMessage)
+{
+    if (!note.date.isValid()) {
+        assignError(errorMessage, QStringLiteral("A day note needs a valid date."));
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO daily_notes (note_date, body, updated_at) "
+        "VALUES (:note_date, :body, :updated_at) "
+        "ON CONFLICT(note_date) DO UPDATE SET "
+        "body = excluded.body, updated_at = excluded.updated_at"));
+    query.bindValue(QStringLiteral(":note_date"), serializeDate(note.date));
+    query.bindValue(QStringLiteral(":body"), note.text);
+    query.bindValue(
+        QStringLiteral(":updated_at"),
+        serializeDateTime(note.updatedAt.isValid()
+            ? note.updatedAt : QDateTime::currentDateTime()));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::pruneDailyNotes(
+    const QDate &oldestDate,
+    QString *errorMessage)
+{
+    if (!oldestDate.isValid()) {
+        assignError(errorMessage, QStringLiteral("A retention date is required."));
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "DELETE FROM daily_notes WHERE note_date < :oldest_date"));
+    query.bindValue(QStringLiteral(":oldest_date"), serializeDate(oldestDate));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
 QVector<Category> TaskRepository::categories(QString *errorMessage) const
 {
     QVector<Category> result;
@@ -796,13 +872,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 5) {
+    if (version > 6) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-    if (version == 5) {
+    if (version == 6) {
         return true;
     }
 
@@ -924,6 +1000,16 @@ bool TaskRepository::migrate(QString *errorMessage)
                 "CREATE INDEX tasks_open_planned_index "
                 "ON tasks(is_completed, planned_date)"), errorMessage)
             && execute(QStringLiteral("PRAGMA user_version = 5"), errorMessage);
+    }
+
+    if (migrated && version < 6) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE daily_notes ("
+            "note_date TEXT PRIMARY KEY NOT NULL, "
+            "body TEXT NOT NULL DEFAULT '', "
+            "updated_at TEXT NOT NULL"
+            ")"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 6"), errorMessage);
     }
 
     if (!migrated) {
