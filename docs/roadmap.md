@@ -17,7 +17,8 @@
 
 ## Slice 3 — Connected mind map
 
-- Life areas, goals, projects, and tasks
+- Long-term goals and dated milestones (foundation complete)
+- Life areas, projects, and links between goals and tasks
 - Task dependencies and blocked states
 - Zoomable native graphics scene
 - Shared selection between the map and Today queue

@@ -4,6 +4,7 @@
 
 #include <QDir>
 #include <QFileInfo>
+#include <QHash>
 #include <QMetaType>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -25,11 +26,107 @@ QDateTime deserializeDateTime(const QString &value)
     return QDateTime::fromString(value, Qt::ISODateWithMs).toLocalTime();
 }
 
+QString serializeDate(const QDate &date)
+{
+    return date.isValid() ? date.toString(Qt::ISODate) : QString();
+}
+
+QDate deserializeDate(const QString &value)
+{
+    return value.isEmpty() ? QDate() : QDate::fromString(value, Qt::ISODate);
+}
+
 void assignError(QString *target, const QString &message)
 {
     if (target != nullptr) {
         *target = message;
     }
+}
+
+void bindNullableString(QSqlQuery &query, const QString &placeholder, const QString &value)
+{
+    if (value.isEmpty()) {
+        query.bindValue(placeholder, QVariant(QMetaType::fromType<QString>()));
+    } else {
+        query.bindValue(placeholder, value);
+    }
+}
+
+void bindNullableDateTime(
+    QSqlQuery &query,
+    const QString &placeholder,
+    const QDateTime &value)
+{
+    bindNullableString(query, placeholder, serializeDateTime(value));
+}
+
+void bindNullableDate(QSqlQuery &query, const QString &placeholder, const QDate &value)
+{
+    bindNullableString(query, placeholder, serializeDate(value));
+}
+
+Task taskFromQuery(const QSqlQuery &query)
+{
+    Task task;
+    task.id = query.value(0).toString();
+    task.title = query.value(1).toString();
+    task.notes = query.value(2).toString();
+    task.project = query.value(3).toString();
+    task.dueAt = deserializeDateTime(query.value(4).toString());
+    task.createdAt = deserializeDateTime(query.value(5).toString());
+    task.importance = query.value(6).toInt();
+    task.estimatedMinutes = query.value(7).toInt();
+    task.completed = query.value(8).toBool();
+    task.completedAt = deserializeDateTime(query.value(9).toString());
+    return task;
+}
+
+void bindTask(QSqlQuery &query, const Task &task)
+{
+    query.bindValue(QStringLiteral(":id"), task.id);
+    query.bindValue(QStringLiteral(":title"), task.title);
+    query.bindValue(
+        QStringLiteral(":notes"),
+        task.notes.isNull() ? QStringLiteral("") : task.notes);
+    query.bindValue(
+        QStringLiteral(":project"),
+        task.project.isNull() ? QStringLiteral("") : task.project);
+    bindNullableDateTime(query, QStringLiteral(":due_at"), task.dueAt);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(task.createdAt));
+    query.bindValue(QStringLiteral(":importance"), task.importance);
+    query.bindValue(QStringLiteral(":estimated_minutes"), task.estimatedMinutes);
+    query.bindValue(QStringLiteral(":is_completed"), task.completed);
+    bindNullableDateTime(query, QStringLiteral(":completed_at"), task.completedAt);
+}
+
+void bindGoal(QSqlQuery &query, const Goal &goal)
+{
+    query.bindValue(QStringLiteral(":id"), goal.id);
+    query.bindValue(QStringLiteral(":title"), goal.title);
+    query.bindValue(
+        QStringLiteral(":description"),
+        goal.description.isNull() ? QStringLiteral("") : goal.description);
+    bindNullableDate(query, QStringLiteral(":target_date"), goal.targetDate);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(goal.createdAt));
+    query.bindValue(QStringLiteral(":is_completed"), goal.completed);
+    bindNullableDateTime(
+        query,
+        QStringLiteral(":completed_at"),
+        goal.completed ? QDateTime::currentDateTime() : QDateTime());
+}
+
+void bindMilestone(QSqlQuery &query, const Milestone &milestone)
+{
+    query.bindValue(QStringLiteral(":id"), milestone.id);
+    query.bindValue(QStringLiteral(":goal_id"), milestone.goalId);
+    query.bindValue(QStringLiteral(":title"), milestone.title);
+    bindNullableDate(query, QStringLiteral(":target_date"), milestone.targetDate);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(milestone.createdAt));
+    query.bindValue(QStringLiteral(":is_completed"), milestone.completed);
+    bindNullableDateTime(
+        query,
+        QStringLiteral(":completed_at"),
+        milestone.completed ? QDateTime::currentDateTime() : QDateTime());
 }
 
 } // namespace
@@ -92,29 +189,35 @@ bool TaskRepository::isOpen() const
 
 QVector<Task> TaskRepository::openTasks(QString *errorMessage) const
 {
+    return loadTasks(false, errorMessage);
+}
+
+QVector<Task> TaskRepository::allTasks(QString *errorMessage) const
+{
+    return loadTasks(true, errorMessage);
+}
+
+QVector<Task> TaskRepository::loadTasks(
+    bool includeCompleted,
+    QString *errorMessage) const
+{
     QVector<Task> tasks;
     QSqlQuery query(m_database);
+    const QString whereClause = includeCompleted
+        ? QString()
+        : QStringLiteral(" WHERE is_completed = 0");
 
     if (!query.exec(QStringLiteral(
             "SELECT id, title, notes, project, due_at, created_at, importance, "
-            "estimated_minutes, is_completed "
-            "FROM tasks WHERE is_completed = 0 ORDER BY created_at ASC"))) {
+            "estimated_minutes, is_completed, completed_at FROM tasks")
+            + whereClause
+            + QStringLiteral(" ORDER BY created_at ASC"))) {
         assignError(errorMessage, query.lastError().text());
         return tasks;
     }
 
     while (query.next()) {
-        Task task;
-        task.id = query.value(0).toString();
-        task.title = query.value(1).toString();
-        task.notes = query.value(2).toString();
-        task.project = query.value(3).toString();
-        task.dueAt = deserializeDateTime(query.value(4).toString());
-        task.createdAt = deserializeDateTime(query.value(5).toString());
-        task.importance = query.value(6).toInt();
-        task.estimatedMinutes = query.value(7).toInt();
-        task.completed = query.value(8).toBool();
-        tasks.append(task);
+        tasks.append(taskFromQuery(query));
     }
 
     return tasks;
@@ -125,29 +228,11 @@ bool TaskRepository::addTask(const Task &task, QString *errorMessage)
     QSqlQuery query(m_database);
     query.prepare(QStringLiteral(
         "INSERT INTO tasks "
-        "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, is_completed) "
+        "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
+        "is_completed, completed_at) "
         "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
-        ":estimated_minutes, :is_completed)"));
-
-    query.bindValue(QStringLiteral(":id"), task.id);
-    query.bindValue(QStringLiteral(":title"), task.title);
-    query.bindValue(
-        QStringLiteral(":notes"),
-        task.notes.isNull() ? QStringLiteral("") : task.notes);
-    query.bindValue(
-        QStringLiteral(":project"),
-        task.project.isNull() ? QStringLiteral("") : task.project);
-    if (task.dueAt.isValid()) {
-        query.bindValue(QStringLiteral(":due_at"), serializeDateTime(task.dueAt));
-    } else {
-        query.bindValue(
-            QStringLiteral(":due_at"),
-            QVariant(QMetaType::fromType<QString>()));
-    }
-    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(task.createdAt));
-    query.bindValue(QStringLiteral(":importance"), task.importance);
-    query.bindValue(QStringLiteral(":estimated_minutes"), task.estimatedMinutes);
-    query.bindValue(QStringLiteral(":is_completed"), task.completed);
+        ":estimated_minutes, :is_completed, :completed_at)"));
+    bindTask(query, task);
 
     if (!query.exec()) {
         assignError(errorMessage, query.lastError().text());
@@ -167,15 +252,10 @@ bool TaskRepository::setCompleted(
         "UPDATE tasks SET is_completed = :completed, completed_at = :completed_at "
         "WHERE id = :id"));
     query.bindValue(QStringLiteral(":completed"), completed);
-    if (completed) {
-        query.bindValue(
-            QStringLiteral(":completed_at"),
-            serializeDateTime(QDateTime::currentDateTime()));
-    } else {
-        query.bindValue(
-            QStringLiteral(":completed_at"),
-            QVariant(QMetaType::fromType<QString>()));
-    }
+    bindNullableDateTime(
+        query,
+        QStringLiteral(":completed_at"),
+        completed ? QDateTime::currentDateTime() : QDateTime());
     query.bindValue(QStringLiteral(":id"), taskId);
 
     if (!query.exec()) {
@@ -191,6 +271,234 @@ bool TaskRepository::setCompleted(
     return true;
 }
 
+QVector<Goal> TaskRepository::goals(QString *errorMessage) const
+{
+    QVector<Goal> result;
+    QHash<QString, qsizetype> goalIndexes;
+    QSqlQuery goalQuery(m_database);
+
+    if (!goalQuery.exec(QStringLiteral(
+            "SELECT id, title, description, target_date, created_at, is_completed "
+            "FROM goals "
+            "ORDER BY (target_date IS NULL) ASC, target_date ASC, created_at ASC"))) {
+        assignError(errorMessage, goalQuery.lastError().text());
+        return result;
+    }
+
+    while (goalQuery.next()) {
+        Goal goal;
+        goal.id = goalQuery.value(0).toString();
+        goal.title = goalQuery.value(1).toString();
+        goal.description = goalQuery.value(2).toString();
+        goal.targetDate = deserializeDate(goalQuery.value(3).toString());
+        goal.createdAt = deserializeDateTime(goalQuery.value(4).toString());
+        goal.completed = goalQuery.value(5).toBool();
+        goalIndexes.insert(goal.id, result.size());
+        result.append(goal);
+    }
+
+    QSqlQuery milestoneQuery(m_database);
+    if (!milestoneQuery.exec(QStringLiteral(
+            "SELECT id, goal_id, title, target_date, created_at, is_completed "
+            "FROM milestones ORDER BY position ASC, created_at ASC"))) {
+        assignError(errorMessage, milestoneQuery.lastError().text());
+        return {};
+    }
+
+    while (milestoneQuery.next()) {
+        const QString goalId = milestoneQuery.value(1).toString();
+        const auto index = goalIndexes.constFind(goalId);
+        if (index == goalIndexes.cend()) {
+            continue;
+        }
+
+        Milestone milestone;
+        milestone.id = milestoneQuery.value(0).toString();
+        milestone.goalId = goalId;
+        milestone.title = milestoneQuery.value(2).toString();
+        milestone.targetDate = deserializeDate(milestoneQuery.value(3).toString());
+        milestone.createdAt = deserializeDateTime(milestoneQuery.value(4).toString());
+        milestone.completed = milestoneQuery.value(5).toBool();
+        result[*index].milestones.append(milestone);
+    }
+
+    return result;
+}
+
+bool TaskRepository::addGoal(const Goal &goal, QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO goals "
+        "(id, title, description, target_date, created_at, is_completed, completed_at) "
+        "VALUES (:id, :title, :description, :target_date, :created_at, :is_completed, "
+        ":completed_at)"));
+    bindGoal(query, goal);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::addMilestone(
+    const Milestone &milestone,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO milestones "
+        "(id, goal_id, title, target_date, created_at, is_completed, completed_at, position) "
+        "VALUES (:id, :goal_id, :title, :target_date, :created_at, :is_completed, "
+        ":completed_at, (SELECT COALESCE(MAX(position), -1) + 1 FROM milestones "
+        "WHERE goal_id = :goal_id))"));
+    bindMilestone(query, milestone);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::setMilestoneCompleted(
+    const QString &milestoneId,
+    bool completed,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE milestones SET is_completed = :completed, completed_at = :completed_at "
+        "WHERE id = :id"));
+    query.bindValue(QStringLiteral(":completed"), completed);
+    bindNullableDateTime(
+        query,
+        QStringLiteral(":completed_at"),
+        completed ? QDateTime::currentDateTime() : QDateTime());
+    query.bindValue(QStringLiteral(":id"), milestoneId);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected milestone no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::setGoalCompleted(
+    const QString &goalId,
+    bool completed,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE goals SET is_completed = :completed, completed_at = :completed_at "
+        "WHERE id = :id"));
+    query.bindValue(QStringLiteral(":completed"), completed);
+    bindNullableDateTime(
+        query,
+        QStringLiteral(":completed_at"),
+        completed ? QDateTime::currentDateTime() : QDateTime());
+    query.bindValue(QStringLiteral(":id"), goalId);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected goal no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::mergeImportedData(
+    const QVector<Task> &tasks,
+    const QVector<Goal> &goalsToMerge,
+    QString *errorMessage)
+{
+    if (!m_database.transaction()) {
+        assignError(errorMessage, m_database.lastError().text());
+        return false;
+    }
+
+    QSqlQuery taskQuery(m_database);
+    taskQuery.prepare(QStringLiteral(
+        "INSERT INTO tasks "
+        "(id, title, notes, project, due_at, created_at, importance, estimated_minutes, "
+        "is_completed, completed_at) "
+        "VALUES (:id, :title, :notes, :project, :due_at, :created_at, :importance, "
+        ":estimated_minutes, :is_completed, :completed_at) "
+        "ON CONFLICT(id) DO UPDATE SET title = excluded.title, notes = excluded.notes, "
+        "project = excluded.project, due_at = excluded.due_at, "
+        "created_at = excluded.created_at, importance = excluded.importance, "
+        "estimated_minutes = excluded.estimated_minutes, "
+        "is_completed = excluded.is_completed, completed_at = excluded.completed_at"));
+
+    for (const Task &task : tasks) {
+        bindTask(taskQuery, task);
+        if (!taskQuery.exec()) {
+            assignError(errorMessage, taskQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+    }
+
+    QSqlQuery goalQuery(m_database);
+    goalQuery.prepare(QStringLiteral(
+        "INSERT INTO goals "
+        "(id, title, description, target_date, created_at, is_completed, completed_at) "
+        "VALUES (:id, :title, :description, :target_date, :created_at, :is_completed, "
+        ":completed_at) "
+        "ON CONFLICT(id) DO UPDATE SET title = excluded.title, "
+        "description = excluded.description, target_date = excluded.target_date, "
+        "created_at = excluded.created_at, is_completed = excluded.is_completed, "
+        "completed_at = excluded.completed_at"));
+
+    QSqlQuery milestoneQuery(m_database);
+    milestoneQuery.prepare(QStringLiteral(
+        "INSERT INTO milestones "
+        "(id, goal_id, title, target_date, created_at, is_completed, completed_at, position) "
+        "VALUES (:id, :goal_id, :title, :target_date, :created_at, :is_completed, "
+        ":completed_at, :position) "
+        "ON CONFLICT(id) DO UPDATE SET goal_id = excluded.goal_id, title = excluded.title, "
+        "target_date = excluded.target_date, created_at = excluded.created_at, "
+        "is_completed = excluded.is_completed, completed_at = excluded.completed_at, "
+        "position = excluded.position"));
+
+    for (const Goal &goal : goalsToMerge) {
+        bindGoal(goalQuery, goal);
+        if (!goalQuery.exec()) {
+            assignError(errorMessage, goalQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+
+        for (qsizetype index = 0; index < goal.milestones.size(); ++index) {
+            Milestone milestone = goal.milestones.at(index);
+            milestone.goalId = goal.id;
+            bindMilestone(milestoneQuery, milestone);
+            milestoneQuery.bindValue(QStringLiteral(":position"), index);
+            if (!milestoneQuery.exec()) {
+                assignError(errorMessage, milestoneQuery.lastError().text());
+                m_database.rollback();
+                return false;
+            }
+        }
+    }
+
+    if (!m_database.commit()) {
+        assignError(errorMessage, m_database.lastError().text());
+        m_database.rollback();
+        return false;
+    }
+    return true;
+}
+
 bool TaskRepository::migrate(QString *errorMessage)
 {
     QSqlQuery versionQuery(m_database);
@@ -200,14 +508,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 1) {
+    if (version > 2) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-
-    if (version == 1) {
+    if (version == 2) {
         return true;
     }
 
@@ -216,25 +523,57 @@ bool TaskRepository::migrate(QString *errorMessage)
         return false;
     }
 
-    const bool created = execute(QStringLiteral(
-        "CREATE TABLE tasks ("
-        "id TEXT PRIMARY KEY NOT NULL, "
-        "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
-        "notes TEXT NOT NULL DEFAULT '', "
-        "project TEXT NOT NULL DEFAULT '', "
-        "due_at TEXT, "
-        "created_at TEXT NOT NULL, "
-        "importance INTEGER NOT NULL DEFAULT 3 CHECK(importance BETWEEN 1 AND 5), "
-        "estimated_minutes INTEGER NOT NULL DEFAULT 30 "
-        "CHECK(estimated_minutes BETWEEN 5 AND 480), "
-        "is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)), "
-        "completed_at TEXT"
-        ")"), errorMessage)
-        && execute(QStringLiteral(
-            "CREATE INDEX tasks_open_due_index ON tasks(is_completed, due_at)"), errorMessage)
-        && execute(QStringLiteral("PRAGMA user_version = 1"), errorMessage);
+    bool migrated = true;
+    if (version == 0) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE tasks ("
+            "id TEXT PRIMARY KEY NOT NULL, "
+            "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+            "notes TEXT NOT NULL DEFAULT '', "
+            "project TEXT NOT NULL DEFAULT '', "
+            "due_at TEXT, "
+            "created_at TEXT NOT NULL, "
+            "importance INTEGER NOT NULL DEFAULT 3 CHECK(importance BETWEEN 1 AND 5), "
+            "estimated_minutes INTEGER NOT NULL DEFAULT 30 "
+            "CHECK(estimated_minutes BETWEEN 5 AND 480), "
+            "is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)), "
+            "completed_at TEXT"
+            ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX tasks_open_due_index ON tasks(is_completed, due_at)"), errorMessage);
+    }
 
-    if (!created) {
+    if (migrated) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE goals ("
+            "id TEXT PRIMARY KEY NOT NULL, "
+            "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+            "description TEXT NOT NULL DEFAULT '', "
+            "target_date TEXT, "
+            "created_at TEXT NOT NULL, "
+            "is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)), "
+            "completed_at TEXT"
+            ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX goals_open_target_index ON goals(is_completed, target_date)"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE TABLE milestones ("
+                "id TEXT PRIMARY KEY NOT NULL, "
+                "goal_id TEXT NOT NULL REFERENCES goals(id) ON DELETE CASCADE, "
+                "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+                "target_date TEXT, "
+                "created_at TEXT NOT NULL, "
+                "is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)), "
+                "completed_at TEXT, "
+                "position INTEGER NOT NULL DEFAULT 0"
+                ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX milestones_goal_position_index "
+                "ON milestones(goal_id, position)"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 2"), errorMessage);
+    }
+
+    if (!migrated) {
         m_database.rollback();
         return false;
     }
@@ -243,7 +582,6 @@ bool TaskRepository::migrate(QString *errorMessage)
         assignError(errorMessage, m_database.lastError().text());
         return false;
     }
-
     return true;
 }
 
@@ -254,6 +592,5 @@ bool TaskRepository::execute(const QString &sql, QString *errorMessage) const
         assignError(errorMessage, query.lastError().text());
         return false;
     }
-
     return true;
 }

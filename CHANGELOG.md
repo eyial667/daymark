@@ -16,3 +16,7 @@ and releases will use semantic versioning.
 - Application settings for planning defaults and behavior.
 - Per-user Linux installer, terminal launcher, menu entry, and desktop shortcut.
 - Cross-platform GitHub Actions build, lint, test, package, and artifact pipeline.
+- Long-term goals with descriptions, target dates, progress, and smaller dated
+  milestones.
+- Versioned portable data export and merge import for tasks, completed history,
+  goals, milestones, and preferences.

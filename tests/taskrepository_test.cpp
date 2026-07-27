@@ -3,6 +3,9 @@
 #include "data/taskrepository.h"
 
 #include <QTest>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 #include <QTemporaryDir>
 #include <QUuid>
 
@@ -69,6 +72,55 @@ private slots:
             QCOMPARE(tasks.first().id, taskId);
             QCOMPARE(tasks.first().title, QStringLiteral("Persistent task"));
         }
+    }
+
+    void migratesVersionOneWithoutLosingTasks()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        const QString databasePath = directory.filePath(QStringLiteral("daymark.sqlite3"));
+        const QString connectionName = QStringLiteral("legacy-%1")
+            .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+
+        {
+            QSqlDatabase database = QSqlDatabase::addDatabase(
+                QStringLiteral("QSQLITE"),
+                connectionName);
+            database.setDatabaseName(databasePath);
+            QVERIFY2(database.open(), qPrintable(database.lastError().text()));
+
+            QSqlQuery query(database);
+            QVERIFY2(query.exec(QStringLiteral(
+                "CREATE TABLE tasks ("
+                "id TEXT PRIMARY KEY NOT NULL, title TEXT NOT NULL, "
+                "notes TEXT NOT NULL DEFAULT '', project TEXT NOT NULL DEFAULT '', "
+                "due_at TEXT, created_at TEXT NOT NULL, importance INTEGER NOT NULL, "
+                "estimated_minutes INTEGER NOT NULL, is_completed INTEGER NOT NULL, "
+                "completed_at TEXT)")), qPrintable(query.lastError().text()));
+            QVERIFY2(query.exec(QStringLiteral(
+                "INSERT INTO tasks VALUES "
+                "('legacy-task', 'Keep this task', '', '', NULL, "
+                "'2026-01-01T09:00:00.000Z', 3, 30, 0, NULL)")),
+                qPrintable(query.lastError().text()));
+            QVERIFY2(query.exec(QStringLiteral("PRAGMA user_version = 1")),
+                qPrintable(query.lastError().text()));
+            database.close();
+        }
+        QSqlDatabase::removeDatabase(connectionName);
+
+        TaskRepository repository(databasePath);
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+        const QVector<Task> tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.size(), 1);
+        QCOMPARE(tasks.first().title, QStringLiteral("Keep this task"));
+
+        Goal goal;
+        goal.id = QStringLiteral("new-goal");
+        goal.title = QStringLiteral("A migrated goal");
+        goal.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addGoal(goal, &error), qPrintable(error));
+        QCOMPARE(repository.goals(&error).size(), 1);
     }
 };
 

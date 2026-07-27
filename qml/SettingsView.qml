@@ -4,15 +4,18 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 
 Item {
     id: root
 
     required property var appSettings
+    required property var dataTransfer
     required property var theme
 
     property bool folderOpenFailed: false
+    property url pendingImportUrl: ""
 
     function durationLabel(minutes) {
         const hours = Math.floor(minutes / 60)
@@ -469,7 +472,48 @@ Item {
                         SectionHeading {
                             Layout.fillWidth: true
                             heading: "Local data & privacy"
-                            description: "Your tasks and preferences stay on this machine. Daymark has no account or cloud service."
+                            description: "Your tasks, goals, and preferences stay on this machine. Export a portable copy whenever you want."
+                        }
+
+                        SettingDivider { Layout.fillWidth: true }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 18
+
+                            SettingCopy {
+                                Layout.fillWidth: true
+                                heading: "Portable Daymark data"
+                                description: "Export tasks, completed history, long-term goals, milestones, and preferences. Imports merge with data already on this computer."
+                            }
+
+                            AppButton {
+                                theme: root.theme
+                                text: "Import"
+                                onClicked: {
+                                    root.dataTransfer.clearStatus()
+                                    importFileDialog.open()
+                                }
+                            }
+
+                            AppButton {
+                                theme: root.theme
+                                primary: true
+                                text: "Export"
+                                onClicked: {
+                                    root.dataTransfer.clearStatus()
+                                    exportFileDialog.open()
+                                }
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: root.dataTransfer.statusMessage.length > 0
+                            text: root.dataTransfer.statusMessage
+                            color: root.theme.accent
+                            font.pixelSize: 10
+                            wrapMode: Text.WordWrap
                         }
 
                         SettingDivider { Layout.fillWidth: true }
@@ -519,7 +563,7 @@ Item {
                             SettingCopy {
                                 Layout.fillWidth: true
                                 heading: "Reset preferences"
-                                description: "Restore settings only. Your tasks and local database will not be changed."
+                                description: "Restore settings only. Your tasks, goals, milestones, and local database will not be changed."
                             }
 
                             AppButton {
@@ -532,6 +576,90 @@ Item {
                 }
             }
         }
+    }
+
+    FileDialog {
+        id: exportFileDialog
+
+        title: "Export Daymark data"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Daymark data (*.daymark.json)"]
+        defaultSuffix: "daymark.json"
+        onAccepted: root.dataTransfer.exportData(selectedFile)
+    }
+
+    FileDialog {
+        id: importFileDialog
+
+        title: "Import Daymark data"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Daymark data (*.daymark.json)", "JSON files (*.json)"]
+        onAccepted: {
+            root.pendingImportUrl = selectedFile
+            importConfirmationDialog.open()
+        }
+    }
+
+    Dialog {
+        id: importConfirmationDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 450
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: root.theme.radius + 3
+            color: root.theme.surfaceRaised
+            border.color: root.theme.borderStrong
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 13
+
+            Text {
+                text: "Import this Daymark data?"
+                color: root.theme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: "Tasks, goals, milestones, and preferences from the selected file will be merged into this computer. Existing records are kept."
+                color: root.theme.textSecondary
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Item { Layout.fillWidth: true }
+
+                AppButton {
+                    theme: root.theme
+                    quiet: true
+                    text: "Cancel"
+                    onClicked: importConfirmationDialog.close()
+                }
+
+                AppButton {
+                    theme: root.theme
+                    primary: true
+                    text: "Import and merge"
+                    onClicked: {
+                        root.dataTransfer.importData(root.pendingImportUrl)
+                        importConfirmationDialog.close()
+                    }
+                }
+            }
+        }
+
+        onClosed: root.pendingImportUrl = ""
     }
 
     Dialog {
@@ -562,7 +690,7 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: "Color mode, interface, accent, planning defaults, and behavior settings will be restored. Tasks stay untouched."
+                text: "Color mode, interface, accent, planning defaults, and behavior settings will be restored. Tasks and goals stay untouched."
                 color: root.theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap

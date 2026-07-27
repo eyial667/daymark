@@ -2,6 +2,8 @@
 
 #include "data/taskrepository.h"
 #include "presentation/appsettings.h"
+#include "presentation/datatransferservice.h"
+#include "presentation/goallistmodel.h"
 #include "presentation/tasklistmodel.h"
 
 #include <QGuiApplication>
@@ -34,12 +36,20 @@ int main(int argc, char *argv[])
     }
 
     TaskListModel taskModel(repository);
+    GoalListModel goalModel(repository);
     AppSettings appSettings(dataDirectory);
+    DataTransferService dataTransfer(
+        repository,
+        taskModel,
+        goalModel,
+        appSettings);
 
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
         {QStringLiteral("taskModel"), QVariant::fromValue(&taskModel)},
+        {QStringLiteral("goalModel"), QVariant::fromValue(&goalModel)},
         {QStringLiteral("appSettings"), QVariant::fromValue(&appSettings)},
+        {QStringLiteral("dataTransfer"), QVariant::fromValue(&dataTransfer)},
     });
     QObject::connect(
         &engine,

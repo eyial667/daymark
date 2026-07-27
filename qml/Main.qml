@@ -8,7 +8,9 @@ ApplicationWindow {
     id: window
 
     required property var taskModel
+    required property var goalModel
     required property var appSettings
+    required property var dataTransfer
 
     property int currentPage: 0
     property int pendingCompletionIndex: -1
@@ -87,7 +89,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Ctrl+,"
-        onActivated: window.currentPage = 6
+        onActivated: window.currentPage = 7
     }
 
     Shortcut {
@@ -226,6 +228,11 @@ ApplicationWindow {
                     detail: "Project progress, milestones, and the tasks holding each outcome together."
                 }
 
+                GoalsView {
+                    goalModel: window.goalModel
+                    theme: interfaceTheme
+                }
+
                 PlaceholderPage {
                     pageTitle: "Focus"
                     detail: "A distraction-free timer and a single deliberate next action."
@@ -238,6 +245,7 @@ ApplicationWindow {
 
                 SettingsView {
                     appSettings: window.appSettings
+                    dataTransfer: window.dataTransfer
                     theme: interfaceTheme
                 }
             }

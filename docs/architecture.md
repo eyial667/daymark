@@ -15,15 +15,24 @@ The QML layer owns presentation and interaction only. C++ owns validation,
 persistence, priority decisions, integration coordination, and operating-system
 services. QML must not contain business rules or direct SQL access.
 
-`TaskListModel` is the current application boundary. It converts persisted tasks
-into a sorted, read-only queue for the interface and translates user actions
-into repository operations.
+`TaskListModel` converts persisted tasks into a sorted queue for the interface.
+`GoalListModel` owns goal and milestone presentation state, and
+`DataTransferService` coordinates validated portable exports and imports. These
+objects translate user actions into repository operations without exposing SQL
+to QML.
 
 ## Persistence
 
 SQLite is the source of truth. Schema changes use SQLite's `user_version` value
-and transactional migrations. Dates are stored as UTC ISO-8601 strings and
-converted to local time at the presentation boundary.
+and transactional migrations. Timestamps are stored as UTC ISO-8601 strings and
+converted to local time at the presentation boundary. Goal and milestone target
+dates are calendar dates stored in ISO-8601 form without a timezone.
+
+Portable data uses the versioned `org.daymark.backup` JSON format. Import fully
+validates a file before starting a database transaction, upserts matching record
+IDs, and retains unrelated destination records. Preferences are applied only
+after the database merge succeeds. See [data-format.md](data-format.md) for the
+portable schema and merge contract.
 
 Future sync integrations must operate through an outbox rather than mutating UI
 state directly. Local edits remain usable while integrations are offline.

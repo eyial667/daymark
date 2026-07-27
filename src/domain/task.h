@@ -13,6 +13,7 @@ struct Task
     QString project;
     QDateTime dueAt;
     QDateTime createdAt;
+    QDateTime completedAt;
     int importance = 3;
     int estimatedMinutes = 30;
     bool completed = false;

@@ -28,9 +28,14 @@ add_library(daymark_core STATIC
     src/core/priorityengine.h
     src/data/taskrepository.cpp
     src/data/taskrepository.h
+    src/domain/goal.h
     src/domain/task.h
     src/presentation/appsettings.cpp
     src/presentation/appsettings.h
+    src/presentation/datatransferservice.cpp
+    src/presentation/datatransferservice.h
+    src/presentation/goallistmodel.cpp
+    src/presentation/goallistmodel.h
     src/presentation/tasklistmodel.cpp
     src/presentation/tasklistmodel.h
 )
@@ -60,6 +65,7 @@ qt_add_qml_module(daymark
         qml/Main.qml
         qml/AppButton.qml
         qml/EmptyState.qml
+        qml/GoalsView.qml
         qml/HybridView.qml
         qml/MetricCard.qml
         qml/MidnightCommandView.qml
@@ -146,6 +152,14 @@ if(BUILD_TESTING)
     qt_add_executable(appsettings_tests tests/appsettings_test.cpp)
     target_link_libraries(appsettings_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME appsettings_tests COMMAND appsettings_tests)
+
+    qt_add_executable(goallistmodel_tests tests/goallistmodel_test.cpp)
+    target_link_libraries(goallistmodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME goallistmodel_tests COMMAND goallistmodel_tests)
+
+    qt_add_executable(datatransfer_tests tests/datatransfer_test.cpp)
+    target_link_libraries(datatransfer_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME datatransfer_tests COMMAND datatransfer_tests)
 endif()
 
 set(CPACK_PACKAGE_NAME "Daymark")

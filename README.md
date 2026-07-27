@@ -23,6 +23,10 @@ embedded webview, Node.js, or a local web server.
 - Configure light or dark mode, accent color, daily capacity, task-capture
   defaults, clock format, priority explanations, and completion confirmation
   from a native Settings page.
+- Create long-term goals, break them into dated milestones, track their progress,
+  and keep achieved goals in local history.
+- Export tasks, completed history, goals, milestones, and preferences to a
+  portable `.daymark.json` file, then merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
 - Navigate the initial desktop application shell.
 
@@ -149,10 +153,18 @@ PowerShell or File Explorer.
 The SQLite database is created in the operating system's standard local
 application-data directory. It is never committed to the repository.
 
-Use the **Interface** selector at the bottom of the sidebar to change the Today
-layout. `Ctrl+1`, `Ctrl+2`, `Ctrl+3`, and `Ctrl+4` switch directly between the
-four interfaces; `Ctrl+N` opens task capture, `Ctrl+,` opens Settings, and
-`Ctrl+Shift+L` toggles light or dark mode.
+To move Daymark data to another computer, open **Settings → Local data &
+privacy**, select **Export**, and copy the resulting `.daymark.json` file to the
+other computer. Install Daymark there, choose **Import**, select the file, and
+confirm **Import and merge**. Existing records on the destination computer are
+kept. The versioned file structure is documented in
+[docs/data-format.md](docs/data-format.md).
+
+Use **Goals** in the sidebar to create long-term outcomes and add their smaller
+milestones. Use the **Interface** selector at the bottom of the sidebar to change
+the Today layout. `Ctrl+1`, `Ctrl+2`, `Ctrl+3`, and `Ctrl+4` switch directly
+between the four interfaces; `Ctrl+N` opens task capture, `Ctrl+,` opens
+Settings, and `Ctrl+Shift+L` toggles light or dark mode.
 
 ## Create a package
 
