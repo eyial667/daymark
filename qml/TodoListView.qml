@@ -43,6 +43,7 @@ Item {
             }
             Item { Layout.fillWidth: true }
             Rectangle {
+                visible: root.width >= 650
                 implicitWidth: queueSummary.implicitWidth + 24
                 implicitHeight: 32
                 radius: 16

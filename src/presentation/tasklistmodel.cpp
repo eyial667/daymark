@@ -7,6 +7,7 @@
 #include <QTime>
 #include <QTimeZone>
 #include <QUuid>
+#include <QVariantMap>
 
 #include <algorithm>
 
@@ -83,6 +84,11 @@ int TaskListModel::activeCount() const
     return m_items.size();
 }
 
+int TaskListModel::revision() const
+{
+    return m_revision;
+}
+
 int TaskListModel::totalEstimatedMinutes() const
 {
     int total = 0;
@@ -107,9 +113,29 @@ QString TaskListModel::plannedDuration() const
     return QStringLiteral("%1h %2m").arg(hours).arg(minutes);
 }
 
+QString TaskListModel::topTaskId() const
+{
+    return m_items.isEmpty() ? QString() : m_items.first().task.id;
+}
+
 QString TaskListModel::topTaskTitle() const
 {
     return m_items.isEmpty() ? QStringLiteral("Nothing queued") : m_items.first().task.title;
+}
+
+int TaskListModel::topTaskEstimatedMinutes() const
+{
+    return m_items.isEmpty() ? 0 : m_items.first().task.estimatedMinutes;
+}
+
+int TaskListModel::completedTodayCount() const
+{
+    return m_completedTodayTitles.size();
+}
+
+QStringList TaskListModel::completedTodayTitles() const
+{
+    return m_completedTodayTitles;
 }
 
 bool TaskListModel::hasBacklogSuggestion() const
@@ -237,6 +263,38 @@ bool TaskListModel::completeTask(int row)
     return true;
 }
 
+QVariantList TaskListModel::tasksForAssignment(
+    const QString &categoryId,
+    const QString &subcategoryId,
+    bool includeAll) const
+{
+    QVariantList tasks;
+    for (qsizetype row = 0; row < m_items.size(); ++row) {
+        const Item &item = m_items.at(row);
+        const bool matches = includeAll
+            || (categoryId.isEmpty() && item.task.categoryId.isEmpty())
+            || (!categoryId.isEmpty() && item.task.categoryId == categoryId
+                && (subcategoryId.isEmpty() || item.task.subcategoryId == subcategoryId));
+        if (!matches) {
+            continue;
+        }
+        tasks.append(QVariantMap {
+            {QStringLiteral("sourceRow"), row},
+            {QStringLiteral("taskId"), item.task.id},
+            {QStringLiteral("title"), item.task.title},
+            {QStringLiteral("dueText"), formatDueDate(item.task.dueAt)},
+            {QStringLiteral("estimatedMinutes"), item.task.estimatedMinutes},
+            {QStringLiteral("priorityScore"), item.priority.score},
+            {QStringLiteral("priorityReason"), item.priority.reasons.join(QStringLiteral(" · "))},
+            {QStringLiteral("categoryId"), item.task.categoryId},
+            {QStringLiteral("categoryName"), item.task.categoryName},
+            {QStringLiteral("subcategoryId"), item.task.subcategoryId},
+            {QStringLiteral("subcategoryName"), item.task.subcategoryName},
+        });
+    }
+    return tasks;
+}
+
 bool TaskListModel::planSuggestedTaskForToday()
 {
     if (m_backlogSuggestionTaskId.isEmpty()) {
@@ -269,6 +327,18 @@ void TaskListModel::reload()
 {
     QString errorMessage;
     const QVector<Task> tasks = m_repository.openTasks(&errorMessage);
+    QString historyError;
+    QVector<Task> allTasks = m_repository.allTasks(&historyError);
+    std::stable_sort(allTasks.begin(), allTasks.end(), [](const Task &left, const Task &right) {
+        return left.completedAt > right.completedAt;
+    });
+    QStringList completedTodayTitles;
+    const QDate today = QDate::currentDate();
+    for (const Task &task : allTasks) {
+        if (task.completed && task.completedAt.isValid() && task.completedAt.date() == today) {
+            completedTodayTitles.append(task.title);
+        }
+    }
 
     QVector<Item> ranked;
     ranked.reserve(tasks.size());
@@ -296,7 +366,6 @@ void TaskListModel::reload()
     m_backlogSuggestionDetail.clear();
     if (m_scope == Today) {
         refreshed.reserve(ranked.size());
-        const QDate today = QDate::currentDate();
         for (const Item &item : ranked) {
             if (belongsToToday(item.task, today)) {
                 refreshed.append(item);
@@ -317,11 +386,15 @@ void TaskListModel::reload()
 
     beginResetModel();
     m_items = std::move(refreshed);
+    m_completedTodayTitles = std::move(completedTodayTitles);
+    ++m_revision;
     endResetModel();
     emit summaryChanged();
 
     if (!errorMessage.isEmpty()) {
         setStatusMessage(QStringLiteral("Could not load tasks: %1").arg(errorMessage));
+    } else if (!historyError.isEmpty()) {
+        setStatusMessage(QStringLiteral("Could not load completed tasks: %1").arg(historyError));
     }
 }
 

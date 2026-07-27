@@ -35,6 +35,8 @@ add_library(daymark_core STATIC
     src/presentation/appsettings.h
     src/presentation/datatransferservice.cpp
     src/presentation/datatransferservice.h
+    src/presentation/focussessionmodel.cpp
+    src/presentation/focussessionmodel.h
     src/presentation/categorylistmodel.cpp
     src/presentation/categorylistmodel.h
     src/presentation/goallistmodel.cpp
@@ -71,12 +73,14 @@ qt_add_qml_module(daymark
         qml/DateField.qml
         qml/DayPlanningPrompt.qml
         qml/EmptyState.qml
+        qml/FocusView.qml
         qml/GoalsView.qml
         qml/HybridView.qml
         qml/MetricCard.qml
         qml/MidnightCommandView.qml
         qml/QuickAddDialog.qml
         qml/QuietFocusView.qml
+        qml/ReviewView.qml
         qml/SettingsView.qml
         qml/Sidebar.qml
         qml/SpatialMapView.qml
@@ -171,6 +175,10 @@ if(BUILD_TESTING)
     qt_add_executable(datatransfer_tests tests/datatransfer_test.cpp)
     target_link_libraries(datatransfer_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME datatransfer_tests COMMAND datatransfer_tests)
+
+    qt_add_executable(focussessionmodel_tests tests/focussessionmodel_test.cpp)
+    target_link_libraries(focussessionmodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME focussessionmodel_tests COMMAND focussessionmodel_tests)
 endif()
 
 set(CPACK_PACKAGE_NAME "Daymark")

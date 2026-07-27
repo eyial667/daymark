@@ -87,9 +87,15 @@ private slots:
         tasks = repository.openTasks(&error);
         QVERIFY(tasks.first().categoryId.isEmpty());
 
+        QVERIFY2(
+            repository.setTaskCategory(task.id, category.id, subcategory.id, &error),
+            qPrintable(error));
         QVERIFY2(repository.setCompleted(task.id, true, &error), qPrintable(error));
         tasks = repository.openTasks(&error);
         QVERIFY(tasks.isEmpty());
+        categories = repository.categories(&error);
+        QCOMPARE(categories.first().taskCount, 0);
+        QCOMPARE(categories.first().subcategories.first().taskCount, 0);
     }
 
     void persistsTasksAcrossConnections()

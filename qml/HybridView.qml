@@ -53,6 +53,7 @@ Item {
             }
             Item { Layout.fillWidth: true }
             Text {
+                visible: root.width >= 720
                 text: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
                     ? "●  Day is realistic"
@@ -187,7 +188,8 @@ Item {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 322
+                visible: root.width >= 820
+                Layout.preferredWidth: visible ? 322 : 0
                 Layout.fillHeight: true
                 spacing: 12
 

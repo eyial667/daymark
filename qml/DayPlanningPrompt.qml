@@ -30,20 +30,27 @@ Item {
     Rectangle {
         anchors.centerIn: parent
         width: Math.min(940, parent.width - 56)
-        height: promptContent.implicitHeight + 44
+        height: Math.min(promptContent.implicitHeight + 44, parent.height - 36)
         radius: root.theme.radius + 5
         color: root.theme.surfaceRaised
         border.color: root.theme.borderStrong
         border.width: 1
 
-        ColumnLayout {
-            id: promptContent
+        Flickable {
+            id: promptFlickable
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.fill: parent
             anchors.margins: 22
-            spacing: 14
+            contentWidth: width
+            contentHeight: promptContent.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+
+            ColumnLayout {
+                id: promptContent
+
+                width: promptFlickable.width
+                spacing: 14
 
             RowLayout {
                 Layout.fillWidth: true
@@ -80,13 +87,15 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            RowLayout {
+            GridLayout {
                 Layout.fillWidth: true
-                spacing: 12
+                columns: root.width < 720 ? 1 : 3
+                columnSpacing: 12
+                rowSpacing: 12
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 166
+                    Layout.preferredHeight: root.width < 720 ? 140 : 166
                     radius: root.theme.radius
                     color: root.theme.surface
                     border.color: root.theme.border
@@ -140,7 +149,7 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 166
+                    Layout.preferredHeight: root.width < 720 ? 140 : 166
                     radius: root.theme.radius
                     color: root.theme.surface
                     border.color: root.theme.border
@@ -206,7 +215,7 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 166
+                    Layout.preferredHeight: root.width < 720 ? 140 : 166
                     radius: root.theme.radius
                     color: root.theme.surface
                     border.color: root.theme.border
@@ -279,6 +288,7 @@ Item {
                         root.addRequested()
                     }
                 }
+            }
             }
         }
     }

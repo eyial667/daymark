@@ -11,6 +11,7 @@ ApplicationWindow {
     required property var todayTaskModel
     required property var categoryModel
     required property var goalModel
+    required property var focusSession
     required property var appSettings
     required property var dataTransfer
 
@@ -54,6 +55,16 @@ ApplicationWindow {
         feedbackTimer.restart()
     }
 
+    function openFocusForTopTask() {
+        if (todayTaskModel.activeCount > 0) {
+            focusSession.prepareTask(
+                todayTaskModel.topTaskId,
+                todayTaskModel.topTaskTitle,
+                todayTaskModel.topTaskEstimatedMinutes)
+        }
+        currentPage = 5
+    }
+
     onCurrentPageChanged: {
         if (currentPage !== 0)
             planningPromptOpen = false
@@ -61,8 +72,8 @@ ApplicationWindow {
 
     width: 1440
     height: 900
-    minimumWidth: 1040
-    minimumHeight: 700
+    minimumWidth: 640
+    minimumHeight: 600
     visible: true
     title: "Daymark — " + interfaceTheme.modeName
     color: interfaceTheme.background
@@ -121,6 +132,13 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: window.focusSession
+        function onStatusMessageChanged() {
+            window.showFeedback(window.focusSession.statusMessage)
+        }
+    }
+
     Timer {
         id: feedbackTimer
         interval: 2800
@@ -129,6 +147,7 @@ ApplicationWindow {
             window.taskModel.clearStatus()
             window.todayTaskModel.clearStatus()
             window.goalModel.clearStatus()
+            window.focusSession.clearStatus()
         }
     }
 
@@ -163,61 +182,13 @@ ApplicationWindow {
             window.appSettings.colorMode === 0 ? 1 : 0
     }
 
-    component PlaceholderPage: Item {
-        id: placeholderPage
-
-        required property string pageTitle
-        required property string detail
-
-        ColumnLayout {
-            anchors.centerIn: parent
-            width: Math.min(520, parent.width - 80)
-            spacing: 14
-
-            Rectangle {
-                Layout.alignment: Qt.AlignHCenter
-                implicitWidth: 52
-                implicitHeight: 52
-                radius: 16
-                color: interfaceTheme.accentSoft
-                border.color: interfaceTheme.borderStrong
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "◇"
-                    color: interfaceTheme.accent
-                    font.pixelSize: 24
-                }
-            }
-
-            Label {
-                Layout.fillWidth: true
-                text: placeholderPage.pageTitle
-                color: interfaceTheme.textPrimary
-                font.pixelSize: 28
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Label {
-                Layout.fillWidth: true
-                text: placeholderPage.detail
-                color: interfaceTheme.textSecondary
-                font.pixelSize: 14
-                lineHeight: 1.4
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-            }
-        }
-    }
-
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
         Sidebar {
             Layout.fillHeight: true
-            Layout.preferredWidth: 212
+            Layout.preferredWidth: window.width < 850 ? 164 : 212
             theme: interfaceTheme
             appSettings: window.appSettings
             currentIndex: window.currentPage
@@ -245,7 +216,7 @@ ApplicationWindow {
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
                             onSuggestionRequested: window.planningPromptOpen = true
-                            onFocusRequested: window.currentPage = 5
+                            onFocusRequested: window.openFocusForTopTask()
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -256,11 +227,15 @@ ApplicationWindow {
 
                         SpatialMapView {
                             taskModel: window.todayTaskModel
+                            categoryModel: window.categoryModel
                             appSettings: window.appSettings
                             theme: interfaceTheme
                             showSuggestionAction: true
                             onAddRequested: quickAdd.open()
                             onSuggestionRequested: window.planningPromptOpen = true
+                            onAddInCategoryRequested: (categoryId, subcategoryId) =>
+                                quickAdd.openForAssignment(categoryId, subcategoryId)
+                            onManageCategoriesRequested: window.currentPage = 3
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
@@ -275,7 +250,7 @@ ApplicationWindow {
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
                             onSuggestionRequested: window.planningPromptOpen = true
-                            onFocusRequested: window.currentPage = 5
+                            onFocusRequested: window.openFocusForTopTask()
                             onReviewRequested: window.currentPage = 6
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
@@ -291,7 +266,7 @@ ApplicationWindow {
                             theme: interfaceTheme
                             onAddRequested: quickAdd.open()
                             onSuggestionRequested: window.planningPromptOpen = true
-                            onFocusRequested: window.currentPage = 5
+                            onFocusRequested: window.openFocusForTopTask()
                             onMapRequested: window.currentPage = 2
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
@@ -333,9 +308,13 @@ ApplicationWindow {
 
                 SpatialMapView {
                     taskModel: window.taskModel
+                    categoryModel: window.categoryModel
                     appSettings: window.appSettings
                     theme: interfaceTheme
                     onAddRequested: quickAdd.open()
+                    onAddInCategoryRequested: (categoryId, subcategoryId) =>
+                        quickAdd.openForAssignment(categoryId, subcategoryId)
+                    onManageCategoriesRequested: window.currentPage = 3
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(
                             window.taskModel, taskIndex, taskTitle)
@@ -354,14 +333,24 @@ ApplicationWindow {
                     theme: interfaceTheme
                 }
 
-                PlaceholderPage {
-                    pageTitle: "Focus"
-                    detail: "A distraction-free timer and a single deliberate next action."
+                FocusView {
+                    focusSession: window.focusSession
+                    taskModel: window.todayTaskModel
+                    theme: interfaceTheme
+                    onBackRequested: window.currentPage = 0
                 }
 
-                PlaceholderPage {
-                    pageTitle: "Review"
-                    detail: "Close the loop on your day, carry forward what matters, and make tomorrow lighter."
+                ReviewView {
+                    todayTaskModel: window.todayTaskModel
+                    appSettings: window.appSettings
+                    theme: interfaceTheme
+                    onBackRequested: window.currentPage = 0
+                    onCompletionRequested: (taskIndex, taskTitle) =>
+                        window.requestTaskCompletion(
+                            window.todayTaskModel, taskIndex, taskTitle)
+                    onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
+                        window.requestTaskCategory(
+                            taskId, taskTitle, categoryId, subcategoryId)
                 }
 
                 SettingsView {

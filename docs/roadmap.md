@@ -18,6 +18,7 @@
 ## Slice 3 — Connected mind map
 
 - Long-term goals and dated milestones (foundation complete)
+- Live category and subcategory task map (foundation complete)
 - Deeper category relationships and links between goals and tasks
 - Task dependencies and blocked states
 - Zoomable native graphics scene
@@ -25,9 +26,10 @@
 
 ## Slice 4 — Focus and review
 
-- Focus sessions and timers
+- Today-task focus sessions and countdown timer (foundation complete)
 - Planned versus actual time
-- Evening and weekly reviews
+- Daily completion and remaining-work review (foundation complete)
+- Evening and weekly review prompts
 - Postponement and estimation insights
 
 ## Slice 5 — Integrations and distribution

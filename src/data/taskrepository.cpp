@@ -399,7 +399,8 @@ QVector<Category> TaskRepository::categories(QString *errorMessage) const
     QSqlQuery query(m_database);
     if (!query.exec(QStringLiteral(
             "SELECT c.id, c.name, c.notes, c.created_at, COUNT(t.id) "
-            "FROM categories c LEFT JOIN tasks t ON t.category_id = c.id "
+            "FROM categories c LEFT JOIN tasks t "
+            "ON t.category_id = c.id AND t.is_completed = 0 "
             "GROUP BY c.id, c.name, c.notes, c.created_at "
             "ORDER BY c.name COLLATE NOCASE ASC"))) {
         assignError(errorMessage, query.lastError().text());
@@ -420,7 +421,8 @@ QVector<Category> TaskRepository::categories(QString *errorMessage) const
     QSqlQuery subcategoryQuery(m_database);
     if (!subcategoryQuery.exec(QStringLiteral(
             "SELECT s.id, s.category_id, s.name, s.notes, s.created_at, COUNT(t.id) "
-            "FROM subcategories s LEFT JOIN tasks t ON t.subcategory_id = s.id "
+            "FROM subcategories s LEFT JOIN tasks t "
+            "ON t.subcategory_id = s.id AND t.is_completed = 0 "
             "GROUP BY s.id, s.category_id, s.name, s.notes, s.created_at "
             "ORDER BY s.name COLLATE NOCASE ASC"))) {
         assignError(errorMessage, subcategoryQuery.lastError().text());

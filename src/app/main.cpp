@@ -4,6 +4,7 @@
 #include "presentation/appsettings.h"
 #include "presentation/categorylistmodel.h"
 #include "presentation/datatransferservice.h"
+#include "presentation/focussessionmodel.h"
 #include "presentation/goallistmodel.h"
 #include "presentation/tasklistmodel.h"
 
@@ -41,6 +42,7 @@ int main(int argc, char *argv[])
     TaskListModel todayTaskModel(repository, TaskListModel::Today);
     CategoryListModel categoryModel(repository);
     GoalListModel goalModel(repository);
+    FocusSessionModel focusSession;
     AppSettings appSettings(dataDirectory);
     DataTransferService dataTransfer(
         repository,
@@ -96,6 +98,7 @@ int main(int argc, char *argv[])
         {QStringLiteral("todayTaskModel"), QVariant::fromValue(&todayTaskModel)},
         {QStringLiteral("categoryModel"), QVariant::fromValue(&categoryModel)},
         {QStringLiteral("goalModel"), QVariant::fromValue(&goalModel)},
+        {QStringLiteral("focusSession"), QVariant::fromValue(&focusSession)},
         {QStringLiteral("appSettings"), QVariant::fromValue(&appSettings)},
         {QStringLiteral("dataTransfer"), QVariant::fromValue(&dataTransfer)},
     });

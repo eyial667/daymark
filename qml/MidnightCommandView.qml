@@ -38,6 +38,7 @@ Item {
             spacing: 12
 
             Rectangle {
+                visible: root.width >= 700
                 Layout.fillWidth: true
                 implicitHeight: 42
                 radius: root.theme.radius
@@ -61,6 +62,7 @@ Item {
             }
 
             Text {
+                visible: root.width >= 700
                 text: Qt.formatDate(new Date(), "MMM d, ddd")
                 color: root.theme.textSecondary
                 font.pixelSize: 12

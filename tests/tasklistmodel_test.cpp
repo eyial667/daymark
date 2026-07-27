@@ -45,7 +45,9 @@ private slots:
 
         QCOMPARE(model.activeCount(), 2);
         QCOMPARE(model.totalEstimatedMinutes(), 85);
+        QVERIFY(!model.topTaskId().isEmpty());
         QCOMPARE(model.topTaskTitle(), QStringLiteral("High priority"));
+        QCOMPARE(model.topTaskEstimatedMinutes(), 25);
 
         const QModelIndex first = model.index(0);
         QCOMPARE(
@@ -56,6 +58,13 @@ private slots:
         QCOMPARE(
             model.data(first, TaskListModel::SubcategoryNameRole).toString(),
             subcategory.name);
+        const QVariantList mappedTasks = model.tasksForAssignment(
+            category.id,
+            subcategory.id);
+        QCOMPARE(mappedTasks.size(), 1);
+        QCOMPARE(
+            mappedTasks.first().toMap().value(QStringLiteral("title")).toString(),
+            QStringLiteral("High priority"));
 
         QVERIFY(model.assignTaskCategory(
             model.data(first, TaskListModel::IdRole).toString(),
@@ -66,6 +75,10 @@ private slots:
         QVERIFY(model.completeTask(0));
         QCOMPARE(model.activeCount(), 1);
         QCOMPARE(model.topTaskTitle(), QStringLiteral("Low priority"));
+        QCOMPARE(model.completedTodayCount(), 1);
+        QCOMPARE(
+            model.completedTodayTitles(),
+            QStringList {QStringLiteral("High priority")});
     }
 
     void rejectsAnInvalidDueDate()

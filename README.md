@@ -23,6 +23,10 @@ embedded webview, Node.js, or a local web server.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
 - Complete tasks from the Today queue.
+- Browse the live task map by category or subcategory, and add work directly to
+  the selected area.
+- Run a countdown focus session for any task in Today and review work completed
+  or still remaining for the current day.
 - Switch between four interfaces, each with coordinated light and dark palettes,
   without changing task data: Midnight Command, Spatial Map, Quiet Focus, and
   Daymark Hybrid.
@@ -185,6 +189,16 @@ itself complete from Goals when its outcome is actually finished.
 Today defaults to a list-first layout without assigning tasks to clock times.
 Enable **Settings → Behavior → Show timeline** to restore the timeline, agenda,
 and day-shape panels; the choice is saved locally and included in exports.
+
+Use **Map** to select All tasks, Uncategorized work, a category, or one of its
+subcategories. The task list and counts update from the local database, and
+**Add here** opens capture with the selected work area already chosen. Use
+**Focus** to select a Today task and start, pause, or reset its countdown. Use
+**Review** to see what was completed today alongside the tasks that remain.
+
+The main window supports compact layouts down to 640 pixels wide, including
+standard left- or right-half desktop window snapping. Secondary panels collapse
+or stack at narrow widths instead of forcing a wide window.
 
 ## Create a package
 

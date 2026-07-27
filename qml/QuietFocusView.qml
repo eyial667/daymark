@@ -47,6 +47,7 @@ Item {
             spacing: 12
 
             Text {
+                visible: root.width >= 760
                 text: root.taskModel.totalEstimatedMinutes
                         <= root.appSettings.dailyCapacityMinutes
                     ? "◉  Your day is realistic"
@@ -57,14 +58,26 @@ Item {
                     : root.theme.danger
                 font.pixelSize: 13
             }
-            Rectangle { implicitWidth: 1; implicitHeight: 28; color: root.theme.border }
+            Rectangle {
+                visible: root.width >= 760
+                implicitWidth: 1
+                implicitHeight: 28
+                color: root.theme.border
+            }
             Text {
+                visible: root.width >= 760
                 text: "☆  " + Math.min(3, root.taskModel.activeCount) + " priorities"
                 color: root.theme.textPrimary
                 font.pixelSize: 13
             }
-            Rectangle { implicitWidth: 1; implicitHeight: 28; color: root.theme.border }
+            Rectangle {
+                visible: root.width >= 760
+                implicitWidth: 1
+                implicitHeight: 28
+                color: root.theme.border
+            }
             Text {
+                visible: root.width >= 760
                 text: "◷  " + root.taskModel.plannedDuration + " planned"
                 color: root.theme.secondaryAccent
                 font.pixelSize: 13
