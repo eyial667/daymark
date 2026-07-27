@@ -29,7 +29,85 @@ embedded webview, Node.js, or a local web server.
 The working product name is **Daymark** and can be changed before the first
 public release.
 
-## Build requirements
+## Install a packaged build
+
+Daymark does not publish signed releases yet. The current packages are unsigned
+development snapshots attached to successful runs of the
+[CI workflow](https://github.com/eyial667/daymark/actions/workflows/ci.yml).
+Open the latest successful run on `main`, scroll to **Artifacts**, and download
+the package for your operating system. GitHub wraps each package in an artifact
+ZIP, so extract that outer ZIP first.
+
+### Linux
+
+The Linux artifact contains `Daymark-0.1.0-Linux.tar.gz`. It is currently a
+host-compatible package rather than a distribution-independent AppImage, so the
+system must provide a compatible Qt 6 runtime, including Qt Quick, Qt Quick
+Controls, the SQLite driver, and the Wayland or XCB platform plugin used by the
+desktop session.
+
+Install it for the current user without administrator privileges:
+
+```bash
+unzip daymark-linux.zip
+mkdir -p daymark-package
+tar --strip-components=1 -xzf Daymark-0.1.0-Linux.tar.gz \
+  -C daymark-package
+./daymark-package/install.sh
+```
+
+This installs Daymark under `~/.local/opt/daymark`, creates the terminal command
+`~/.local/bin/daymark`, and adds application-menu and desktop entries. Launch it
+from the application menu or a terminal:
+
+```bash
+daymark
+```
+
+If `~/.local/bin` is not on `PATH`, launch it with
+`~/.local/bin/daymark` instead.
+
+### macOS
+
+Extract `daymark-macos.zip`, then open `Daymark-0.1.0-Darwin.dmg`. Drag
+**Daymark** into the **Applications** folder and eject the disk image.
+
+Launch Daymark from Applications, Spotlight, or Terminal:
+
+```bash
+open -a Daymark
+```
+
+The direct executable is
+`/Applications/Daymark.app/Contents/MacOS/daymark`. Because current CI snapshots
+are not signed or notarized, macOS may ask for confirmation before the first
+launch.
+
+### Windows
+
+Extract `daymark-windows.zip`, then extract the contained
+`Daymark-0.1.0-win64.zip`. Move or rename the resulting
+`Daymark-0.1.0-win64` directory to a permanent location such as
+`%LOCALAPPDATA%\Programs\Daymark`. Keep the complete directory together because
+it contains the Qt runtime and plugins required by Daymark.
+
+Launch `bin\daymark.exe` from that directory. From PowerShell, the suggested
+location can be launched with:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Daymark\bin\daymark.exe"
+```
+
+The Windows package is currently portable: it does not modify the registry or
+create Start-menu and terminal shortcuts. Windows may display a SmartScreen
+warning because the development snapshot is not code-signed.
+
+Package filenames above use the current `0.1.0` version; substitute the version
+shown in a newer artifact when it changes.
+
+## Build from source
+
+### Requirements
 
 - A C++20 compiler
 - CMake 3.21 or newer
@@ -54,17 +132,19 @@ sudo apt install build-essential cmake ninja-build \
 On macOS and Windows, install Qt 6 through the open-source Qt installer and use
 the platform compiler supplied by Xcode or Visual Studio respectively.
 
-## Build and run
+### Configure, build, test, and launch
 
 ```bash
 cmake --preset dev
 cmake --build --preset dev
-ctest --preset dev
+cmake --build --preset dev --target daymark_qmllint
+ctest --preset dev --output-on-failure
 ./build/dev/daymark
 ```
 
-On macOS, run `build/dev/daymark.app`. On Windows, run
-`build\\dev\\daymark.exe`.
+The last command launches the development build on Linux. On macOS, use
+`open build/dev/daymark.app`. On Windows, run `build\dev\daymark.exe` from
+PowerShell or File Explorer.
 
 The SQLite database is created in the operating system's standard local
 application-data directory. It is never committed to the repository.
@@ -89,21 +169,9 @@ plugins. The distribution-independent Linux release will be an AppImage produced
 in an older Linux CI container so its glibc baseline works across supported
 distributions.
 
-To install the generated archive for the current Linux user:
-
-```bash
-mkdir daymark-package
-tar --strip-components=1 -xzf build/packages/Daymark-0.1.0-Linux.tar.gz \
-  -C daymark-package
-./daymark-package/install.sh
-```
-
-The installer requires no administrator privileges. It creates:
-
-- `~/.local/opt/daymark` for the application files
-- `~/.local/bin/daymark` for terminal launches
-- an application-menu entry and scalable application icon
-- a `Daymark.desktop` shortcut in the user's configured desktop directory
+Generated packages are written to `build/packages`. Follow the matching Linux,
+macOS, or Windows installation instructions above; locally generated packages
+do not have GitHub's additional artifact ZIP wrapper.
 
 ## Continuous integration
 
