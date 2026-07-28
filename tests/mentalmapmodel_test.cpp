@@ -5,6 +5,8 @@
 #include <QSignalSpy>
 #include <QTest>
 
+#include <algorithm>
+
 class MentalMapModelTest final : public QObject
 {
     Q_OBJECT
@@ -47,9 +49,18 @@ private slots:
 
         MentalMapModel reloaded(repository);
         QCOMPARE(reloaded.groups().size(), 2);
-        QCOMPARE(reloaded.notes().size(), 2);
+        const QVariantList reloadedNotes = reloaded.notes();
+        QCOMPARE(reloadedNotes.size(), 2);
         QCOMPARE(reloaded.connections().size(), 1);
-        const QVariantMap storedNote = reloaded.notes().first().toMap();
+        const auto storedNoteIt = std::find_if(
+            reloadedNotes.cbegin(),
+            reloadedNotes.cend(),
+            [&firstNote](const QVariant &value) {
+                return value.toMap().value(QStringLiteral("noteId")).toString()
+                    == firstNote;
+            });
+        QVERIFY(storedNoteIt != reloadedNotes.cend());
+        const QVariantMap storedNote = storedNoteIt->toMap();
         QCOMPARE(storedNote.value(QStringLiteral("priority")).toInt(), 4);
         QCOMPARE(storedNote.value(QStringLiteral("checklist")).toList().size(), 1);
     }

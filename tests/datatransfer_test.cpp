@@ -187,12 +187,21 @@ private slots:
             targetRepository.meetings(&error).first().notes,
             QStringLiteral("This meeting must move too."));
         QCOMPARE(targetRepository.mentalMapGroups(&error).size(), 1);
-        QCOMPARE(targetRepository.mentalMapNotes(&error).size(), 2);
+        const QVector<MentalMapNote> importedMapNotes =
+            targetRepository.mentalMapNotes(&error);
+        QCOMPARE(importedMapNotes.size(), 2);
         QCOMPARE(targetRepository.mentalMapConnections(&error).size(), 1);
+        const auto importedFirstMapNote = std::find_if(
+            importedMapNotes.cbegin(),
+            importedMapNotes.cend(),
+            [&firstMapNote](const MentalMapNote &note) {
+                return note.id == firstMapNote;
+            });
+        QVERIFY(importedFirstMapNote != importedMapNotes.cend());
         QCOMPARE(
-            targetRepository.mentalMapNotes(&error).first().checklist.first().text,
+            importedFirstMapNote->checklist.first().text,
             QStringLiteral("Portable checklist item"));
-        QVERIFY(!targetRepository.mentalMapNotes(&error).first().linkedTaskId.isEmpty());
+        QVERIFY(!importedFirstMapNote->linkedTaskId.isEmpty());
         QCOMPARE(targetSettings.interfaceStyle(), AppSettings::QuietFocus);
         QCOMPARE(targetSettings.language(), AppSettings::French);
         QCOMPARE(targetSettings.colorMode(), AppSettings::Light);

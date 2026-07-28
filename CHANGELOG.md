@@ -7,6 +7,13 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-07-28
+
+### Fixed
+
+- Cross-platform mental-map tests now identify persisted notes by stable IDs
+  instead of relying on undefined database ordering for equal timestamps.
+
 ## [0.2.5] - 2026-07-28
 
 ### Added

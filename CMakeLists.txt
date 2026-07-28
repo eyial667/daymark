@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     Daymark
-    VERSION 0.2.5
+    VERSION 0.2.6
     DESCRIPTION "A local-first daily command center"
     LANGUAGES CXX
 )
