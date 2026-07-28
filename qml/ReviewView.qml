@@ -14,6 +14,7 @@ Item {
     required property var theme
     signal backRequested()
     signal completionRequested(int taskIndex, string taskTitle)
+    signal deletionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
         string taskTitle,
@@ -236,6 +237,8 @@ Item {
                             showReason: root.appSettings.showPriorityReasons
                             onCompletionRequested: rowIndex =>
                                 root.completionRequested(rowIndex, reviewTask.title)
+                            onDeletionRequested: rowIndex =>
+                                root.deletionRequested(rowIndex, reviewTask.title)
                             onCategoryRequested: (taskId, categoryId, subcategoryId) =>
                                 root.categoryRequested(
                                     taskId,

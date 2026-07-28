@@ -206,6 +206,43 @@ bool GoalListModel::addMilestone(
     return true;
 }
 
+bool GoalListModel::deleteGoal(int goalRow)
+{
+    if (goalRow < 0 || goalRow >= m_goals.size()) {
+        setStatusMessage(tr("That goal is no longer in the list."));
+        return false;
+    }
+    const QString title = m_goals.at(goalRow).title;
+    QString errorMessage;
+    if (!m_repository.deleteGoal(m_goals.at(goalRow).id, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the goal: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Goal “%1” and its milestones deleted.").arg(title));
+    return true;
+}
+
+bool GoalListModel::deleteMilestone(int goalRow, int milestoneIndex)
+{
+    if (goalRow < 0 || goalRow >= m_goals.size()
+        || milestoneIndex < 0
+        || milestoneIndex >= m_goals.at(goalRow).milestones.size()) {
+        setStatusMessage(tr("That milestone is no longer in the list."));
+        return false;
+    }
+    const Milestone &milestone = m_goals.at(goalRow).milestones.at(milestoneIndex);
+    const QString title = milestone.title;
+    QString errorMessage;
+    if (!m_repository.deleteMilestone(milestone.id, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the milestone: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Milestone “%1” deleted.").arg(title));
+    return true;
+}
+
 bool GoalListModel::setMilestoneCompleted(
     int goalRow,
     int milestoneIndex,

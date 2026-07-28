@@ -5,6 +5,7 @@
 #include "presentation/datatransferservice.h"
 #include "presentation/goallistmodel.h"
 #include "presentation/meetinglistmodel.h"
+#include "presentation/mentalmapmodel.h"
 #include "presentation/tasklistmodel.h"
 
 #include <QCoreApplication>
@@ -97,6 +98,23 @@ private slots:
             QStringLiteral("23:59"),
             QStringLiteral("This meeting must move too.")));
 
+        MentalMapModel sourceMap(sourceRepository);
+        const QString mapGroup = sourceMap.addGroup(
+            QStringLiteral("cloud"), QStringLiteral("Portable brainstorm"), 120, -80);
+        const QString firstMapNote = sourceMap.addNote(
+            mapGroup, QStringLiteral("Portable idea"), 20, 72);
+        const QString secondMapNote = sourceMap.addNote(
+            mapGroup, QStringLiteral("Connected idea"), 188, 72);
+        QVERIFY(!mapGroup.isEmpty());
+        QVERIFY(!firstMapNote.isEmpty());
+        QVERIFY(!secondMapNote.isEmpty());
+        QVERIFY(sourceMap.addChecklistItem(
+            firstMapNote, QStringLiteral("Portable checklist item")));
+        QVERIFY(!sourceMap.addConnection(
+            firstMapNote, secondMapNote, QStringLiteral("supports")).isEmpty());
+        QVERIFY2(sourceRepository.linkMentalMapNoteToTask(
+            firstMapNote, sourceTasks.topTaskId(), &error), qPrintable(error));
+
         sourceSettings.setInterfaceStyle(AppSettings::QuietFocus);
         sourceSettings.setLanguage(AppSettings::French);
         sourceSettings.setColorMode(AppSettings::Light);
@@ -168,6 +186,13 @@ private slots:
         QCOMPARE(
             targetRepository.meetings(&error).first().notes,
             QStringLiteral("This meeting must move too."));
+        QCOMPARE(targetRepository.mentalMapGroups(&error).size(), 1);
+        QCOMPARE(targetRepository.mentalMapNotes(&error).size(), 2);
+        QCOMPARE(targetRepository.mentalMapConnections(&error).size(), 1);
+        QCOMPARE(
+            targetRepository.mentalMapNotes(&error).first().checklist.first().text,
+            QStringLiteral("Portable checklist item"));
+        QVERIFY(!targetRepository.mentalMapNotes(&error).first().linkedTaskId.isEmpty());
         QCOMPARE(targetSettings.interfaceStyle(), AppSettings::QuietFocus);
         QCOMPARE(targetSettings.language(), AppSettings::French);
         QCOMPARE(targetSettings.colorMode(), AppSettings::Light);

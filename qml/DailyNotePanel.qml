@@ -134,6 +134,13 @@ Item {
                     font.pixelSize: 10
                 }
                 AppButton {
+                    visible: root.dailyNoteModel.todayText.trim().length > 0
+                    theme: root.theme
+                    quiet: true
+                    text: qsTr("Delete…")
+                    onClicked: deleteDialog.open()
+                }
+                AppButton {
                     theme: root.theme
                     primary: true
                     text: qsTr("Save note")
@@ -149,6 +156,58 @@ Item {
             if (!noteEditor.activeFocus
                     && noteEditor.text !== root.dailyNoteModel.todayText) {
                 noteEditor.text = root.dailyNoteModel.todayText
+            }
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 420
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: root.theme.radius + 3
+            color: root.theme.surfaceRaised
+            border.color: root.theme.danger
+        }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                text: qsTr("Delete today’s note?")
+                color: root.theme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("Today’s note will be permanently deleted.")
+                color: root.theme.textSecondary
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: root.theme
+                    quiet: true
+                    text: qsTr("Cancel")
+                    onClicked: deleteDialog.close()
+                }
+                AppButton {
+                    theme: root.theme
+                    primary: true
+                    text: qsTr("Delete")
+                    onClicked: {
+                        if (root.dailyNoteModel.deleteToday())
+                            deleteDialog.close()
+                    }
+                }
             }
         }
     }

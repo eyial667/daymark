@@ -54,6 +54,8 @@ public:
         int goalRow,
         const QString &title,
         const QString &targetDate);
+    Q_INVOKABLE bool deleteGoal(int goalRow);
+    Q_INVOKABLE bool deleteMilestone(int goalRow, int milestoneIndex);
     Q_INVOKABLE bool setMilestoneCompleted(
         int goalRow,
         int milestoneIndex,

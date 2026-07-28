@@ -37,6 +37,11 @@ private slots:
         QVERIFY(model.saveNow());
         QVERIFY(!model.dirty());
         QCOMPARE(repository.dailyNote(today, &error)->text, QStringLiteral("Updated thought"));
+        QVERIFY(model.deleteToday());
+        QVERIFY(model.todayText().isEmpty());
+        QVERIFY(!repository.dailyNote(today, &error).has_value());
+        QVERIFY(model.saveNow());
+        QVERIFY(!repository.dailyNote(today, &error).has_value());
     }
 };
 

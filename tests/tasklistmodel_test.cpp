@@ -202,6 +202,20 @@ private slots:
             QStringLiteral("Added “Chosen lower priority task” to Today."));
         QVERIFY(!todoModel.planTaskForToday(QStringLiteral("missing-task")));
     }
+
+    void permanentlyDeletesATask()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+        TaskListModel model(repository);
+        QVERIFY(model.addTask(QStringLiteral("Disposable task"), {}, 3, 30));
+        QCOMPARE(model.activeCount(), 1);
+        QVERIFY(model.deleteTask(0));
+        QCOMPARE(model.activeCount(), 0);
+        QVERIFY(repository.allTasks(&error).isEmpty());
+        QVERIFY(!model.deleteTask(0));
+    }
 };
 
 QTEST_GUILESS_MAIN(TaskListModelTest)

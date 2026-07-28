@@ -29,6 +29,7 @@ public:
     [[nodiscard]] QString statusMessage() const;
 
     Q_INVOKABLE bool saveNow();
+    Q_INVOKABLE bool deleteToday();
     Q_INVOKABLE void refreshDay();
     Q_INVOKABLE void clearStatus();
 

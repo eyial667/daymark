@@ -18,11 +18,11 @@
 ## Slice 3 — Connected mind map
 
 - Long-term goals and dated milestones (foundation complete)
-- Unified task, category, goal, and milestone mental map with cloud, flow, and
-  constellation renderers (foundation complete)
+- Persistent brainstorming map with separate movable cloud and constellation
+  views, rich notes, directed links, pan and zoom (foundation complete)
 - Deeper category relationships and links between goals and tasks
 - Task dependencies and blocked states
-- Pan and zoom controls for large native map scenes
+- Linked conversion from map ideas to tasks (foundation complete)
 - Shared selection between the map and Today queue
 
 ## Slice 4 — Focus and review

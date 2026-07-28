@@ -102,6 +102,16 @@ int main(int argc, char *argv[])
         &GoalListModel::taskCreated,
         &taskModel,
         &TaskListModel::reload);
+    QObject::connect(
+        &mentalMapModel,
+        &MentalMapModel::taskCreated,
+        &taskModel,
+        &TaskListModel::reload);
+    QObject::connect(
+        &dataTransfer,
+        &DataTransferService::dataImported,
+        &mentalMapModel,
+        &MentalMapModel::reload);
 
     QObject::connect(
         &meetingModel,

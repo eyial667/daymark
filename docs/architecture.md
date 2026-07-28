@@ -28,9 +28,11 @@ earliest unfinished milestone. `DataTransferService` coordinates validated
 portable exports and imports. `TaskListModel` also exposes a completed-today
 summary for review.
 `FocusSessionModel` owns the deterministic countdown state used by the Focus
-screen; it does not persist or mutate tasks. `MentalMapModel` builds one
-read-only hierarchy and radial layout from open tasks, categories, active goals,
-and unfinished milestones so each native map renderer presents the same facts.
+screen; it does not persist or mutate tasks. `MentalMapModel` validates and
+persists user-authored brainstorming groups, short notes, metadata, checklists,
+positions, and directed connections. It also creates task links without coupling
+map-note lifetime to task lifetime: deleting a task unlinks its note, while
+deleting a note never deletes its task.
 `DailyNoteModel` debounces local note saves and exposes only today and yesterday
 to QML. These objects translate user actions into repository operations without
 exposing SQL to QML.
@@ -75,6 +77,12 @@ Meetings store their start, creation, and optional notification timestamps as
 UTC ISO-8601 values and convert them back to local time for display and
 scheduling. Reminder state is durable so each meeting is claimed at most once.
 
+The mental map uses separate group, note, and directed-connection tables. Group
+and note positions use map-space coordinates so presentation pan and zoom do not
+alter stored layout. Deleting a group cascades through its contained notes and
+their connections. A note's optional task foreign key uses `ON DELETE SET NULL`,
+preserving the brainstorm record when its task is removed.
+
 Daily notes use a separate date-keyed table. On startup and across day
 boundaries, records older than yesterday are deleted. The current and previous
 day are the complete retention window; daily notes are deliberately excluded
@@ -110,7 +118,7 @@ will not silently replace the deterministic engine.
 ## Planned boundaries
 
 - Calendar adapters import events into a separate calendar domain.
-- A future graph service extends the current visual hierarchy with explicit
-  dependencies and user-authored relationships.
+- A future graph service may extend user-authored map connections into task
+  dependencies and blocked-work rules.
 - Additional platform services wrap autostart and credential storage.
 - Export and backup operate on documented, versioned formats.

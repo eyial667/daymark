@@ -14,6 +14,9 @@ Item {
 
     property int selectedGoalRow: -1
     property string selectedGoalTitle: ""
+    property string pendingDeleteType: ""
+    property int pendingDeleteMilestoneIndex: -1
+    property string pendingDeleteName: ""
 
     function openMilestoneDialog(goalRow, goalTitle) {
         selectedGoalRow = goalRow
@@ -25,6 +28,14 @@ Item {
         selectedGoalRow = goalRow
         selectedGoalTitle = goalTitle
         completionDialog.open()
+    }
+
+    function requestDelete(type, goalRow, milestoneIndex, name) {
+        pendingDeleteType = type
+        selectedGoalRow = goalRow
+        pendingDeleteMilestoneIndex = milestoneIndex
+        pendingDeleteName = name
+        deleteDialog.open()
     }
 
     ScrollView {
@@ -361,6 +372,18 @@ Item {
                                                 : root.theme.textMuted
                                             font.pixelSize: 10
                                         }
+                                        AppButton {
+                                            theme: root.theme
+                                            quiet: true
+                                            text: "×"
+                                            ToolTip.visible: hovered
+                                            ToolTip.text: qsTr("Delete milestone")
+                                            onClicked: root.requestDelete(
+                                                "milestone",
+                                                goalCard.index,
+                                                milestoneRow.index,
+                                                milestoneRow.modelData.title)
+                                        }
                                     }
                                 }
                             }
@@ -387,6 +410,13 @@ Item {
                                     onClicked: root.openCompletionDialog(
                                         goalCard.index,
                                         goalCard.title)
+                                }
+                                AppButton {
+                                    theme: root.theme
+                                    quiet: true
+                                    text: qsTr("Delete goal…")
+                                    onClicked: root.requestDelete(
+                                        "goal", goalCard.index, -1, goalCard.title)
                                 }
                             }
                         }
@@ -653,6 +683,77 @@ Item {
         onClosed: {
             root.selectedGoalRow = -1
             root.selectedGoalTitle = ""
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 440
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: root.theme.radius + 3
+            color: root.theme.surfaceRaised
+            border.color: root.theme.danger
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 13
+            Text {
+                text: root.pendingDeleteType === "goal"
+                    ? qsTr("Delete this goal?") : qsTr("Delete this milestone?")
+                color: root.theme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: root.pendingDeleteType === "goal"
+                    ? qsTr("“%1” and every milestone beneath it will be permanently deleted.")
+                        .arg(root.pendingDeleteName)
+                    : qsTr("“%1” will be permanently deleted.").arg(root.pendingDeleteName)
+                color: root.theme.textSecondary
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: root.theme
+                    quiet: true
+                    text: qsTr("Cancel")
+                    onClicked: deleteDialog.close()
+                }
+                AppButton {
+                    theme: root.theme
+                    primary: true
+                    text: qsTr("Delete")
+                    onClicked: {
+                        const removed = root.pendingDeleteType === "goal"
+                            ? root.goalModel.deleteGoal(root.selectedGoalRow)
+                            : root.goalModel.deleteMilestone(
+                                root.selectedGoalRow,
+                                root.pendingDeleteMilestoneIndex)
+                        if (removed)
+                            deleteDialog.close()
+                    }
+                }
+            }
+        }
+
+        onClosed: {
+            root.selectedGoalRow = -1
+            root.selectedGoalTitle = ""
+            root.pendingDeleteType = ""
+            root.pendingDeleteMilestoneIndex = -1
+            root.pendingDeleteName = ""
         }
     }
 }

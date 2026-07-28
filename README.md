@@ -23,8 +23,10 @@ embedded webview, Node.js, or a local web server.
 - Rank open tasks with a deterministic priority engine.
 - Explain every priority score.
 - Complete tasks from the Today queue.
-- See every active work area, subcategory, task, goal, and unfinished milestone
-  in a shared mental map with recursive-cloud and constellation views.
+- Brainstorm on one persistent, freely pannable and zoomable mental map with
+  separate cloud and constellation views. Move groups and short notes, draw
+  labelled directed connections across groups, attach notes, colors, checklists,
+  tags, links, and priorities, then convert an idea into a permanently linked task.
 - Run a countdown focus session for any task in Today and review work completed
   or still remaining for the current day.
 - Keep a rolling day note from Today and review yesterday’s note without
@@ -44,9 +46,9 @@ embedded webview, Node.js, or a local web server.
   notification 10 minutes before each meeting while Daymark is running.
 - Choose task, goal, and milestone dates from a calendar or enter them manually
   as `YYYY-MM-DD`.
-- Export tasks, completed history, categories, subcategories and their notes,
-  goals, milestones, meetings, and preferences to a portable `.daymark.json`
-  file, then merge it safely on another computer.
+- Export tasks, completed history, categories, goals, meetings, brainstorming
+  maps, and preferences to a portable `.daymark.json` file, then merge it safely
+  on another computer.
 - Open the local application-data folder directly from Settings.
 - Check the official GitHub Releases feed after launch, offer newer native
   packages, and verify the release manifest's SHA-256 digest before installation.
@@ -205,12 +207,13 @@ Today defaults to a list-first layout without assigning tasks to clock times.
 Enable **Settings → Behavior → Show timeline** to restore the timeline, agenda,
 and day-shape panels; the choice is saved locally and included in exports.
 
-Use **Map** to move between two views of the same live hierarchy. **Recursive
-clouds** nests tasks inside their subcategories and work areas.
-**Constellation** lays out independent work-area and goal clusters, drawing only
-real parent-to-child relationships instead of connecting everything through a
-decorative center. Select any node for its details or to add a task directly to
-that work area.
+Use **Map** as a continuously evolving brainstorming space. **Clouds** are large
+movable regions for clusters of short notes; **Constellations** begin with a
+central idea and movable surrounding notes. Drag empty space to pan, use the
+wheel or canvas controls to zoom, and double-click a group to capture an idea.
+Select an idea to edit rich metadata, start a directed connection, manage its
+checklist, or convert it into a linked task. `Ctrl+Enter` captures an idea and
+`Ctrl+Shift+N` creates a group in the current view.
 
 Use the floating **Day note** action on Today to capture decisions and context;
 the note saves locally as you type. **Review** shows only yesterday’s note next

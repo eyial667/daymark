@@ -102,6 +102,34 @@ private slots:
         model.advanceWorkSuggestion();
         QCOMPARE(model.workSuggestionName(), firstSuggestion);
     }
+
+    void deletesCategoriesAndSubcategoriesWithoutDeletingTasks()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+        CategoryListModel model(repository);
+        QVERIFY(model.addCategory(QStringLiteral("Work"), {}));
+        QVERIFY(model.addSubcategory(0, QStringLiteral("Planning"), {}));
+
+        Task task;
+        task.id = QStringLiteral("kept-task");
+        task.title = QStringLiteral("Keep me");
+        task.categoryId = model.idAt(0);
+        task.subcategoryId = model.subcategoryIdForAssignment(1);
+        task.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addTask(task, &error), qPrintable(error));
+
+        QVERIFY(model.deleteSubcategory(0, 0));
+        QVector<Task> tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.size(), 1);
+        QVERIFY(tasks.first().subcategoryId.isEmpty());
+        QVERIFY(!tasks.first().categoryId.isEmpty());
+        QVERIFY(model.deleteCategory(0));
+        tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.size(), 1);
+        QVERIFY(tasks.first().categoryId.isEmpty());
+    }
 };
 
 QTEST_GUILESS_MAIN(CategoryListModelTest)

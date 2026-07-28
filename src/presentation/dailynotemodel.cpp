@@ -63,6 +63,22 @@ bool DailyNoteModel::saveNow()
     return persist(true);
 }
 
+bool DailyNoteModel::deleteToday()
+{
+    m_saveTimer.stop();
+    QString errorMessage;
+    const QDate date = m_currentDate.isValid() ? m_currentDate : QDate::currentDate();
+    if (!m_repository.deleteDailyNote(date, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the day note: %1").arg(errorMessage));
+        return false;
+    }
+    m_todayText.clear();
+    setDirty(false);
+    emit todayTextChanged();
+    setStatusMessage(tr("Today's note deleted."));
+    return true;
+}
+
 void DailyNoteModel::refreshDay()
 {
     if (m_dirty && !persist(false)) {
@@ -105,7 +121,10 @@ bool DailyNoteModel::persist(bool announce)
     if (!m_currentDate.isValid()) {
         m_currentDate = QDate::currentDate();
     }
-    if (!m_dirty && !announce) {
+    if (!m_dirty) {
+        if (announce) {
+            setStatusMessage(tr("Day note is already saved."));
+        }
         return true;
     }
 

@@ -84,6 +84,7 @@ public:
         const QString &categoryId,
         const QString &subcategoryId = {});
     Q_INVOKABLE bool completeTask(int row);
+    Q_INVOKABLE bool deleteTask(int row);
     Q_INVOKABLE bool planTaskForToday(const QString &taskId);
     Q_INVOKABLE bool planSuggestedTaskForToday();
     Q_INVOKABLE void clearStatus();

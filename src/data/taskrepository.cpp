@@ -5,6 +5,9 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QHash>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMetaType>
 #include <QSqlError>
 #include <QSqlQuery>
@@ -170,6 +173,56 @@ void bindMeeting(QSqlQuery &query, const Meeting &meeting)
     bindNullableDateTime(query, QStringLiteral(":notified_at"), meeting.notifiedAt);
 }
 
+QString serializeChecklist(const QVector<MentalMapChecklistItem> &items)
+{
+    QJsonArray array;
+    for (const MentalMapChecklistItem &item : items) {
+        array.append(QJsonObject {
+            {QStringLiteral("text"), item.text},
+            {QStringLiteral("completed"), item.completed},
+        });
+    }
+    return QString::fromUtf8(QJsonDocument(array).toJson(QJsonDocument::Compact));
+}
+
+QVector<MentalMapChecklistItem> deserializeChecklist(const QString &value)
+{
+    QVector<MentalMapChecklistItem> result;
+    const QJsonDocument document = QJsonDocument::fromJson(value.toUtf8());
+    if (!document.isArray()) {
+        return result;
+    }
+    for (const QJsonValue &entry : document.array()) {
+        const QJsonObject object = entry.toObject();
+        const QString text = object.value(QStringLiteral("text")).toString().trimmed();
+        if (!text.isEmpty()) {
+            result.append({text, object.value(QStringLiteral("completed")).toBool()});
+        }
+    }
+    return result;
+}
+
+bool deleteById(
+    QSqlDatabase database,
+    const QString &table,
+    const QString &id,
+    const QString &missingMessage,
+    QString *errorMessage)
+{
+    QSqlQuery query(database);
+    query.prepare(QStringLiteral("DELETE FROM %1 WHERE id = :id").arg(table));
+    query.bindValue(QStringLiteral(":id"), id);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, missingMessage);
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 TaskRepository::TaskRepository(QString databasePath)
@@ -306,6 +359,16 @@ bool TaskRepository::addTask(const Task &task, QString *errorMessage)
     }
 
     return true;
+}
+
+bool TaskRepository::deleteTask(const QString &taskId, QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("tasks"),
+        taskId,
+        QStringLiteral("The selected task no longer exists."),
+        errorMessage);
 }
 
 bool TaskRepository::setCompleted(
@@ -460,6 +523,22 @@ bool TaskRepository::saveDailyNote(
     return true;
 }
 
+bool TaskRepository::deleteDailyNote(const QDate &date, QString *errorMessage)
+{
+    if (!date.isValid()) {
+        assignError(errorMessage, QStringLiteral("A valid day is required."));
+        return false;
+    }
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral("DELETE FROM daily_notes WHERE note_date = :note_date"));
+    query.bindValue(QStringLiteral(":note_date"), serializeDate(date));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
 bool TaskRepository::pruneDailyNotes(
     const QDate &oldestDate,
     QString *errorMessage)
@@ -573,6 +652,16 @@ bool TaskRepository::updateCategory(
     return true;
 }
 
+bool TaskRepository::deleteCategory(const QString &categoryId, QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("categories"),
+        categoryId,
+        QStringLiteral("The selected category no longer exists."),
+        errorMessage);
+}
+
 bool TaskRepository::addSubcategory(
     const Subcategory &subcategory,
     QString *errorMessage)
@@ -612,6 +701,18 @@ bool TaskRepository::updateSubcategory(
         return false;
     }
     return true;
+}
+
+bool TaskRepository::deleteSubcategory(
+    const QString &subcategoryId,
+    QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("subcategories"),
+        subcategoryId,
+        QStringLiteral("The selected subcategory no longer exists."),
+        errorMessage);
 }
 
 QVector<Goal> TaskRepository::goals(QString *errorMessage) const
@@ -685,6 +786,16 @@ bool TaskRepository::addGoal(const Goal &goal, QString *errorMessage)
     return true;
 }
 
+bool TaskRepository::deleteGoal(const QString &goalId, QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("goals"),
+        goalId,
+        QStringLiteral("The selected goal no longer exists."),
+        errorMessage);
+}
+
 bool TaskRepository::addMilestone(
     const Milestone &milestone,
     QString *errorMessage)
@@ -703,6 +814,18 @@ bool TaskRepository::addMilestone(
         return false;
     }
     return true;
+}
+
+bool TaskRepository::deleteMilestone(
+    const QString &milestoneId,
+    QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("milestones"),
+        milestoneId,
+        QStringLiteral("The selected milestone no longer exists."),
+        errorMessage);
 }
 
 bool TaskRepository::setMilestoneCompleted(
@@ -850,11 +973,305 @@ bool TaskRepository::markMeetingNotified(
     return true;
 }
 
+QVector<MentalMapGroup> TaskRepository::mentalMapGroups(QString *errorMessage) const
+{
+    QVector<MentalMapGroup> result;
+    QSqlQuery query(m_database);
+    if (!query.exec(QStringLiteral(
+            "SELECT id, kind, title, color, x, y, width, height, created_at "
+            "FROM mental_map_groups ORDER BY created_at ASC"))) {
+        assignError(errorMessage, query.lastError().text());
+        return result;
+    }
+    while (query.next()) {
+        MentalMapGroup group;
+        group.id = query.value(0).toString();
+        group.kind = query.value(1).toString();
+        group.title = query.value(2).toString();
+        group.color = query.value(3).toString();
+        group.x = query.value(4).toDouble();
+        group.y = query.value(5).toDouble();
+        group.width = query.value(6).toDouble();
+        group.height = query.value(7).toDouble();
+        group.createdAt = deserializeDateTime(query.value(8).toString());
+        result.append(group);
+    }
+    return result;
+}
+
+QVector<MentalMapNote> TaskRepository::mentalMapNotes(QString *errorMessage) const
+{
+    QVector<MentalMapNote> result;
+    QSqlQuery query(m_database);
+    if (!query.exec(QStringLiteral(
+            "SELECT n.id, n.group_id, g.kind, n.title, n.body, n.color, n.tags, "
+            "n.external_link, n.priority, n.x, n.y, n.is_center, n.linked_task_id, "
+            "COALESCE(t.title, ''), COALESCE(t.is_completed, 0), n.checklist_json, "
+            "n.created_at FROM mental_map_notes n "
+            "JOIN mental_map_groups g ON g.id = n.group_id "
+            "LEFT JOIN tasks t ON t.id = n.linked_task_id "
+            "ORDER BY n.created_at ASC"))) {
+        assignError(errorMessage, query.lastError().text());
+        return result;
+    }
+    while (query.next()) {
+        MentalMapNote note;
+        note.id = query.value(0).toString();
+        note.groupId = query.value(1).toString();
+        note.groupKind = query.value(2).toString();
+        note.title = query.value(3).toString();
+        note.body = query.value(4).toString();
+        note.color = query.value(5).toString();
+        note.tags = query.value(6).toString();
+        note.externalLink = query.value(7).toString();
+        note.priority = query.value(8).toInt();
+        note.x = query.value(9).toDouble();
+        note.y = query.value(10).toDouble();
+        note.center = query.value(11).toBool();
+        note.linkedTaskId = query.value(12).toString();
+        note.linkedTaskTitle = query.value(13).toString();
+        note.linkedTaskCompleted = query.value(14).toBool();
+        note.checklist = deserializeChecklist(query.value(15).toString());
+        note.createdAt = deserializeDateTime(query.value(16).toString());
+        result.append(note);
+    }
+    return result;
+}
+
+QVector<MentalMapConnection> TaskRepository::mentalMapConnections(
+    QString *errorMessage) const
+{
+    QVector<MentalMapConnection> result;
+    QSqlQuery query(m_database);
+    if (!query.exec(QStringLiteral(
+            "SELECT id, view_kind, source_note_id, target_note_id, label, created_at "
+            "FROM mental_map_connections ORDER BY created_at ASC"))) {
+        assignError(errorMessage, query.lastError().text());
+        return result;
+    }
+    while (query.next()) {
+        result.append({
+            query.value(0).toString(),
+            query.value(1).toString(),
+            query.value(2).toString(),
+            query.value(3).toString(),
+            query.value(4).toString(),
+            deserializeDateTime(query.value(5).toString()),
+        });
+    }
+    return result;
+}
+
+bool TaskRepository::addMentalMapGroup(
+    const MentalMapGroup &group,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO mental_map_groups "
+        "(id, kind, title, color, x, y, width, height, created_at) "
+        "VALUES (:id, :kind, :title, :color, :x, :y, :width, :height, :created_at)"));
+    query.bindValue(QStringLiteral(":id"), group.id);
+    query.bindValue(QStringLiteral(":kind"), group.kind);
+    query.bindValue(QStringLiteral(":title"), group.title);
+    query.bindValue(QStringLiteral(":color"), group.color);
+    query.bindValue(QStringLiteral(":x"), group.x);
+    query.bindValue(QStringLiteral(":y"), group.y);
+    query.bindValue(QStringLiteral(":width"), group.width);
+    query.bindValue(QStringLiteral(":height"), group.height);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(group.createdAt));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::updateMentalMapGroup(
+    const MentalMapGroup &group,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE mental_map_groups SET title = :title, color = :color, x = :x, y = :y, "
+        "width = :width, height = :height WHERE id = :id"));
+    query.bindValue(QStringLiteral(":id"), group.id);
+    query.bindValue(QStringLiteral(":title"), group.title);
+    query.bindValue(QStringLiteral(":color"), group.color);
+    query.bindValue(QStringLiteral(":x"), group.x);
+    query.bindValue(QStringLiteral(":y"), group.y);
+    query.bindValue(QStringLiteral(":width"), group.width);
+    query.bindValue(QStringLiteral(":height"), group.height);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected map group no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::deleteMentalMapGroup(
+    const QString &groupId,
+    QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("mental_map_groups"),
+        groupId,
+        QStringLiteral("The selected map group no longer exists."),
+        errorMessage);
+}
+
+bool TaskRepository::addMentalMapNote(
+    const MentalMapNote &note,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO mental_map_notes "
+        "(id, group_id, title, body, color, tags, external_link, priority, x, y, "
+        "is_center, linked_task_id, checklist_json, created_at) VALUES "
+        "(:id, :group_id, :title, :body, :color, :tags, :external_link, :priority, "
+        ":x, :y, :is_center, :linked_task_id, :checklist_json, :created_at)"));
+    query.bindValue(QStringLiteral(":id"), note.id);
+    query.bindValue(QStringLiteral(":group_id"), note.groupId);
+    query.bindValue(QStringLiteral(":title"), note.title);
+    query.bindValue(
+        QStringLiteral(":body"), note.body.isNull() ? QStringLiteral("") : note.body);
+    query.bindValue(QStringLiteral(":color"), note.color);
+    query.bindValue(
+        QStringLiteral(":tags"), note.tags.isNull() ? QStringLiteral("") : note.tags);
+    query.bindValue(
+        QStringLiteral(":external_link"),
+        note.externalLink.isNull() ? QStringLiteral("") : note.externalLink);
+    query.bindValue(QStringLiteral(":priority"), note.priority);
+    query.bindValue(QStringLiteral(":x"), note.x);
+    query.bindValue(QStringLiteral(":y"), note.y);
+    query.bindValue(QStringLiteral(":is_center"), note.center);
+    bindNullableString(query, QStringLiteral(":linked_task_id"), note.linkedTaskId);
+    query.bindValue(QStringLiteral(":checklist_json"), serializeChecklist(note.checklist));
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(note.createdAt));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::updateMentalMapNote(
+    const MentalMapNote &note,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE mental_map_notes SET title = :title, body = :body, color = :color, "
+        "tags = :tags, external_link = :external_link, priority = :priority, x = :x, "
+        "y = :y, checklist_json = :checklist_json WHERE id = :id"));
+    query.bindValue(QStringLiteral(":id"), note.id);
+    query.bindValue(QStringLiteral(":title"), note.title);
+    query.bindValue(
+        QStringLiteral(":body"), note.body.isNull() ? QStringLiteral("") : note.body);
+    query.bindValue(QStringLiteral(":color"), note.color);
+    query.bindValue(
+        QStringLiteral(":tags"), note.tags.isNull() ? QStringLiteral("") : note.tags);
+    query.bindValue(
+        QStringLiteral(":external_link"),
+        note.externalLink.isNull() ? QStringLiteral("") : note.externalLink);
+    query.bindValue(QStringLiteral(":priority"), note.priority);
+    query.bindValue(QStringLiteral(":x"), note.x);
+    query.bindValue(QStringLiteral(":y"), note.y);
+    query.bindValue(QStringLiteral(":checklist_json"), serializeChecklist(note.checklist));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected map note no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::deleteMentalMapNote(
+    const QString &noteId,
+    QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("mental_map_notes"),
+        noteId,
+        QStringLiteral("The selected map note no longer exists."),
+        errorMessage);
+}
+
+bool TaskRepository::addMentalMapConnection(
+    const MentalMapConnection &connection,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO mental_map_connections "
+        "(id, view_kind, source_note_id, target_note_id, label, created_at) "
+        "VALUES (:id, :view_kind, :source_note_id, :target_note_id, :label, :created_at)"));
+    query.bindValue(QStringLiteral(":id"), connection.id);
+    query.bindValue(QStringLiteral(":view_kind"), connection.viewKind);
+    query.bindValue(QStringLiteral(":source_note_id"), connection.sourceNoteId);
+    query.bindValue(QStringLiteral(":target_note_id"), connection.targetNoteId);
+    query.bindValue(
+        QStringLiteral(":label"),
+        connection.label.isNull() ? QStringLiteral("") : connection.label);
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(connection.createdAt));
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::deleteMentalMapConnection(
+    const QString &connectionId,
+    QString *errorMessage)
+{
+    return deleteById(
+        m_database,
+        QStringLiteral("mental_map_connections"),
+        connectionId,
+        QStringLiteral("The selected connection no longer exists."),
+        errorMessage);
+}
+
+bool TaskRepository::linkMentalMapNoteToTask(
+    const QString &noteId,
+    const QString &taskId,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE mental_map_notes SET linked_task_id = :task_id WHERE id = :id"));
+    bindNullableString(query, QStringLiteral(":task_id"), taskId);
+    query.bindValue(QStringLiteral(":id"), noteId);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected map note no longer exists."));
+        return false;
+    }
+    return true;
+}
+
 bool TaskRepository::mergeImportedData(
     const QVector<Category> &categoriesToMerge,
     const QVector<Task> &tasks,
     const QVector<Goal> &goalsToMerge,
     const QVector<Meeting> &meetingsToMerge,
+    const QVector<MentalMapGroup> &mapGroups,
+    const QVector<MentalMapNote> &mapNotes,
+    const QVector<MentalMapConnection> &mapConnections,
     QString *errorMessage)
 {
     if (!m_database.transaction()) {
@@ -975,6 +1392,99 @@ bool TaskRepository::mergeImportedData(
         }
     }
 
+    QSqlQuery mapGroupQuery(m_database);
+    mapGroupQuery.prepare(QStringLiteral(
+        "INSERT INTO mental_map_groups "
+        "(id, kind, title, color, x, y, width, height, created_at) "
+        "VALUES (:id, :kind, :title, :color, :x, :y, :width, :height, :created_at) "
+        "ON CONFLICT(id) DO UPDATE SET kind = excluded.kind, title = excluded.title, "
+        "color = excluded.color, x = excluded.x, y = excluded.y, width = excluded.width, "
+        "height = excluded.height, created_at = excluded.created_at"));
+    for (const MentalMapGroup &group : mapGroups) {
+        mapGroupQuery.bindValue(QStringLiteral(":id"), group.id);
+        mapGroupQuery.bindValue(QStringLiteral(":kind"), group.kind);
+        mapGroupQuery.bindValue(QStringLiteral(":title"), group.title);
+        mapGroupQuery.bindValue(QStringLiteral(":color"), group.color);
+        mapGroupQuery.bindValue(QStringLiteral(":x"), group.x);
+        mapGroupQuery.bindValue(QStringLiteral(":y"), group.y);
+        mapGroupQuery.bindValue(QStringLiteral(":width"), group.width);
+        mapGroupQuery.bindValue(QStringLiteral(":height"), group.height);
+        mapGroupQuery.bindValue(QStringLiteral(":created_at"), serializeDateTime(group.createdAt));
+        if (!mapGroupQuery.exec()) {
+            assignError(errorMessage, mapGroupQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+    }
+
+    QSqlQuery mapNoteQuery(m_database);
+    mapNoteQuery.prepare(QStringLiteral(
+        "INSERT INTO mental_map_notes "
+        "(id, group_id, title, body, color, tags, external_link, priority, x, y, "
+        "is_center, linked_task_id, checklist_json, created_at) VALUES "
+        "(:id, :group_id, :title, :body, :color, :tags, :external_link, :priority, "
+        ":x, :y, :is_center, :linked_task_id, :checklist_json, :created_at) "
+        "ON CONFLICT(id) DO UPDATE SET group_id = excluded.group_id, title = excluded.title, "
+        "body = excluded.body, color = excluded.color, tags = excluded.tags, "
+        "external_link = excluded.external_link, priority = excluded.priority, x = excluded.x, "
+        "y = excluded.y, is_center = excluded.is_center, "
+        "linked_task_id = excluded.linked_task_id, checklist_json = excluded.checklist_json, "
+        "created_at = excluded.created_at"));
+    for (const MentalMapNote &note : mapNotes) {
+        mapNoteQuery.bindValue(QStringLiteral(":id"), note.id);
+        mapNoteQuery.bindValue(QStringLiteral(":group_id"), note.groupId);
+        mapNoteQuery.bindValue(QStringLiteral(":title"), note.title);
+        mapNoteQuery.bindValue(
+            QStringLiteral(":body"), note.body.isNull() ? QStringLiteral("") : note.body);
+        mapNoteQuery.bindValue(QStringLiteral(":color"), note.color);
+        mapNoteQuery.bindValue(
+            QStringLiteral(":tags"), note.tags.isNull() ? QStringLiteral("") : note.tags);
+        mapNoteQuery.bindValue(
+            QStringLiteral(":external_link"),
+            note.externalLink.isNull() ? QStringLiteral("") : note.externalLink);
+        mapNoteQuery.bindValue(QStringLiteral(":priority"), note.priority);
+        mapNoteQuery.bindValue(QStringLiteral(":x"), note.x);
+        mapNoteQuery.bindValue(QStringLiteral(":y"), note.y);
+        mapNoteQuery.bindValue(QStringLiteral(":is_center"), note.center);
+        bindNullableString(
+            mapNoteQuery, QStringLiteral(":linked_task_id"), note.linkedTaskId);
+        mapNoteQuery.bindValue(
+            QStringLiteral(":checklist_json"), serializeChecklist(note.checklist));
+        mapNoteQuery.bindValue(QStringLiteral(":created_at"), serializeDateTime(note.createdAt));
+        if (!mapNoteQuery.exec()) {
+            assignError(errorMessage, mapNoteQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+    }
+
+    QSqlQuery mapConnectionQuery(m_database);
+    mapConnectionQuery.prepare(QStringLiteral(
+        "INSERT INTO mental_map_connections "
+        "(id, view_kind, source_note_id, target_note_id, label, created_at) "
+        "VALUES (:id, :view_kind, :source_note_id, :target_note_id, :label, :created_at) "
+        "ON CONFLICT(id) DO UPDATE SET view_kind = excluded.view_kind, "
+        "source_note_id = excluded.source_note_id, target_note_id = excluded.target_note_id, "
+        "label = excluded.label, created_at = excluded.created_at"));
+    for (const MentalMapConnection &connection : mapConnections) {
+        mapConnectionQuery.bindValue(QStringLiteral(":id"), connection.id);
+        mapConnectionQuery.bindValue(QStringLiteral(":view_kind"), connection.viewKind);
+        mapConnectionQuery.bindValue(
+            QStringLiteral(":source_note_id"), connection.sourceNoteId);
+        mapConnectionQuery.bindValue(
+            QStringLiteral(":target_note_id"), connection.targetNoteId);
+        mapConnectionQuery.bindValue(
+            QStringLiteral(":label"),
+            connection.label.isNull() ? QStringLiteral("") : connection.label);
+        mapConnectionQuery.bindValue(
+            QStringLiteral(":created_at"), serializeDateTime(connection.createdAt));
+        if (!mapConnectionQuery.exec()) {
+            assignError(errorMessage, mapConnectionQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+    }
+
     if (!m_database.commit()) {
         assignError(errorMessage, m_database.lastError().text());
         m_database.rollback();
@@ -992,13 +1502,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 7) {
+    if (version > 8) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-    if (version == 7) {
+    if (version == 8) {
         return true;
     }
 
@@ -1148,6 +1658,60 @@ bool TaskRepository::migrate(QString *errorMessage)
                 "CREATE INDEX meetings_pending_reminder_index "
                 "ON meetings(notified_at, starts_at)"), errorMessage)
             && execute(QStringLiteral("PRAGMA user_version = 7"), errorMessage);
+    }
+
+    if (migrated && version < 8) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE mental_map_groups ("
+            "id TEXT PRIMARY KEY NOT NULL, "
+            "kind TEXT NOT NULL CHECK(kind IN ('cloud', 'constellation')), "
+            "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+            "color TEXT NOT NULL DEFAULT 'accent', "
+            "x REAL NOT NULL, y REAL NOT NULL, "
+            "width REAL NOT NULL CHECK(width BETWEEN 220 AND 1200), "
+            "height REAL NOT NULL CHECK(height BETWEEN 160 AND 900), "
+            "created_at TEXT NOT NULL"
+            ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX mental_map_groups_kind_index "
+                "ON mental_map_groups(kind, created_at)"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE TABLE mental_map_notes ("
+                "id TEXT PRIMARY KEY NOT NULL, "
+                "group_id TEXT NOT NULL REFERENCES mental_map_groups(id) ON DELETE CASCADE, "
+                "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+                "body TEXT NOT NULL DEFAULT '', "
+                "color TEXT NOT NULL DEFAULT 'accent', "
+                "tags TEXT NOT NULL DEFAULT '', "
+                "external_link TEXT NOT NULL DEFAULT '', "
+                "priority INTEGER NOT NULL DEFAULT 0 CHECK(priority BETWEEN 0 AND 5), "
+                "x REAL NOT NULL, y REAL NOT NULL, "
+                "is_center INTEGER NOT NULL DEFAULT 0 CHECK(is_center IN (0, 1)), "
+                "linked_task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL, "
+                "checklist_json TEXT NOT NULL DEFAULT '[]', "
+                "created_at TEXT NOT NULL"
+                ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX mental_map_notes_group_index "
+                "ON mental_map_notes(group_id, created_at)"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX mental_map_notes_task_index "
+                "ON mental_map_notes(linked_task_id)"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE TABLE mental_map_connections ("
+                "id TEXT PRIMARY KEY NOT NULL, "
+                "view_kind TEXT NOT NULL CHECK(view_kind IN ('cloud', 'constellation')), "
+                "source_note_id TEXT NOT NULL REFERENCES mental_map_notes(id) ON DELETE CASCADE, "
+                "target_note_id TEXT NOT NULL REFERENCES mental_map_notes(id) ON DELETE CASCADE, "
+                "label TEXT NOT NULL DEFAULT '', "
+                "created_at TEXT NOT NULL, "
+                "CHECK(source_note_id <> target_note_id), "
+                "UNIQUE(source_note_id, target_note_id)"
+                ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX mental_map_connections_view_index "
+                "ON mental_map_connections(view_kind, created_at)"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 8"), errorMessage);
     }
 
     if (!migrated) {

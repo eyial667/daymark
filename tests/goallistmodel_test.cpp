@@ -85,6 +85,21 @@ private slots:
             model.statusMessage(),
             QStringLiteral("Use YYYY-MM-DD for the target date."));
     }
+
+    void permanentlyDeletesMilestonesAndGoals()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+        GoalListModel model(repository);
+        QVERIFY(model.addGoal(QStringLiteral("Temporary goal"), {}, {}));
+        QVERIFY(model.addMilestone(0, QStringLiteral("Temporary milestone"), {}));
+        QVERIFY(model.deleteMilestone(0, 0));
+        QCOMPARE(model.totalMilestoneCount(), 0);
+        QVERIFY(model.deleteGoal(0));
+        QCOMPARE(model.goalCount(), 0);
+        QVERIFY(repository.goals(&error).isEmpty());
+    }
 };
 
 QTEST_GUILESS_MAIN(GoalListModelTest)

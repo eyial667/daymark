@@ -260,6 +260,25 @@ bool TaskListModel::completeTask(int row)
     return true;
 }
 
+bool TaskListModel::deleteTask(int row)
+{
+    if (row < 0 || row >= m_items.size()) {
+        setStatusMessage(tr("That task is no longer in the list."));
+        return false;
+    }
+
+    const QString title = m_items.at(row).task.title;
+    QString errorMessage;
+    if (!m_repository.deleteTask(m_items.at(row).task.id, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the task: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    emit tasksChanged();
+    setStatusMessage(tr("Task “%1” deleted.").arg(title));
+    return true;
+}
+
 bool TaskListModel::planTaskForToday(const QString &taskId)
 {
     const auto item = std::find_if(

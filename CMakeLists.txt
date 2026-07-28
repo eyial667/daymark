@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     Daymark
-    VERSION 0.2.4
+    VERSION 0.2.5
     DESCRIPTION "A local-first daily command center"
     LANGUAGES CXX
 )
@@ -35,6 +35,7 @@ add_library(daymark_core STATIC
     src/domain/dailynote.h
     src/domain/goal.h
     src/domain/meeting.h
+    src/domain/mentalmap.h
     src/domain/task.h
     src/presentation/appsettings.cpp
     src/presentation/appsettings.h
@@ -88,6 +89,7 @@ qt_add_qml_module(daymark
     QML_FILES
         qml/Main.qml
         qml/AppButton.qml
+        qml/BrainstormCanvas.qml
         qml/CategoriesView.qml
         qml/DateField.qml
         qml/DayPlanningPrompt.qml

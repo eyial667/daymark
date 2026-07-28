@@ -16,6 +16,7 @@ system's SQLite and settings locations.
 | `categories` | array | Reusable task categories with nested subcategories and notes. |
 | `goals` | array | Active and achieved goals with nested milestones. |
 | `meetings` | array | Dated meetings and their durable reminder state. |
+| `mentalMap` | object | Persistent cloud and constellation groups, notes, and directed connections. |
 | `settings` | object | Portable appearance, planning, and behavior preferences. |
 
 Task records contain their stable ID, title, notes, optional category and
@@ -28,6 +29,11 @@ records contain stable IDs, titles, descriptions where applicable, target dates,
 creation timestamps, and completion state.
 Meeting records contain a stable ID, title, notes, required start and creation
 timestamps, and an optional notification timestamp.
+The mental-map object contains `groups`, `notes`, and `connections` arrays.
+Groups retain their view kind, title, color, map-space rectangle, and creation
+time. Notes retain their group, position, body, color, tags, external link,
+priority, checklist, central-idea state, and optional linked task ID. Connections
+retain their source, destination, optional label, and direction.
 
 Settings include the selected interface, language, and palette, planning and capture
 defaults, and behavior preferences such as timeline visibility. The
@@ -55,6 +61,8 @@ anything. Import then performs one SQLite transaction:
   intact;
 - milestones remain attached to their exported goal;
 - meetings retain their start time and whether their reminder was already sent;
+- map groups are merged before their notes and directed connections, while linked
+  task IDs continue to refer to the imported task records;
 - preferences are applied only after the database transaction succeeds.
 
 Unknown format versions are rejected so a newer Daymark export cannot be
@@ -69,3 +77,5 @@ so backups from builds that predate Today planning remain valid and import those
 tasks into To-do without assigning them to a day.
 The top-level `meetings` list is optional for the same compatibility reason;
 older version 1 backups import with an empty meeting list.
+The top-level `mentalMap` object is also optional in version 1, so older backups
+continue to import with an empty brainstorming map.

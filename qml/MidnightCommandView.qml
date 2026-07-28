@@ -15,6 +15,7 @@ Item {
     signal suggestionRequested()
     signal focusRequested()
     signal completionRequested(int taskIndex, string taskTitle)
+    signal deletionRequested(int taskIndex, string taskTitle)
     signal categoryRequested(
         string taskId,
         string taskTitle,
@@ -213,6 +214,8 @@ Item {
                             showReason: root.appSettings.showPriorityReasons
                             onCompletionRequested: rowIndex =>
                                 root.completionRequested(rowIndex, taskRow.title)
+                            onDeletionRequested: rowIndex =>
+                                root.deletionRequested(rowIndex, taskRow.title)
                             onCategoryRequested: (taskId, categoryId, subcategoryId) =>
                                 root.categoryRequested(
                                     taskId, taskRow.title, categoryId, subcategoryId)

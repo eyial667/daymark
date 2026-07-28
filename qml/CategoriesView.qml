@@ -14,6 +14,10 @@ Item {
     property int editingIndex: -1
     property var selectedSubcategories: []
     property int editingSubcategoryIndex: -1
+    property string pendingDeleteType: ""
+    property string pendingDeleteName: ""
+    property int pendingDeleteCategoryIndex: -1
+    property int pendingDeleteSubcategoryIndex: -1
 
     function startNewCategory(clearStatus) {
         editingIndex = -1
@@ -42,6 +46,22 @@ Item {
         subcategoryNotesField.text = notes || ""
         categoryModel.clearStatus()
         subcategoryDialog.open()
+    }
+
+    function requestCategoryDelete() {
+        pendingDeleteType = "category"
+        pendingDeleteName = nameField.text
+        pendingDeleteCategoryIndex = editingIndex
+        pendingDeleteSubcategoryIndex = -1
+        deleteDialog.open()
+    }
+
+    function requestSubcategoryDelete(index, name) {
+        pendingDeleteType = "subcategory"
+        pendingDeleteName = name
+        pendingDeleteCategoryIndex = editingIndex
+        pendingDeleteSubcategoryIndex = index
+        deleteDialog.open()
     }
 
     ColumnLayout {
@@ -358,6 +378,15 @@ Item {
                                         subcategoryRow.modelData.name,
                                         subcategoryRow.modelData.notes)
                                 }
+                                AppButton {
+                                    theme: root.theme
+                                    quiet: true
+                                    text: "×"
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: qsTr("Delete subcategory")
+                                    onClicked: root.requestSubcategoryDelete(
+                                        subcategoryRow.index, subcategoryRow.modelData.name)
+                                }
                             }
                             HoverHandler { id: subcategoryHover }
                         }
@@ -390,6 +419,13 @@ Item {
 
                     RowLayout {
                         Layout.fillWidth: true
+                        AppButton {
+                            visible: root.editingIndex >= 0
+                            theme: root.theme
+                            quiet: true
+                            text: qsTr("Delete category…")
+                            onClicked: root.requestCategoryDelete()
+                        }
                         Item { Layout.fillWidth: true }
                         AppButton {
                             visible: root.editingIndex >= 0
@@ -525,6 +561,85 @@ Item {
             root.editingSubcategoryIndex = -1
             subcategoryNameField.clear()
             subcategoryNotesField.clear()
+        }
+    }
+
+    Dialog {
+        id: deleteDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 440
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: root.theme.radius + 3
+            color: root.theme.surfaceRaised
+            border.color: root.theme.danger
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                text: root.pendingDeleteType === "category"
+                    ? qsTr("Delete this category?") : qsTr("Delete this subcategory?")
+                color: root.theme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: root.pendingDeleteType === "category"
+                    ? qsTr("“%1” and its subcategories will be deleted. Existing tasks will remain uncategorized.")
+                        .arg(root.pendingDeleteName)
+                    : qsTr("“%1” will be deleted. Existing tasks will remain in their parent category.")
+                        .arg(root.pendingDeleteName)
+                color: root.theme.textSecondary
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: root.theme
+                    quiet: true
+                    text: qsTr("Cancel")
+                    onClicked: deleteDialog.close()
+                }
+                AppButton {
+                    theme: root.theme
+                    primary: true
+                    text: qsTr("Delete")
+                    onClicked: {
+                        const removed = root.pendingDeleteType === "category"
+                            ? root.categoryModel.deleteCategory(
+                                root.pendingDeleteCategoryIndex)
+                            : root.categoryModel.deleteSubcategory(
+                                root.pendingDeleteCategoryIndex,
+                                root.pendingDeleteSubcategoryIndex)
+                        if (!removed)
+                            return
+                        if (root.pendingDeleteType === "category") {
+                            root.startNewCategory(false)
+                        } else {
+                            root.selectedSubcategories = root.categoryModel.subcategoriesAt(
+                                root.editingIndex)
+                        }
+                        deleteDialog.close()
+                    }
+                }
+            }
+        }
+
+        onClosed: {
+            root.pendingDeleteType = ""
+            root.pendingDeleteName = ""
+            root.pendingDeleteCategoryIndex = -1
+            root.pendingDeleteSubcategoryIndex = -1
         }
     }
 }

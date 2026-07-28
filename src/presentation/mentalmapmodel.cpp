@@ -2,9 +2,83 @@
 
 #include "presentation/mentalmapmodel.h"
 
-#include <QHash>
-#include <QLocale>
+#include <QDateTime>
+#include <QUuid>
+#include <QVariantMap>
+
 #include <algorithm>
+
+namespace {
+
+QString cleanColor(const QString &color)
+{
+    static const QStringList colors {
+        QStringLiteral("accent"),
+        QStringLiteral("secondary"),
+        QStringLiteral("success"),
+        QStringLiteral("danger"),
+        QStringLiteral("neutral"),
+    };
+    const QString candidate = color.trimmed().toLower();
+    return colors.contains(candidate) ? candidate : QStringLiteral("accent");
+}
+
+QVariantMap groupVariant(const MentalMapGroup &group, int noteCount)
+{
+    return {
+        {QStringLiteral("groupId"), group.id},
+        {QStringLiteral("kind"), group.kind},
+        {QStringLiteral("title"), group.title},
+        {QStringLiteral("color"), group.color},
+        {QStringLiteral("x"), group.x},
+        {QStringLiteral("y"), group.y},
+        {QStringLiteral("width"), group.width},
+        {QStringLiteral("height"), group.height},
+        {QStringLiteral("noteCount"), noteCount},
+    };
+}
+
+QVariantMap noteVariant(const MentalMapNote &note)
+{
+    QVariantList checklist;
+    for (const MentalMapChecklistItem &item : note.checklist) {
+        checklist.append(QVariantMap {
+            {QStringLiteral("text"), item.text},
+            {QStringLiteral("completed"), item.completed},
+        });
+    }
+    return {
+        {QStringLiteral("noteId"), note.id},
+        {QStringLiteral("groupId"), note.groupId},
+        {QStringLiteral("groupKind"), note.groupKind},
+        {QStringLiteral("title"), note.title},
+        {QStringLiteral("body"), note.body},
+        {QStringLiteral("color"), note.color},
+        {QStringLiteral("tags"), note.tags},
+        {QStringLiteral("externalLink"), note.externalLink},
+        {QStringLiteral("priority"), note.priority},
+        {QStringLiteral("x"), note.x},
+        {QStringLiteral("y"), note.y},
+        {QStringLiteral("center"), note.center},
+        {QStringLiteral("linkedTaskId"), note.linkedTaskId},
+        {QStringLiteral("linkedTaskTitle"), note.linkedTaskTitle},
+        {QStringLiteral("linkedTaskCompleted"), note.linkedTaskCompleted},
+        {QStringLiteral("checklist"), checklist},
+    };
+}
+
+QVariantMap connectionVariant(const MentalMapConnection &connection)
+{
+    return {
+        {QStringLiteral("connectionId"), connection.id},
+        {QStringLiteral("viewKind"), connection.viewKind},
+        {QStringLiteral("sourceNoteId"), connection.sourceNoteId},
+        {QStringLiteral("targetNoteId"), connection.targetNoteId},
+        {QStringLiteral("label"), connection.label},
+    };
+}
+
+} // namespace
 
 MentalMapModel::MentalMapModel(TaskRepository &repository, QObject *parent)
     : QObject(parent)
@@ -13,196 +87,356 @@ MentalMapModel::MentalMapModel(TaskRepository &repository, QObject *parent)
     reload();
 }
 
-QVariantList MentalMapModel::hierarchy() const
+QVariantList MentalMapModel::groups() const { return m_groups; }
+QVariantList MentalMapModel::notes() const { return m_notes; }
+QVariantList MentalMapModel::connections() const { return m_connections; }
+int MentalMapModel::itemCount() const { return m_storedGroups.size() + m_storedNotes.size(); }
+int MentalMapModel::revision() const { return m_revision; }
+QString MentalMapModel::statusMessage() const { return m_statusMessage; }
+
+QString MentalMapModel::addGroup(
+    const QString &kind,
+    const QString &title,
+    double x,
+    double y)
 {
-    return m_hierarchy;
+    const QString cleanKind = kind.trimmed().toLower();
+    const QString cleanTitle = title.trimmed();
+    if (cleanKind != QStringLiteral("cloud")
+        && cleanKind != QStringLiteral("constellation")) {
+        setStatusMessage(tr("Choose either a cloud or a constellation."));
+        return {};
+    }
+    if (cleanTitle.isEmpty() || cleanTitle.size() > 120) {
+        setStatusMessage(tr("A map group needs a short title."));
+        return {};
+    }
+
+    MentalMapGroup group;
+    group.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    group.kind = cleanKind;
+    group.title = cleanTitle;
+    group.color = QStringLiteral("accent");
+    group.x = x;
+    group.y = y;
+    group.width = cleanKind == QStringLiteral("cloud") ? 380.0 : 520.0;
+    group.height = cleanKind == QStringLiteral("cloud") ? 280.0 : 400.0;
+    group.createdAt = QDateTime::currentDateTime();
+
+    QString error;
+    if (!m_repository.addMentalMapGroup(group, &error)) {
+        setStatusMessage(tr("Could not create the map group: %1").arg(error));
+        return {};
+    }
+
+    if (cleanKind == QStringLiteral("constellation")) {
+        MentalMapNote center;
+        center.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        center.groupId = group.id;
+        center.groupKind = group.kind;
+        center.title = cleanTitle;
+        center.color = group.color;
+        center.x = group.width / 2.0 - 72.0;
+        center.y = group.height / 2.0 - 28.0;
+        center.center = true;
+        center.createdAt = group.createdAt;
+        if (!m_repository.addMentalMapNote(center, &error)) {
+            QString cleanupError;
+            const bool cleaned = m_repository.deleteMentalMapGroup(group.id, &cleanupError);
+            Q_UNUSED(cleaned);
+            setStatusMessage(tr("Could not create the central idea: %1").arg(error));
+            return {};
+        }
+    }
+
+    reload();
+    setStatusMessage(cleanKind == QStringLiteral("cloud")
+            ? tr("Cloud created. Double-click inside it to capture an idea.")
+            : tr("Constellation created. Add surrounding ideas and connect them."));
+    return group.id;
 }
 
-QVariantList MentalMapModel::flatNodes() const
+bool MentalMapModel::updateGroup(
+    const QString &groupId,
+    const QString &title,
+    const QString &color)
 {
-    return m_flatNodes;
+    MentalMapGroup *group = findGroup(groupId);
+    const QString cleanTitle = title.trimmed();
+    if (group == nullptr) {
+        setStatusMessage(tr("That map group no longer exists."));
+        return false;
+    }
+    if (cleanTitle.isEmpty() || cleanTitle.size() > 120) {
+        setStatusMessage(tr("A map group needs a short title."));
+        return false;
+    }
+    group->title = cleanTitle;
+    group->color = cleanColor(color);
+    return saveGroup(*group, tr("Map group updated."));
 }
 
-int MentalMapModel::itemCount() const
+bool MentalMapModel::moveGroup(const QString &groupId, double x, double y)
 {
-    return m_flatNodes.size();
+    MentalMapGroup *group = findGroup(groupId);
+    if (group == nullptr) {
+        return false;
+    }
+    group->x = x;
+    group->y = y;
+    return saveGroup(*group, {});
 }
 
-int MentalMapModel::revision() const
+bool MentalMapModel::resizeGroup(
+    const QString &groupId,
+    double width,
+    double height)
 {
-    return m_revision;
+    MentalMapGroup *group = findGroup(groupId);
+    if (group == nullptr) {
+        return false;
+    }
+    group->width = std::clamp(width, 220.0, 1200.0);
+    group->height = std::clamp(height, 160.0, 900.0);
+    return saveGroup(*group, {});
 }
 
-QString MentalMapModel::statusMessage() const
+bool MentalMapModel::deleteGroup(const QString &groupId)
 {
-    return m_statusMessage;
+    QString error;
+    if (!m_repository.deleteMentalMapGroup(groupId, &error)) {
+        setStatusMessage(tr("Could not delete the map group: %1").arg(error));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Map group and all of its notes deleted."));
+    return true;
+}
+
+QString MentalMapModel::addNote(
+    const QString &groupId,
+    const QString &title,
+    double x,
+    double y)
+{
+    MentalMapGroup *group = findGroup(groupId);
+    const QString cleanTitle = title.trimmed();
+    if (group == nullptr) {
+        setStatusMessage(tr("Choose a cloud or constellation first."));
+        return {};
+    }
+    if (cleanTitle.isEmpty() || cleanTitle.size() > 160) {
+        setStatusMessage(tr("An idea needs a short title."));
+        return {};
+    }
+
+    MentalMapNote note;
+    note.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    note.groupId = group->id;
+    note.groupKind = group->kind;
+    note.title = cleanTitle;
+    note.color = group->color;
+    note.x = x;
+    note.y = y;
+    note.createdAt = QDateTime::currentDateTime();
+    QString error;
+    if (!m_repository.addMentalMapNote(note, &error)) {
+        setStatusMessage(tr("Could not save the idea: %1").arg(error));
+        return {};
+    }
+    reload();
+    setStatusMessage(tr("Idea added."));
+    return note.id;
+}
+
+bool MentalMapModel::updateNote(
+    const QString &noteId,
+    const QString &title,
+    const QString &body,
+    const QString &color,
+    const QString &tags,
+    const QString &externalLink,
+    int priority)
+{
+    MentalMapNote *note = findNote(noteId);
+    const QString cleanTitle = title.trimmed();
+    if (note == nullptr) {
+        setStatusMessage(tr("That idea no longer exists."));
+        return false;
+    }
+    if (cleanTitle.isEmpty() || cleanTitle.size() > 160 || body.size() > 10000) {
+        setStatusMessage(tr("Keep the idea title short and its notes under 10,000 characters."));
+        return false;
+    }
+    note->title = cleanTitle;
+    note->body = body.trimmed();
+    note->color = cleanColor(color);
+    note->tags = tags.trimmed().left(1000);
+    note->externalLink = externalLink.trimmed().left(2000);
+    note->priority = std::clamp(priority, 0, 5);
+    return saveNote(*note, tr("Idea updated."));
+}
+
+bool MentalMapModel::moveNote(const QString &noteId, double x, double y)
+{
+    MentalMapNote *note = findNote(noteId);
+    if (note == nullptr) {
+        return false;
+    }
+    note->x = x;
+    note->y = y;
+    return saveNote(*note, {});
+}
+
+bool MentalMapModel::deleteNote(const QString &noteId)
+{
+    const MentalMapNote *note = findNote(noteId);
+    if (note == nullptr) {
+        setStatusMessage(tr("That idea no longer exists."));
+        return false;
+    }
+    if (note->center) {
+        setStatusMessage(tr("Delete the constellation to remove its central idea."));
+        return false;
+    }
+    QString error;
+    if (!m_repository.deleteMentalMapNote(noteId, &error)) {
+        setStatusMessage(tr("Could not delete the idea: %1").arg(error));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Idea and its connections deleted."));
+    return true;
+}
+
+bool MentalMapModel::addChecklistItem(const QString &noteId, const QString &text)
+{
+    MentalMapNote *note = findNote(noteId);
+    const QString cleanText = text.trimmed();
+    if (note == nullptr || cleanText.isEmpty()) {
+        setStatusMessage(tr("Enter a checklist item first."));
+        return false;
+    }
+    note->checklist.append({cleanText.left(300), false});
+    return saveNote(*note, tr("Checklist item added."));
+}
+
+bool MentalMapModel::toggleChecklistItem(
+    const QString &noteId,
+    int itemIndex,
+    bool completed)
+{
+    MentalMapNote *note = findNote(noteId);
+    if (note == nullptr || itemIndex < 0 || itemIndex >= note->checklist.size()) {
+        setStatusMessage(tr("That checklist item no longer exists."));
+        return false;
+    }
+    note->checklist[itemIndex].completed = completed;
+    return saveNote(*note, {});
+}
+
+bool MentalMapModel::deleteChecklistItem(const QString &noteId, int itemIndex)
+{
+    MentalMapNote *note = findNote(noteId);
+    if (note == nullptr || itemIndex < 0 || itemIndex >= note->checklist.size()) {
+        setStatusMessage(tr("That checklist item no longer exists."));
+        return false;
+    }
+    note->checklist.removeAt(itemIndex);
+    return saveNote(*note, tr("Checklist item deleted."));
+}
+
+QString MentalMapModel::addConnection(
+    const QString &sourceNoteId,
+    const QString &targetNoteId,
+    const QString &label)
+{
+    const MentalMapNote *source = findNote(sourceNoteId);
+    const MentalMapNote *target = findNote(targetNoteId);
+    if (source == nullptr || target == nullptr || sourceNoteId == targetNoteId) {
+        setStatusMessage(tr("Choose two different ideas to connect."));
+        return {};
+    }
+    if (source->groupKind != target->groupKind) {
+        setStatusMessage(tr("Connections stay within the current map view."));
+        return {};
+    }
+    MentalMapConnection connection;
+    connection.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    connection.viewKind = source->groupKind;
+    connection.sourceNoteId = sourceNoteId;
+    connection.targetNoteId = targetNoteId;
+    connection.label = label.trimmed().left(120);
+    connection.createdAt = QDateTime::currentDateTime();
+    QString error;
+    if (!m_repository.addMentalMapConnection(connection, &error)) {
+        setStatusMessage(tr("Could not create the connection: %1").arg(error));
+        return {};
+    }
+    reload();
+    setStatusMessage(tr("Directed connection created."));
+    return connection.id;
+}
+
+bool MentalMapModel::deleteConnection(const QString &connectionId)
+{
+    QString error;
+    if (!m_repository.deleteMentalMapConnection(connectionId, &error)) {
+        setStatusMessage(tr("Could not delete the connection: %1").arg(error));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Connection deleted."));
+    return true;
+}
+
+bool MentalMapModel::createTaskForNote(const QString &noteId)
+{
+    MentalMapNote *note = findNote(noteId);
+    if (note == nullptr) {
+        setStatusMessage(tr("That idea no longer exists."));
+        return false;
+    }
+    if (!note->linkedTaskId.isEmpty()) {
+        setStatusMessage(tr("This idea is already linked to a task."));
+        return false;
+    }
+    Task task;
+    task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    task.title = note->title;
+    task.notes = note->body;
+    task.createdAt = QDateTime::currentDateTime();
+    task.importance = note->priority > 0 ? note->priority : 3;
+    task.estimatedMinutes = 30;
+    QString error;
+    if (!m_repository.addTask(task, &error)) {
+        setStatusMessage(tr("Could not create the linked task: %1").arg(error));
+        return false;
+    }
+    if (!m_repository.linkMentalMapNoteToTask(noteId, task.id, &error)) {
+        QString cleanupError;
+        const bool cleaned = m_repository.deleteTask(task.id, &cleanupError);
+        Q_UNUSED(cleaned);
+        setStatusMessage(tr("Could not link the new task: %1").arg(error));
+        return false;
+    }
+    reload();
+    emit taskCreated();
+    setStatusMessage(tr("Task created and linked to this idea."));
+    return true;
 }
 
 void MentalMapModel::reload()
 {
-    QString taskError;
-    QString categoryError;
-    QString goalError;
-    const QVector<Task> tasks = m_repository.openTasks(&taskError);
-    const QVector<Category> categories = m_repository.categories(&categoryError);
-    const QVector<Goal> goals = m_repository.goals(&goalError);
-
-    QHash<QString, QVector<Task>> directTasks;
-    QHash<QString, QVector<Task>> subcategoryTasks;
-    QVector<Task> uncategorizedTasks;
-    for (const Task &task : tasks) {
-        if (task.categoryId.isEmpty()) {
-            uncategorizedTasks.append(task);
-        } else if (task.subcategoryId.isEmpty()) {
-            directTasks[task.categoryId].append(task);
-        } else {
-            subcategoryTasks[task.subcategoryId].append(task);
-        }
-    }
-
-    QVariantList hierarchy;
-    int colorIndex = 0;
-    for (const Category &category : categories) {
-        QVariantList children;
-        for (const Subcategory &subcategory : category.subcategories) {
-            QVariantList taskChildren;
-            const QVector<Task> assignedTasks = subcategoryTasks.value(subcategory.id);
-            for (const Task &task : assignedTasks) {
-                taskChildren.append(makeNode(
-                    QStringLiteral("task:%1").arg(task.id),
-                    task.title,
-                    QStringLiteral("task"),
-                    taskDetail(task),
-                    colorIndex,
-                    category.id,
-                    subcategory.id));
-            }
-            const QString detail = subcategory.notes.isEmpty()
-                ? tr("%1 open %2")
-                    .arg(taskChildren.size())
-                    .arg(taskChildren.size() == 1
-                        ? tr("task") : tr("tasks"))
-                : subcategory.notes;
-            children.append(makeNode(
-                QStringLiteral("subcategory:%1").arg(subcategory.id),
-                subcategory.name,
-                QStringLiteral("subcategory"),
-                detail,
-                colorIndex,
-                category.id,
-                subcategory.id,
-                taskChildren));
-        }
-
-        const QVector<Task> categoryTasks = directTasks.value(category.id);
-        for (const Task &task : categoryTasks) {
-            children.append(makeNode(
-                QStringLiteral("task:%1").arg(task.id),
-                task.title,
-                QStringLiteral("task"),
-                taskDetail(task),
-                colorIndex,
-                category.id));
-        }
-        const QString detail = category.notes.isEmpty()
-            ? tr("%1 open %2")
-                .arg(category.taskCount)
-                .arg(category.taskCount == 1
-                    ? tr("task") : tr("tasks"))
-            : category.notes;
-        hierarchy.append(makeNode(
-            QStringLiteral("category:%1").arg(category.id),
-            category.name,
-            QStringLiteral("category"),
-            detail,
-            colorIndex,
-            category.id,
-            {},
-            children));
-        ++colorIndex;
-    }
-
-    if (!uncategorizedTasks.isEmpty()) {
-        QVariantList children;
-        for (const Task &task : uncategorizedTasks) {
-            children.append(makeNode(
-                QStringLiteral("task:%1").arg(task.id),
-                task.title,
-                QStringLiteral("task"),
-                taskDetail(task),
-                colorIndex));
-        }
-        hierarchy.append(makeNode(
-            QStringLiteral("uncategorized"),
-            tr("Uncategorized"),
-            QStringLiteral("category"),
-            tr("Tasks that have not been placed in a work area yet."),
-            colorIndex,
-            {},
-            {},
-            children));
-        ++colorIndex;
-    }
-
-    for (const Goal &goal : goals) {
-        if (goal.completed) {
-            continue;
-        }
-        QVariantList children;
-        for (const Milestone &milestone : goal.milestones) {
-            if (milestone.completed) {
-                continue;
-            }
-            children.append(makeNode(
-                QStringLiteral("milestone:%1").arg(milestone.id),
-                milestone.title,
-                QStringLiteral("milestone"),
-                targetDetail(milestone.targetDate, tr("No target date")),
-                colorIndex));
-        }
-        hierarchy.append(makeNode(
-            QStringLiteral("goal:%1").arg(goal.id),
-            goal.title,
-            QStringLiteral("goal"),
-            goal.targetDate.isValid() && !goal.description.isEmpty()
-                ? tr("%1 · %2").arg(
-                    goal.description,
-                    targetDetail(goal.targetDate, {}))
-                : targetDetail(goal.targetDate, goal.description),
-            colorIndex,
-            {},
-            {},
-            children));
-        ++colorIndex;
-    }
-
-    m_hierarchy = std::move(hierarchy);
-    m_flatNodes.clear();
-    const int branchCount = m_hierarchy.size();
-    constexpr double pi = 3.14159265358979323846;
-    const double fullCircle = 2.0 * pi;
-    const double sectorWidth = branchCount > 0
-        ? std::min(1.15, fullCircle / static_cast<double>(branchCount) * 0.78)
-        : 0.0;
-    for (int index = 0; index < branchCount; ++index) {
-        const double angle = -pi / 2.0
-            + fullCircle * static_cast<double>(index) / static_cast<double>(branchCount);
-        appendFlatNode(
-            m_hierarchy.at(index).toMap(),
-            {},
-            1,
-            index,
-            branchCount,
-            index,
-            branchCount,
-            angle,
-            sectorWidth);
-    }
-    ++m_revision;
-    emit mapChanged();
-
-    const QString error = !taskError.isEmpty() ? taskError
-        : !categoryError.isEmpty() ? categoryError : goalError;
+    QString groupError;
+    QString noteError;
+    QString connectionError;
+    m_storedGroups = m_repository.mentalMapGroups(&groupError);
+    m_storedNotes = m_repository.mentalMapNotes(&noteError);
+    m_storedConnections = m_repository.mentalMapConnections(&connectionError);
+    rebuildVariants();
+    const QString error = !groupError.isEmpty() ? groupError
+        : !noteError.isEmpty() ? noteError : connectionError;
     if (!error.isEmpty()) {
         setStatusMessage(tr("Could not load the mental map: %1").arg(error));
     }
@@ -213,100 +447,83 @@ void MentalMapModel::clearStatus()
     setStatusMessage({});
 }
 
-QVariantMap MentalMapModel::makeNode(
-    const QString &id,
-    const QString &title,
-    const QString &kind,
-    const QString &detail,
-    int colorIndex,
-    const QString &categoryId,
-    const QString &subcategoryId,
-    const QVariantList &children)
+MentalMapGroup *MentalMapModel::findGroup(const QString &groupId)
 {
-    return {
-        {QStringLiteral("nodeId"), id},
-        {QStringLiteral("title"), title},
-        {QStringLiteral("kind"), kind},
-        {QStringLiteral("detail"), detail},
-        {QStringLiteral("colorIndex"), colorIndex % 5},
-        {QStringLiteral("categoryId"), categoryId},
-        {QStringLiteral("subcategoryId"), subcategoryId},
-        {QStringLiteral("children"), children},
-        {QStringLiteral("childCount"), children.size()},
-    };
+    const auto match = std::find_if(
+        m_storedGroups.begin(), m_storedGroups.end(), [&groupId](const MentalMapGroup &group) {
+            return group.id == groupId;
+        });
+    return match == m_storedGroups.end() ? nullptr : &*match;
 }
 
-QString MentalMapModel::taskDetail(const Task &task)
+MentalMapNote *MentalMapModel::findNote(const QString &noteId)
 {
-    QString dueText = tr("No deadline");
-    if (task.dueAt.isValid()) {
-        const int days = QDate::currentDate().daysTo(task.dueAt.date());
-        if (days < 0) {
-            dueText = tr("Overdue");
-        } else if (days == 0) {
-            dueText = tr("Due today");
-        } else if (days == 1) {
-            dueText = tr("Due tomorrow");
-        } else {
-            dueText = tr("Due %1").arg(
-                QLocale().toString(task.dueAt.date(), QLocale::ShortFormat));
-        }
-    }
-    return tr("%1 · %2 min").arg(dueText).arg(task.estimatedMinutes);
+    const auto match = std::find_if(
+        m_storedNotes.begin(), m_storedNotes.end(), [&noteId](const MentalMapNote &note) {
+            return note.id == noteId;
+        });
+    return match == m_storedNotes.end() ? nullptr : &*match;
 }
 
-QString MentalMapModel::targetDetail(const QDate &targetDate, const QString &fallback)
+const MentalMapNote *MentalMapModel::findNote(const QString &noteId) const
 {
-    if (targetDate.isValid()) {
-        return tr("Target %1").arg(
-            QLocale().toString(targetDate, QLocale::ShortFormat));
-    }
-    return fallback.isEmpty() ? tr("No target date") : fallback;
+    const auto match = std::find_if(
+        m_storedNotes.cbegin(), m_storedNotes.cend(), [&noteId](const MentalMapNote &note) {
+            return note.id == noteId;
+        });
+    return match == m_storedNotes.cend() ? nullptr : &*match;
 }
 
-void MentalMapModel::appendFlatNode(
-    const QVariantMap &node,
-    const QString &parentId,
-    int depth,
-    int branchIndex,
-    int branchCount,
-    int siblingIndex,
-    int siblingCount,
-    double angle,
-    double sectorWidth)
+bool MentalMapModel::saveGroup(MentalMapGroup &group, const QString &action)
 {
-    QVariantMap flatNode = node;
-    const QVariantList children = flatNode.take(QStringLiteral("children")).toList();
-    flatNode.insert(QStringLiteral("parentId"), parentId);
-    flatNode.insert(QStringLiteral("depth"), depth);
-    flatNode.insert(QStringLiteral("branchIndex"), branchIndex);
-    flatNode.insert(QStringLiteral("branchCount"), branchCount);
-    flatNode.insert(QStringLiteral("siblingIndex"), siblingIndex);
-    flatNode.insert(QStringLiteral("siblingCount"), siblingCount);
-    flatNode.insert(QStringLiteral("angle"), angle);
-    const double radius = depth == 1 ? 0.28
-        : depth == 2 ? 0.41
-        : 0.50 + (siblingIndex % 2 == 0 ? 0.0 : 0.045);
-    flatNode.insert(QStringLiteral("radius"), radius);
-    m_flatNodes.append(flatNode);
-
-    const int childCount = children.size();
-    for (int index = 0; index < childCount; ++index) {
-        const double offset = childCount > 1
-            ? (static_cast<double>(index) - static_cast<double>(childCount - 1) / 2.0)
-                * sectorWidth / static_cast<double>(childCount - 1)
-            : 0.0;
-        appendFlatNode(
-            children.at(index).toMap(),
-            node.value(QStringLiteral("nodeId")).toString(),
-            depth + 1,
-            branchIndex,
-            branchCount,
-            index,
-            childCount,
-            angle + offset,
-            sectorWidth / std::max(2, childCount));
+    QString error;
+    if (!m_repository.updateMentalMapGroup(group, &error)) {
+        setStatusMessage(tr("Could not update the map group: %1").arg(error));
+        reload();
+        return false;
     }
+    rebuildVariants();
+    if (!action.isEmpty()) {
+        setStatusMessage(action);
+    }
+    return true;
+}
+
+bool MentalMapModel::saveNote(MentalMapNote &note, const QString &action)
+{
+    QString error;
+    if (!m_repository.updateMentalMapNote(note, &error)) {
+        setStatusMessage(tr("Could not update the idea: %1").arg(error));
+        reload();
+        return false;
+    }
+    rebuildVariants();
+    if (!action.isEmpty()) {
+        setStatusMessage(action);
+    }
+    return true;
+}
+
+void MentalMapModel::rebuildVariants()
+{
+    m_groups.clear();
+    m_notes.clear();
+    m_connections.clear();
+    for (const MentalMapGroup &group : m_storedGroups) {
+        const int noteCount = static_cast<int>(std::count_if(
+            m_storedNotes.cbegin(), m_storedNotes.cend(), [&group](const MentalMapNote &note) {
+                return note.groupId == group.id;
+            }));
+        m_groups.append(groupVariant(group, noteCount));
+    }
+    for (const MentalMapNote &note : m_storedNotes) {
+        m_notes.append(noteVariant(note));
+    }
+    for (const MentalMapConnection &connection : m_storedConnections) {
+        m_connections.append(connectionVariant(connection));
+    }
+    ++m_revision;
+    emit mapChanged();
 }
 
 void MentalMapModel::setStatusMessage(const QString &message)

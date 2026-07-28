@@ -7,6 +7,17 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-07-28
+
+### Added
+
+- A persistent infinite-style brainstorming canvas with separate cloud and
+  constellation views, movable groups and notes, rich idea metadata, checklists,
+  directed connections, and durable idea-to-task links.
+- Confirmed permanent deletion for map content, tasks, categories,
+  subcategories, goals, milestones, meetings, and day notes.
+- Portable export and merge import for brainstorming maps.
+
 ## [0.2.4] - 2026-07-28
 
 ### Added

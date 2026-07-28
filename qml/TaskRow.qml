@@ -27,6 +27,7 @@ Rectangle {
         ? categoryName + " / " + subcategoryName : categoryName
 
     signal completionRequested(int taskIndex)
+    signal deletionRequested(int taskIndex)
     signal categoryRequested(
         string taskId,
         string currentCategoryId,
@@ -192,6 +193,19 @@ Rectangle {
             primary: true
             text: qsTr("Add to Today")
             onClicked: row.planRequested(row.taskId)
+        }
+
+        AppButton {
+            Layout.preferredWidth: 34
+            implicitHeight: 32
+            leftPadding: 8
+            rightPadding: 8
+            theme: row.theme
+            quiet: true
+            text: "×"
+            ToolTip.visible: hovered
+            ToolTip.text: qsTr("Delete task")
+            onClicked: row.deletionRequested(row.index)
         }
     }
 

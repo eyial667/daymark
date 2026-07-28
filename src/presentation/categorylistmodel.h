@@ -55,6 +55,7 @@ public:
 
     Q_INVOKABLE bool addCategory(const QString &name, const QString &notes);
     Q_INVOKABLE bool updateCategory(int row, const QString &name, const QString &notes);
+    Q_INVOKABLE bool deleteCategory(int row);
     Q_INVOKABLE bool addSubcategory(
         int categoryRow,
         const QString &name,
@@ -64,6 +65,7 @@ public:
         int subcategoryRow,
         const QString &name,
         const QString &notes);
+    Q_INVOKABLE bool deleteSubcategory(int categoryRow, int subcategoryRow);
     Q_INVOKABLE QString idAt(int row) const;
     Q_INVOKABLE int indexOfId(const QString &categoryId) const;
     Q_INVOKABLE QString categoryIdForAssignment(int row) const;

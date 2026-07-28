@@ -215,6 +215,23 @@ bool CategoryListModel::updateCategory(
     return true;
 }
 
+bool CategoryListModel::deleteCategory(int row)
+{
+    if (row < 0 || row >= m_categories.size()) {
+        setStatusMessage(tr("That category is no longer in the list."));
+        return false;
+    }
+    const QString name = m_categories.at(row).name;
+    QString errorMessage;
+    if (!m_repository.deleteCategory(m_categories.at(row).id, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the category: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Category “%1” deleted. Its tasks are now uncategorized.").arg(name));
+    return true;
+}
+
 bool CategoryListModel::addSubcategory(
     int categoryRow,
     const QString &name,
@@ -292,6 +309,26 @@ bool CategoryListModel::updateSubcategory(
     }
     reload();
     setStatusMessage(tr("Subcategory updated."));
+    return true;
+}
+
+bool CategoryListModel::deleteSubcategory(int categoryRow, int subcategoryRow)
+{
+    if (categoryRow < 0 || categoryRow >= m_categories.size()
+        || subcategoryRow < 0
+        || subcategoryRow >= m_categories.at(categoryRow).subcategories.size()) {
+        setStatusMessage(tr("That subcategory is no longer in the list."));
+        return false;
+    }
+    const Subcategory &subcategory = m_categories.at(categoryRow).subcategories.at(subcategoryRow);
+    const QString name = subcategory.name;
+    QString errorMessage;
+    if (!m_repository.deleteSubcategory(subcategory.id, &errorMessage)) {
+        setStatusMessage(tr("Could not delete the subcategory: %1").arg(errorMessage));
+        return false;
+    }
+    reload();
+    setStatusMessage(tr("Subcategory “%1” deleted.").arg(name));
     return true;
 }
 

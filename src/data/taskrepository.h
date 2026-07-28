@@ -6,6 +6,7 @@
 #include "domain/dailynote.h"
 #include "domain/goal.h"
 #include "domain/meeting.h"
+#include "domain/mentalmap.h"
 #include "domain/task.h"
 
 #include <QSqlDatabase>
@@ -28,6 +29,9 @@ public:
     [[nodiscard]] QVector<Task> openTasks(QString *errorMessage = nullptr) const;
     [[nodiscard]] QVector<Task> allTasks(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addTask(const Task &task, QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteTask(
+        const QString &taskId,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool setCompleted(
         const QString &taskId,
         bool completed,
@@ -47,6 +51,9 @@ public:
     [[nodiscard]] bool saveDailyNote(
         const DailyNote &note,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteDailyNote(
+        const QDate &date,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool pruneDailyNotes(
         const QDate &oldestDate,
         QString *errorMessage = nullptr);
@@ -57,16 +64,28 @@ public:
     [[nodiscard]] bool updateCategory(
         const Category &category,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteCategory(
+        const QString &categoryId,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool addSubcategory(
         const Subcategory &subcategory,
         QString *errorMessage = nullptr);
     [[nodiscard]] bool updateSubcategory(
         const Subcategory &subcategory,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteSubcategory(
+        const QString &subcategoryId,
+        QString *errorMessage = nullptr);
     [[nodiscard]] QVector<Goal> goals(QString *errorMessage = nullptr) const;
     [[nodiscard]] bool addGoal(const Goal &goal, QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteGoal(
+        const QString &goalId,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool addMilestone(
         const Milestone &milestone,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteMilestone(
+        const QString &milestoneId,
         QString *errorMessage = nullptr);
     [[nodiscard]] bool setMilestoneCompleted(
         const QString &milestoneId,
@@ -87,11 +106,48 @@ public:
         const QString &meetingId,
         const QDateTime &notifiedAt,
         QString *errorMessage = nullptr);
+    [[nodiscard]] QVector<MentalMapGroup> mentalMapGroups(
+        QString *errorMessage = nullptr) const;
+    [[nodiscard]] QVector<MentalMapNote> mentalMapNotes(
+        QString *errorMessage = nullptr) const;
+    [[nodiscard]] QVector<MentalMapConnection> mentalMapConnections(
+        QString *errorMessage = nullptr) const;
+    [[nodiscard]] bool addMentalMapGroup(
+        const MentalMapGroup &group,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool updateMentalMapGroup(
+        const MentalMapGroup &group,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteMentalMapGroup(
+        const QString &groupId,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool addMentalMapNote(
+        const MentalMapNote &note,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool updateMentalMapNote(
+        const MentalMapNote &note,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteMentalMapNote(
+        const QString &noteId,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool addMentalMapConnection(
+        const MentalMapConnection &connection,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteMentalMapConnection(
+        const QString &connectionId,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool linkMentalMapNoteToTask(
+        const QString &noteId,
+        const QString &taskId,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool mergeImportedData(
         const QVector<Category> &categories,
         const QVector<Task> &tasks,
         const QVector<Goal> &goals,
         const QVector<Meeting> &meetings,
+        const QVector<MentalMapGroup> &mapGroups,
+        const QVector<MentalMapNote> &mapNotes,
+        const QVector<MentalMapConnection> &mapConnections,
         QString *errorMessage = nullptr);
 
 private:

@@ -232,6 +232,17 @@ private slots:
         meeting.createdAt = QDateTime::currentDateTime();
         QVERIFY2(repository.addMeeting(meeting, &error), qPrintable(error));
         QCOMPARE(repository.meetings(&error).size(), 1);
+
+        MentalMapGroup mapGroup;
+        mapGroup.id = QStringLiteral("post-migration-cloud");
+        mapGroup.kind = QStringLiteral("cloud");
+        mapGroup.title = QStringLiteral("Migrated brainstorm");
+        mapGroup.color = QStringLiteral("accent");
+        mapGroup.width = 380;
+        mapGroup.height = 280;
+        mapGroup.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addMentalMapGroup(mapGroup, &error), qPrintable(error));
+        QCOMPARE(repository.mentalMapGroups(&error).size(), 1);
     }
 
     void migratesLegacyProjectsIntoCategories()

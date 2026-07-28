@@ -23,6 +23,9 @@ ApplicationWindow {
     property int pendingCompletionIndex: -1
     property string pendingCompletionTitle: ""
     property var pendingCompletionModel: null
+    property int pendingDeletionIndex: -1
+    property string pendingDeletionTitle: ""
+    property var pendingDeletionModel: null
     property string pendingCategoryTaskId: ""
     property string pendingCategoryTitle: ""
     property string pendingCategoryId: ""
@@ -40,6 +43,13 @@ ApplicationWindow {
         pendingCompletionIndex = taskIndex
         pendingCompletionTitle = taskTitle
         completionDialog.open()
+    }
+
+    function requestTaskDeletion(model, taskIndex, taskTitle) {
+        pendingDeletionModel = model
+        pendingDeletionIndex = taskIndex
+        pendingDeletionTitle = taskTitle
+        taskDeletionDialog.open()
     }
 
     function requestTaskCategory(taskId, taskTitle, categoryId, subcategoryId) {
@@ -260,6 +270,9 @@ ApplicationWindow {
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
+                            onDeletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskDeletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
                                     taskId, taskTitle, categoryId, subcategoryId)
@@ -288,6 +301,9 @@ ApplicationWindow {
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
+                            onDeletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskDeletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
                                     taskId, taskTitle, categoryId, subcategoryId)
@@ -303,6 +319,9 @@ ApplicationWindow {
                             onMapRequested: window.currentPage = 2
                             onCompletionRequested: (taskIndex, taskTitle) =>
                                 window.requestTaskCompletion(
+                                    window.todayTaskModel, taskIndex, taskTitle)
+                            onDeletionRequested: (taskIndex, taskTitle) =>
+                                window.requestTaskDeletion(
                                     window.todayTaskModel, taskIndex, taskTitle)
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
@@ -355,6 +374,9 @@ ApplicationWindow {
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(
                             window.taskModel, taskIndex, taskTitle)
+                    onDeletionRequested: (taskIndex, taskTitle) =>
+                        window.requestTaskDeletion(
+                            window.taskModel, taskIndex, taskTitle)
                     onPlanRequested: taskId =>
                         window.taskModel.planTaskForToday(taskId)
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
@@ -397,6 +419,9 @@ ApplicationWindow {
                     onBackRequested: window.currentPage = 0
                     onCompletionRequested: (taskIndex, taskTitle) =>
                         window.requestTaskCompletion(
+                            window.todayTaskModel, taskIndex, taskTitle)
+                    onDeletionRequested: (taskIndex, taskTitle) =>
+                        window.requestTaskDeletion(
                             window.todayTaskModel, taskIndex, taskTitle)
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
@@ -621,6 +646,70 @@ ApplicationWindow {
             window.pendingCompletionIndex = -1
             window.pendingCompletionTitle = ""
             window.pendingCompletionModel = null
+        }
+    }
+
+    Dialog {
+        id: taskDeletionDialog
+
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 430
+        modal: true
+        focus: true
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            radius: interfaceTheme.radius + 3
+            color: interfaceTheme.surfaceRaised
+            border.color: interfaceTheme.danger
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 13
+            Text {
+                text: qsTr("Delete this task permanently?")
+                color: interfaceTheme.textPrimary
+                font.pixelSize: 19
+                font.weight: Font.DemiBold
+            }
+            Text {
+                Layout.fillWidth: true
+                text: qsTr("“%1” will be deleted. Linked map ideas will remain and become unlinked.")
+                    .arg(window.pendingDeletionTitle)
+                color: interfaceTheme.textSecondary
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 5
+                Item { Layout.fillWidth: true }
+                AppButton {
+                    theme: interfaceTheme
+                    quiet: true
+                    text: qsTr("Cancel")
+                    onClicked: taskDeletionDialog.close()
+                }
+                AppButton {
+                    theme: interfaceTheme
+                    primary: true
+                    text: qsTr("Delete")
+                    onClicked: {
+                        if (window.pendingDeletionModel
+                                && window.pendingDeletionModel.deleteTask(
+                                    window.pendingDeletionIndex))
+                            taskDeletionDialog.close()
+                    }
+                }
+            }
+        }
+
+        onClosed: {
+            window.pendingDeletionIndex = -1
+            window.pendingDeletionTitle = ""
+            window.pendingDeletionModel = null
         }
     }
 }

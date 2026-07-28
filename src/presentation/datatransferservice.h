@@ -36,6 +36,7 @@ public:
 
 signals:
     void statusMessageChanged();
+    void dataImported();
 
 private:
     void setStatusMessage(const QString &message);

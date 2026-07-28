@@ -13,6 +13,7 @@ Item {
     required property var theme
     signal addRequested()
     signal completionRequested(int taskIndex, string taskTitle)
+    signal deletionRequested(int taskIndex, string taskTitle)
     signal planRequested(string taskId)
     signal categoryRequested(
         string taskId,
@@ -95,6 +96,8 @@ Item {
                         showPlanAction: true
                         onCompletionRequested: rowIndex =>
                             root.completionRequested(rowIndex, taskRow.title)
+                        onDeletionRequested: rowIndex =>
+                            root.deletionRequested(rowIndex, taskRow.title)
                         onPlanRequested: taskId => root.planRequested(taskId)
                         onCategoryRequested: (taskId, categoryId, subcategoryId) =>
                             root.categoryRequested(
