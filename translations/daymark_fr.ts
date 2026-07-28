@@ -394,245 +394,273 @@
 <context>
     <name>DataTransferService</name>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="154"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="167"/>
         <source>&apos;%1&apos; must be text.</source>
         <translation>« %1 » doit être du texte.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="160"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="173"/>
         <source>&apos;%1&apos; is empty or too long.</source>
         <translation>« %1 » est vide ou trop long.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="189"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="202"/>
         <source>&apos;%1&apos; must be true or false.</source>
         <translation>« %1 » doit être vrai ou faux.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="218"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="231"/>
         <source>&apos;%1&apos; must be a number.</source>
         <translation>« %1 » doit être un nombre.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="225"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="238"/>
         <source>&apos;%1&apos; is outside the supported range.</source>
         <translation>« %1 » est hors de la plage autorisée.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="259"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="272"/>
         <source>&apos;%1&apos; must contain a date and time.</source>
         <translation>« %1 » doit contenir une date et une heure.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="268"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="281"/>
         <source>&apos;%1&apos; contains an invalid date and time.</source>
         <translation>« %1 » contient une date ou une heure invalide.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="292"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="305"/>
         <source>&apos;%1&apos; contains an invalid date.</source>
         <translation>« %1 » contient une date invalide.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="318"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="331"/>
         <source>Every task must be an object.</source>
         <translation>Chaque tâche doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="364"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="377"/>
         <source>Every subcategory must be an object.</source>
         <translation>Chaque sous-catégorie doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="397"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="410"/>
         <source>Every category must be an object.</source>
         <translation>Chaque catégorie doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="426"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="439"/>
         <source>&apos;subcategories&apos; must be a list.</source>
         <translation>« subcategories » doit être une liste.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="431"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="444"/>
         <source>The backup contains too many subcategories.</source>
         <translation>La sauvegarde contient trop de sous-catégories.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="446"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="459"/>
         <source>A category contains duplicate subcategory names.</source>
         <translation>Une catégorie contient des noms de sous-catégorie en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="462"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="475"/>
         <source>Every milestone must be an object.</source>
         <translation>Chaque étape doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="486"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="499"/>
         <source>Every goal must be an object.</source>
         <translation>Chaque objectif doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="506"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="519"/>
         <source>&apos;milestones&apos; must be a list.</source>
         <translation>« milestones » doit être une liste.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="511"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="524"/>
         <source>The backup contains too many milestones.</source>
         <translation>La sauvegarde contient trop d’étapes.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="521"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="534"/>
         <source>The backup contains a duplicate milestone ID.</source>
         <translation>La sauvegarde contient un identifiant d’étape en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="536"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="549"/>
+        <source>Every meeting must be an object.</source>
+        <translation>Chaque réunion doit être un objet.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/datatransferservice.cpp" line="584"/>
         <source>&apos;settings&apos; must be an object.</source>
         <translation>« settings » doit être un objet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="652"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="702"/>
         <source>Choose a local file for the export.</source>
         <translation>Choisissez un fichier local pour l’export.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="659"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="709"/>
         <source>Could not read tasks: %1</source>
         <translation>Impossible de lire les tâches : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="664"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="714"/>
         <source>Could not read categories: %1</source>
         <translation>Impossible de lire les catégories : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="669"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="719"/>
         <source>Could not read goals: %1</source>
         <translation>Impossible de lire les objectifs : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="704"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="724"/>
+        <source>Could not read meetings: %1</source>
+        <translation>Impossible de lire les réunions : %1</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/datatransferservice.cpp" line="764"/>
         <source>Could not create the export: %1</source>
         <translation>Impossible de créer l’export : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="709"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="769"/>
         <source>Could not finish the export: %1</source>
         <translation>Impossible de terminer l’export : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="713"/>
-        <source>Exported tasks, categories, subcategories, goals, and preferences to %1.</source>
-        <translation>Tâches, catégories, sous-catégories, objectifs et préférences exportés vers %1.</translation>
+        <location filename="../src/presentation/datatransferservice.cpp" line="773"/>
+        <source>Exported tasks, categories, subcategories, goals, meetings, and preferences to %1.</source>
+        <translation>Tâches, catégories, sous-catégories, objectifs, réunions et préférences exportés vers %1.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="722"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="999"/>
+        <source>Imported %1 tasks, %2 categories, %3 subcategories, %4 goals, and %5 meetings. Existing records were kept.</source>
+        <translation>%1 tâches, %2 catégories, %3 sous-catégories, %4 objectifs et %5 réunions importés. Les enregistrements existants ont été conservés.</translation>
+    </message>
+    <message>
+        <source>Exported tasks, categories, subcategories, goals, and preferences to %1.</source>
+        <translation type="vanished">Tâches, catégories, sous-catégories, objectifs et préférences exportés vers %1.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/datatransferservice.cpp" line="782"/>
         <source>Choose a local Daymark data file.</source>
         <translation>Choisissez un fichier de données Daymark local.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="728"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="788"/>
         <source>Could not open the import: %1</source>
         <translation>Impossible d’ouvrir l’import : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="732"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="792"/>
         <source>The selected file is too large to be a Daymark export.</source>
         <translation>Le fichier sélectionné est trop volumineux pour être un export Daymark.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="739"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="799"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>Le fichier sélectionné n’est pas un JSON valide : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="746"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="806"/>
         <source>The selected file is not a Daymark export.</source>
         <translation>Le fichier sélectionné n’est pas un export Daymark.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="751"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="811"/>
         <source>This Daymark export version is not supported.</source>
         <translation>Cette version d’export Daymark n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="760"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="822"/>
         <source>The export is missing its task or goal list.</source>
         <translation>Il manque la liste des tâches ou des objectifs dans l’export.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="771"/>
-        <location filename="../src/presentation/datatransferservice.cpp" line="823"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="836"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="890"/>
         <source>The export contains too many records.</source>
         <translation>L’export contient trop d’enregistrements.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="792"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="859"/>
         <source>Could not inspect existing categories: %1</source>
         <translation>Impossible d’examiner les catégories existantes : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="803"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="870"/>
         <source>Could not import a category: %1</source>
         <translation>Impossible d’importer une catégorie : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="808"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="875"/>
         <source>The export contains a duplicate category.</source>
         <translation>L’export contient une catégorie en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="816"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="883"/>
         <source>The export contains a duplicate subcategory ID.</source>
         <translation>L’export contient un identifiant de sous-catégorie en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="833"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="900"/>
         <source>Could not import a task: %1</source>
         <translation>Impossible d’importer une tâche : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="837"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="904"/>
         <source>The export contains a duplicate task ID.</source>
         <translation>L’export contient un identifiant de tâche en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="864"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="931"/>
         <source>A task refers to a category that is missing from the export.</source>
         <translation>Une tâche fait référence à une catégorie absente de l’export.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="871"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="938"/>
         <source>A task refers to a subcategory outside its category.</source>
         <translation>Une tâche fait référence à une sous-catégorie située hors de sa catégorie.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="882"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="949"/>
         <source>Could not import a goal: %1</source>
         <translation>Impossible d’importer un objectif : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="886"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="953"/>
         <source>The export contains a duplicate goal ID.</source>
         <translation>L’export contient un identifiant d’objectif en double.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="898"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="963"/>
+        <source>Could not import a meeting: %1</source>
+        <translation>Impossible d’importer une réunion : %1</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/datatransferservice.cpp" line="967"/>
+        <source>The export contains a duplicate meeting ID.</source>
+        <translation>L’exportation contient un identifiant de réunion en double.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/datatransferservice.cpp" line="979"/>
         <source>Could not import preferences: %1</source>
         <translation>Impossible d’importer les préférences : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="904"/>
+        <location filename="../src/presentation/datatransferservice.cpp" line="990"/>
         <source>Could not merge the imported data: %1</source>
         <translation>Impossible de fusionner les données importées : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/datatransferservice.cpp" line="912"/>
         <source>Imported %1 tasks, %2 categories, %3 subcategories, and %4 goals. Existing records were kept.</source>
-        <translation>%1 tâches, %2 catégories, %3 sous-catégories et %4 objectifs importés. Les éléments existants ont été conservés.</translation>
+        <translation type="vanished">%1 tâches, %2 catégories, %3 sous-catégories et %4 objectifs importés. Les éléments existants ont été conservés.</translation>
     </message>
 </context>
 <context>
@@ -809,6 +837,14 @@
         <location filename="../qml/DayPlanningPrompt.qml" line="285"/>
         <source>+ Add something else</source>
         <translation>+ Ajouter autre chose</translation>
+    </message>
+</context>
+<context>
+    <name>DesktopNotificationService</name>
+    <message>
+        <location filename="../src/app/desktopnotificationservice.cpp" line="20"/>
+        <source>Daymark meeting reminders</source>
+        <translation>Rappels de réunion Daymark</translation>
     </message>
 </context>
 <context>
@@ -1309,50 +1345,269 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="86"/>
+        <location filename="../qml/Main.qml" line="87"/>
         <source>Daymark — %1</source>
         <translation>Daymark — %1</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="327"/>
+        <location filename="../qml/Main.qml" line="336"/>
         <source>✎  Day note</source>
         <translation>✎  Note du jour</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="477"/>
+        <location filename="../qml/Main.qml" line="493"/>
         <source>Assign a category</source>
         <translation>Associer une catégorie</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="492"/>
+        <location filename="../qml/Main.qml" line="508"/>
         <source>No category</source>
         <translation>Aucune catégorie</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="501"/>
+        <location filename="../qml/Main.qml" line="517"/>
         <source>Manage categories</source>
         <translation>Gérer les catégories</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="511"/>
-        <location filename="../qml/Main.qml" line="587"/>
+        <location filename="../qml/Main.qml" line="527"/>
+        <location filename="../qml/Main.qml" line="603"/>
         <source>Cancel</source>
         <translation>Annuler</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="517"/>
+        <location filename="../qml/Main.qml" line="533"/>
         <source>Save</source>
         <translation>Enregistrer</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="567"/>
+        <location filename="../qml/Main.qml" line="583"/>
         <source>Complete this task?</source>
         <translation>Terminer cette tâche ?</translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="593"/>
+        <location filename="../qml/Main.qml" line="609"/>
         <source>Mark complete</source>
         <translation>Marquer comme terminée</translation>
+    </message>
+</context>
+<context>
+    <name>MeetingListModel</name>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="82"/>
+        <source>No meetings scheduled</source>
+        <translation>Aucune réunion planifiée</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="87"/>
+        <source>Your calendar is clear</source>
+        <translation>Votre calendrier est libre</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="104"/>
+        <source>A meeting needs a title.</source>
+        <translation>Une réunion doit avoir un titre.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="110"/>
+        <source>Use YYYY-MM-DD for the meeting date.</source>
+        <translation>Utilisez AAAA-MM-JJ pour la date de la réunion.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="116"/>
+        <source>Use HH:MM for the meeting time.</source>
+        <translation>Utilisez HH:MM pour l’heure de la réunion.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="122"/>
+        <source>Choose a meeting time in the future.</source>
+        <translation>Choisissez une heure de réunion future.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="135"/>
+        <source>Could not save the meeting: %1</source>
+        <translation>Impossible d’enregistrer la réunion : %1</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="142"/>
+        <source>Meeting added. Its reminder will be sent now.</source>
+        <translation>Réunion ajoutée. Son rappel va être envoyé maintenant.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="143"/>
+        <source>Meeting added. A local reminder is scheduled for 10 minutes before it starts.</source>
+        <translation>Réunion ajoutée. Un rappel local est prévu 10 minutes avant son début.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="150"/>
+        <source>That meeting is no longer in the list.</source>
+        <translation>Cette réunion ne figure plus dans la liste.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="157"/>
+        <source>Could not remove the meeting: %1</source>
+        <translation>Impossible de supprimer la réunion : %1</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="163"/>
+        <source>Removed “%1”.</source>
+        <translation>« %1 » supprimé.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="191"/>
+        <source>Could not load meetings: %1</source>
+        <translation>Impossible de charger les réunions : %1</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="211"/>
+        <source>%1 at %2</source>
+        <translation>%1 à %2</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="217"/>
+        <source>Reminder sent</source>
+        <translation>Rappel envoyé</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="221"/>
+        <source>Reminder due now</source>
+        <translation>Rappel à envoyer maintenant</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetinglistmodel.cpp" line="227"/>
+        <source>Reminder at %1</source>
+        <translation>Rappel à %1</translation>
+    </message>
+</context>
+<context>
+    <name>MeetingReminderService</name>
+    <message>
+        <location filename="../src/presentation/meetingreminderservice.cpp" line="47"/>
+        <source>%1 starts at %2.</source>
+        <translation>%1 commence à %2.</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetingreminderservice.cpp" line="48"/>
+        <source>%1 starts at %2.
+%3</source>
+        <translation>%1 commence à %2.
+%3</translation>
+    </message>
+    <message>
+        <location filename="../src/presentation/meetingreminderservice.cpp" line="49"/>
+        <source>Meeting reminder</source>
+        <translation>Rappel de réunion</translation>
+    </message>
+</context>
+<context>
+    <name>MeetingsView</name>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="57"/>
+        <source>Meetings</source>
+        <translation>Réunions</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="65"/>
+        <source>Schedule commitments and receive a local notification 10 minutes before they begin.</source>
+        <translation>Planifiez vos engagements et recevez une notification locale 10 minutes avant leur début.</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="75"/>
+        <source>+  Add meeting</source>
+        <translation>+  Ajouter une réunion</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="88"/>
+        <source>UPCOMING</source>
+        <translation>À VENIR</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="106"/>
+        <source>NEXT MEETING</source>
+        <translation>PROCHAINE RÉUNION</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="178"/>
+        <location filename="../qml/MeetingsView.qml" line="239"/>
+        <source>◷</source>
+        <translation>◷</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="186"/>
+        <source>No upcoming meetings</source>
+        <translation>Aucune réunion à venir</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="195"/>
+        <source>Add a dated meeting and Daymark will remind you locally 10 minutes before it starts while the app is running.</source>
+        <translation>Ajoutez une réunion datée et Daymark vous enverra un rappel local 10 minutes avant son début lorsque l’application fonctionne.</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="285"/>
+        <location filename="../qml/MeetingsView.qml" line="480"/>
+        <source>Remove</source>
+        <translation>Supprimer</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="320"/>
+        <source>Add a meeting</source>
+        <translation>Ajouter une réunion</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="327"/>
+        <source>TITLE</source>
+        <translation>TITRE</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="335"/>
+        <source>Meeting title</source>
+        <translation>Titre de la réunion</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="348"/>
+        <source>DATE</source>
+        <translation>DATE</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="365"/>
+        <source>TIME</source>
+        <translation>HEURE</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="373"/>
+        <source>HH:MM</source>
+        <translation>HH:MM</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="382"/>
+        <source>NOTES</source>
+        <translation>NOTES</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="391"/>
+        <source>Optional location, call link, or context</source>
+        <translation>Lieu, lien d’appel ou contexte facultatif</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="398"/>
+        <source>Daymark sends one local reminder 10 minutes before the start time. Keep the app running to receive it.</source>
+        <translation>Daymark envoie un rappel local 10 minutes avant l’heure de début. Laissez l’application fonctionner pour le recevoir.</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="412"/>
+        <location filename="../qml/MeetingsView.qml" line="474"/>
+        <source>Cancel</source>
+        <translation>Annuler</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="418"/>
+        <source>Add meeting</source>
+        <translation>Ajouter la réunion</translation>
+    </message>
+    <message>
+        <location filename="../qml/MeetingsView.qml" line="456"/>
+        <source>Remove this meeting?</source>
+        <translation>Supprimer cette réunion ?</translation>
     </message>
 </context>
 <context>
@@ -2310,71 +2565,76 @@
     </message>
     <message>
         <location filename="../qml/Sidebar.qml" line="65"/>
+        <source>Meetings</source>
+        <translation>Réunions</translation>
+    </message>
+    <message>
+        <location filename="../qml/Sidebar.qml" line="66"/>
         <source>Settings</source>
         <translation>Paramètres</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="125"/>
+        <location filename="../qml/Sidebar.qml" line="126"/>
         <source>+  Add task</source>
         <translation>+  Ajouter une tâche</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="138"/>
+        <location filename="../qml/Sidebar.qml" line="139"/>
         <source>INTERFACE</source>
         <translation>INTERFACE</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="151"/>
+        <location filename="../qml/Sidebar.qml" line="152"/>
         <source>A · Midnight Command</source>
         <translation>A · Commande de minuit</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="152"/>
+        <location filename="../qml/Sidebar.qml" line="153"/>
         <source>B · Spatial Map</source>
         <translation>B · Carte spatiale</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="153"/>
+        <location filename="../qml/Sidebar.qml" line="154"/>
         <source>C · Quiet Focus</source>
         <translation>C · Concentration calme</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="154"/>
+        <location filename="../qml/Sidebar.qml" line="155"/>
         <source>D · Daymark Hybrid</source>
         <translation>D · Hybride Daymark</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="184"/>
+        <location filename="../qml/Sidebar.qml" line="185"/>
         <source>English</source>
         <translation>Anglais</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="184"/>
+        <location filename="../qml/Sidebar.qml" line="185"/>
         <source>Français</source>
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="186"/>
+        <location filename="../qml/Sidebar.qml" line="187"/>
         <source>Language</source>
         <translation>Langue</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="187"/>
+        <location filename="../qml/Sidebar.qml" line="188"/>
         <source>Application language</source>
         <translation>Langue de l’application</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="216"/>
+        <location filename="../qml/Sidebar.qml" line="217"/>
         <source> · Local-first</source>
         <translation> · Local avant tout</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="230"/>
+        <location filename="../qml/Sidebar.qml" line="231"/>
         <source>Switch to light mode</source>
         <translation>Passer au mode clair</translation>
     </message>
     <message>
-        <location filename="../qml/Sidebar.qml" line="231"/>
+        <location filename="../qml/Sidebar.qml" line="232"/>
         <source>Switch to dark mode</source>
         <translation>Passer au mode sombre</translation>
     </message>
@@ -2481,133 +2741,136 @@
     <name>TaskListModel</name>
     <message>
         <location filename="../src/presentation/tasklistmodel.cpp" line="49"/>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="342"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="369"/>
         <source> · </source>
         <translation> · </translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="107"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="110"/>
         <source>%1h %2m</source>
         <translation>%1 h %2 min</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="117"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="120"/>
         <source>Nothing queued</source>
         <translation>Aucune tâche en file</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="166"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="169"/>
         <source>A task needs a title.</source>
         <translation>Une tâche doit avoir un titre.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="174"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="177"/>
         <source>Use YYYY-MM-DD for the due date.</source>
         <translation>Utilisez AAAA-MM-JJ pour l’échéance.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="193"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="196"/>
         <source>Could not save the task: %1</source>
         <translation>Impossible d’enregistrer la tâche : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="200"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="203"/>
         <source>Task added to Today.</source>
         <translation>Tâche ajoutée à Aujourd’hui.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="202"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="205"/>
         <source>Task added to To-do and shown in Today because its deadline has arrived.</source>
         <translation>Tâche ajoutée aux tâches et affichée dans Aujourd’hui car son échéance est arrivée.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="205"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="208"/>
         <source>Task added to To-do.</source>
         <translation>Tâche ajoutée à la liste.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="220"/>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="244"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="223"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="247"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="270"/>
         <source>That task is no longer in the list.</source>
         <translation>Cette tâche n’est plus dans la liste.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="230"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="233"/>
         <source>Could not assign the category: %1</source>
         <translation>Impossible d’associer la catégorie : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="236"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="239"/>
         <source>Category removed from task.</source>
         <translation>Catégorie retirée de la tâche.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="237"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="240"/>
         <source>Task category updated.</source>
         <translation>Catégorie de la tâche mise à jour.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="250"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="253"/>
         <source>Could not complete the task: %1</source>
         <translation>Impossible de terminer la tâche : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="256"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="259"/>
         <source>Task completed.</source>
         <translation>Tâche terminée.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="263"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="290"/>
         <source>There is no To-do task available to plan.</source>
         <translation>Aucune tâche disponible à planifier.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="273"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="277"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="300"/>
         <source>Could not plan the task: %1</source>
         <translation>Impossible de planifier la tâche : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="279"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="283"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="306"/>
         <source>Added “%1” to Today.</source>
         <translation>« %1 » ajouté à Aujourd’hui.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="339"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="366"/>
         <source>%1 · %2</source>
         <translation>%1 · %2</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="356"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="383"/>
         <source>Could not load tasks: %1</source>
         <translation>Impossible de charger les tâches : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="358"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="385"/>
         <source>Could not load completed tasks: %1</source>
         <translation>Impossible de charger les tâches terminées : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="380"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="407"/>
         <source>No deadline</source>
         <translation>Aucune échéance</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="386"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="413"/>
         <source>Overdue · %1</source>
         <translation>En retard · %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="390"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="417"/>
         <source>Due today</source>
         <translation>Échéance aujourd’hui</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="393"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="420"/>
         <source>Due tomorrow</source>
         <translation>Échéance demain</translation>
     </message>
     <message>
-        <location filename="../src/presentation/tasklistmodel.cpp" line="396"/>
+        <location filename="../src/presentation/tasklistmodel.cpp" line="423"/>
         <source>Due %1</source>
         <translation>Échéance : %1</translation>
     </message>
@@ -2615,32 +2878,32 @@
 <context>
     <name>TaskRow</name>
     <message>
-        <location filename="../qml/TaskRow.qml" line="59"/>
+        <location filename="../qml/TaskRow.qml" line="62"/>
         <source>✓</source>
         <translation>✓</translation>
     </message>
     <message>
-        <location filename="../qml/TaskRow.qml" line="121"/>
+        <location filename="../qml/TaskRow.qml" line="124"/>
         <source>Overdue</source>
         <translation>En retard</translation>
     </message>
     <message>
-        <location filename="../qml/TaskRow.qml" line="138"/>
+        <location filename="../qml/TaskRow.qml" line="141"/>
         <source>%1 min</source>
         <translation>%1 min</translation>
     </message>
     <message>
-        <location filename="../qml/TaskRow.qml" line="153"/>
+        <location filename="../qml/TaskRow.qml" line="156"/>
         <source>Uncategorized</source>
         <translation>Sans catégorie</translation>
     </message>
     <message>
-        <location filename="../qml/TaskRow.qml" line="173"/>
+        <location filename="../qml/TaskRow.qml" line="176"/>
         <source>Change category</source>
         <translation>Changer de catégorie</translation>
     </message>
     <message>
-        <location filename="../qml/TaskRow.qml" line="199"/>
+        <location filename="../qml/TaskRow.qml" line="193"/>
         <source>Add to Today</source>
         <translation>Ajouter à Aujourd’hui</translation>
     </message>
@@ -2671,22 +2934,22 @@
 <context>
     <name>TodoListView</name>
     <message>
-        <location filename="../qml/TodoListView.qml" line="33"/>
+        <location filename="../qml/TodoListView.qml" line="34"/>
         <source>To-do</source>
         <translation>Tâches</translation>
     </message>
     <message>
-        <location filename="../qml/TodoListView.qml" line="39"/>
+        <location filename="../qml/TodoListView.qml" line="40"/>
         <source>Every open task, kept in priority order.</source>
         <translation>Toutes les tâches ouvertes, classées par priorité.</translation>
     </message>
     <message>
-        <location filename="../qml/TodoListView.qml" line="55"/>
+        <location filename="../qml/TodoListView.qml" line="56"/>
         <source>%1 open · %2</source>
         <translation>%1 ouvertes · %2</translation>
     </message>
     <message>
-        <location filename="../qml/TodoListView.qml" line="66"/>
+        <location filename="../qml/TodoListView.qml" line="67"/>
         <source>+ Add task</source>
         <translation>+ Ajouter une tâche</translation>
     </message>
@@ -2742,215 +3005,215 @@
 <context>
     <name>UpdateService</name>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="103"/>
+        <location filename="../src/presentation/updateservice.cpp" line="116"/>
         <source>Open installation wizard</source>
         <translation>Ouvrir l’assistant d’installation</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="105"/>
+        <location filename="../src/presentation/updateservice.cpp" line="118"/>
         <source>Open disk image</source>
         <translation>Ouvrir l’image disque</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="107"/>
+        <location filename="../src/presentation/updateservice.cpp" line="120"/>
         <source>Install and close Daymark</source>
         <translation>Installer et fermer Daymark</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="114"/>
+        <location filename="../src/presentation/updateservice.cpp" line="127"/>
         <source>The native setup wizard will open and Daymark will close.</source>
         <translation>L’assistant d’installation natif va s’ouvrir et Daymark va se fermer.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="116"/>
+        <location filename="../src/presentation/updateservice.cpp" line="129"/>
         <source>The disk image will open. Replace Daymark in Applications, then relaunch it.</source>
         <translation>L’image disque va s’ouvrir. Remplacez Daymark dans Applications, puis relancez-le.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="118"/>
+        <location filename="../src/presentation/updateservice.cpp" line="131"/>
         <source>The per-user installer will run and Daymark will close. Reopen it when installation finishes.</source>
         <translation>L’installateur utilisateur va s’exécuter et Daymark va se fermer. Rouvrez-le après l’installation.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="175"/>
-        <location filename="../src/presentation/updateservice.cpp" line="415"/>
+        <location filename="../src/presentation/updateservice.cpp" line="188"/>
+        <location filename="../src/presentation/updateservice.cpp" line="429"/>
         <source>Checking GitHub for updates…</source>
         <translation>Recherche de mises à jour sur GitHub…</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="202"/>
+        <location filename="../src/presentation/updateservice.cpp" line="214"/>
         <source>The latest Daymark release does not provide update metadata.</source>
         <translation>La dernière version de Daymark ne fournit pas de métadonnées de mise à jour.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="203"/>
+        <location filename="../src/presentation/updateservice.cpp" line="215"/>
         <source>The update check could not reach GitHub: %1</source>
         <translation>La vérification n’a pas pu joindre GitHub : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="212"/>
+        <location filename="../src/presentation/updateservice.cpp" line="222"/>
         <source>The release check was redirected outside GitHub.</source>
         <translation>La vérification a été redirigée hors de GitHub.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="229"/>
-        <location filename="../src/presentation/updateservice.cpp" line="418"/>
+        <location filename="../src/presentation/updateservice.cpp" line="243"/>
+        <location filename="../src/presentation/updateservice.cpp" line="432"/>
         <source>Daymark %1 is up to date.</source>
         <translation>Daymark %1 est à jour.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="234"/>
-        <location filename="../src/presentation/updateservice.cpp" line="421"/>
+        <location filename="../src/presentation/updateservice.cpp" line="248"/>
+        <location filename="../src/presentation/updateservice.cpp" line="435"/>
         <source>Daymark %1 is ready to download.</source>
         <translation>Daymark %1 est prêt à être téléchargé.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="245"/>
+        <location filename="../src/presentation/updateservice.cpp" line="259"/>
         <source>GitHub returned an untrusted update address.</source>
         <translation>GitHub a renvoyé une adresse de mise à jour non fiable.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="251"/>
+        <location filename="../src/presentation/updateservice.cpp" line="265"/>
         <source>Daymark could not create its update cache.</source>
         <translation>Daymark n’a pas pu créer son cache de mise à jour.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="258"/>
+        <location filename="../src/presentation/updateservice.cpp" line="272"/>
         <source>Daymark could not write the downloaded update.</source>
         <translation>Daymark n’a pas pu écrire la mise à jour téléchargée.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="268"/>
-        <location filename="../src/presentation/updateservice.cpp" line="424"/>
+        <location filename="../src/presentation/updateservice.cpp" line="282"/>
+        <location filename="../src/presentation/updateservice.cpp" line="438"/>
         <source>Downloading Daymark %1…</source>
         <translation>Téléchargement de Daymark %1…</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="328"/>
+        <location filename="../src/presentation/updateservice.cpp" line="342"/>
         <source>Update download canceled.</source>
         <translation>Téléchargement annulé.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="336"/>
+        <location filename="../src/presentation/updateservice.cpp" line="350"/>
         <source>The update download failed: %1</source>
         <translation>Le téléchargement a échoué : %1</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="342"/>
+        <location filename="../src/presentation/updateservice.cpp" line="356"/>
         <source>The update was redirected outside GitHub.</source>
         <translation>La mise à jour a été redirigée hors de GitHub.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="349"/>
+        <location filename="../src/presentation/updateservice.cpp" line="363"/>
         <source>The downloaded package was incomplete.</source>
         <translation>Le paquet téléchargé était incomplet.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="357"/>
+        <location filename="../src/presentation/updateservice.cpp" line="371"/>
         <source>The downloaded package could not be verified.</source>
         <translation>Le paquet téléchargé n’a pas pu être vérifié.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="365"/>
+        <location filename="../src/presentation/updateservice.cpp" line="379"/>
         <source>The update failed its GitHub SHA-256 integrity check.</source>
         <translation>La mise à jour a échoué au contrôle d’intégrité SHA-256 de GitHub.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="372"/>
-        <location filename="../src/presentation/updateservice.cpp" line="427"/>
+        <location filename="../src/presentation/updateservice.cpp" line="386"/>
+        <location filename="../src/presentation/updateservice.cpp" line="441"/>
         <source>Daymark %1 was downloaded and verified.</source>
         <translation>Daymark %1 a été téléchargé et vérifié.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="392"/>
+        <location filename="../src/presentation/updateservice.cpp" line="406"/>
         <source>The Windows installation wizard could not be opened.</source>
         <translation>L’assistant d’installation Windows n’a pas pu être ouvert.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="396"/>
+        <location filename="../src/presentation/updateservice.cpp" line="410"/>
         <source>The installation wizard is open.</source>
         <translation>L’assistant d’installation est ouvert.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="400"/>
+        <location filename="../src/presentation/updateservice.cpp" line="414"/>
         <source>The macOS disk image could not be opened.</source>
         <translation>L’image disque macOS n’a pas pu être ouverte.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="404"/>
+        <location filename="../src/presentation/updateservice.cpp" line="418"/>
         <source>The disk image is open. Replace Daymark in Applications.</source>
         <translation>L’image disque est ouverte. Remplacez Daymark dans Applications.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="440"/>
+        <location filename="../src/presentation/updateservice.cpp" line="454"/>
         <source>The Linux updater needs the ‘tar’ command to install this package.</source>
         <translation>Le programme de mise à jour Linux nécessite la commande « tar ».</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="448"/>
+        <location filename="../src/presentation/updateservice.cpp" line="462"/>
         <source>The previous update staging folder could not be cleared.</source>
         <translation>L’ancien dossier de préparation n’a pas pu être vidé.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="452"/>
+        <location filename="../src/presentation/updateservice.cpp" line="466"/>
         <source>The update staging folder could not be created.</source>
         <translation>Le dossier de préparation n’a pas pu être créé.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="478"/>
-        <location filename="../src/presentation/updateservice.cpp" line="510"/>
+        <location filename="../src/presentation/updateservice.cpp" line="492"/>
+        <location filename="../src/presentation/updateservice.cpp" line="524"/>
         <source>The Linux update package could not be extracted.</source>
         <translation>Le paquet Linux n’a pas pu être extrait.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="489"/>
+        <location filename="../src/presentation/updateservice.cpp" line="503"/>
         <source>The Linux update package did not contain a valid installer.</source>
         <translation>Le paquet Linux ne contenait pas d’installateur valide.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="493"/>
+        <location filename="../src/presentation/updateservice.cpp" line="507"/>
         <source>The Linux installer could not be started.</source>
         <translation>L’installateur Linux n’a pas pu démarrer.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="496"/>
+        <location filename="../src/presentation/updateservice.cpp" line="510"/>
         <source>The local installer is running.</source>
         <translation>L’installateur local est en cours d’exécution.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="514"/>
+        <location filename="../src/presentation/updateservice.cpp" line="528"/>
         <source>Preparing the verified Linux update…</source>
         <translation>Préparation de la mise à jour Linux vérifiée…</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="533"/>
+        <location filename="../src/presentation/updateservice.cpp" line="231"/>
+        <location filename="../src/presentation/updateservice.cpp" line="547"/>
+        <location filename="../src/presentation/updateservice.cpp" line="558"/>
         <source>GitHub returned invalid release metadata.</source>
         <translation>GitHub a renvoyé des métadonnées de version invalides.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="544"/>
         <source>GitHub returned an unpublished Daymark release.</source>
-        <translation>GitHub a renvoyé une version Daymark non publiée.</translation>
+        <translation type="vanished">GitHub a renvoyé une version Daymark non publiée.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="555"/>
+        <location filename="../src/presentation/updateservice.cpp" line="570"/>
         <source>The installed or published Daymark version is invalid.</source>
         <translation>La version Daymark installée ou publiée est invalide.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="572"/>
+        <location filename="../src/presentation/updateservice.cpp" line="587"/>
         <source>This operating system does not have a Daymark updater package.</source>
         <translation>Ce système ne dispose pas d’un paquet de mise à jour Daymark.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="596"/>
+        <location filename="../src/presentation/updateservice.cpp" line="606"/>
         <source>The matching GitHub package has invalid integrity metadata.</source>
         <translation>Le paquet GitHub correspondant possède des métadonnées d’intégrité invalides.</translation>
     </message>
     <message>
-        <location filename="../src/presentation/updateservice.cpp" line="606"/>
         <source>GitHub does not contain a %1 update package for this release.</source>
-        <translation>GitHub ne contient pas de paquet de mise à jour %1 pour cette version.</translation>
+        <translation type="vanished">GitHub ne contient pas de paquet de mise à jour %1 pour cette version.</translation>
     </message>
 </context>
 </TS>

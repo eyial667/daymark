@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include "app/desktopnotificationservice.h"
 #include "data/taskrepository.h"
 #include "presentation/appsettings.h"
 #include "presentation/categorylistmodel.h"
@@ -9,10 +10,12 @@
 #include "presentation/goallistmodel.h"
 #include "presentation/languagemanager.h"
 #include "presentation/mentalmapmodel.h"
+#include "presentation/meetinglistmodel.h"
+#include "presentation/meetingreminderservice.h"
 #include "presentation/tasklistmodel.h"
 #include "presentation/updateservice.h"
 
-#include <QGuiApplication>
+#include <QApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
@@ -23,14 +26,15 @@
 int main(int argc, char *argv[])
 {
     QQuickStyle::setStyle(QStringLiteral("Basic"));
-    QGuiApplication application(argc, argv);
+    QApplication application(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("Daymark"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("daymark.org"));
     QCoreApplication::setApplicationName(QStringLiteral("Daymark"));
     QCoreApplication::setApplicationVersion(QString::fromLatin1(DAYMARK_VERSION));
     application.setDesktopFileName(QStringLiteral("org.daymark.dashboard"));
-    application.setWindowIcon(
-        QIcon(QStringLiteral(":/assets/icons/org.daymark.dashboard.svg")));
+    const QIcon applicationIcon(
+        QStringLiteral(":/assets/icons/org.daymark.dashboard.svg"));
+    application.setWindowIcon(applicationIcon);
 
     const QString dataDirectory =
         QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
@@ -52,6 +56,9 @@ int main(int argc, char *argv[])
     TaskListModel todayTaskModel(repository, TaskListModel::Today);
     CategoryListModel categoryModel(repository);
     GoalListModel goalModel(repository);
+    MeetingListModel meetingModel(repository, appSettings);
+    MeetingReminderService meetingReminderService(repository);
+    DesktopNotificationService notificationService(applicationIcon);
     MentalMapModel mentalMapModel(repository);
     DailyNoteModel dailyNoteModel(repository);
     FocusSessionModel focusSession;
@@ -60,6 +67,7 @@ int main(int argc, char *argv[])
         taskModel,
         categoryModel,
         goalModel,
+        meetingModel,
         appSettings);
     UpdateService updateService;
 
@@ -96,6 +104,22 @@ int main(int argc, char *argv[])
         &TaskListModel::reload);
 
     QObject::connect(
+        &meetingModel,
+        &MeetingListModel::meetingsChanged,
+        &meetingReminderService,
+        &MeetingReminderService::refresh);
+    QObject::connect(
+        &meetingReminderService,
+        &MeetingReminderService::remindersChanged,
+        &meetingModel,
+        &MeetingListModel::reload);
+    QObject::connect(
+        &meetingReminderService,
+        &MeetingReminderService::notificationRequested,
+        &notificationService,
+        &DesktopNotificationService::showNotification);
+
+    QObject::connect(
         &categoryModel,
         &CategoryListModel::categoriesChanged,
         &taskModel,
@@ -128,6 +152,11 @@ int main(int argc, char *argv[])
         &QTimer::timeout,
         &dailyNoteModel,
         &DailyNoteModel::refreshDay);
+    QObject::connect(
+        &dayBoundaryRefresh,
+        &QTimer::timeout,
+        &meetingModel,
+        &MeetingListModel::reload);
     dayBoundaryRefresh.start();
 
     QObject::connect(
@@ -151,6 +180,7 @@ int main(int argc, char *argv[])
             todayTaskModel.reload();
             categoryModel.reload();
             goalModel.reload();
+            meetingModel.reload();
             mentalMapModel.reload();
             dailyNoteModel.refreshDay();
             updateService.retranslate();
@@ -160,6 +190,7 @@ int main(int argc, char *argv[])
         {QStringLiteral("todayTaskModel"), QVariant::fromValue(&todayTaskModel)},
         {QStringLiteral("categoryModel"), QVariant::fromValue(&categoryModel)},
         {QStringLiteral("goalModel"), QVariant::fromValue(&goalModel)},
+        {QStringLiteral("meetingModel"), QVariant::fromValue(&meetingModel)},
         {QStringLiteral("mentalMapModel"), QVariant::fromValue(&mentalMapModel)},
         {QStringLiteral("dailyNoteModel"), QVariant::fromValue(&dailyNoteModel)},
         {QStringLiteral("focusSession"), QVariant::fromValue(&focusSession)},
@@ -174,6 +205,8 @@ int main(int argc, char *argv[])
         [] { QCoreApplication::exit(EXIT_FAILURE); },
         Qt::QueuedConnection);
     engine.loadFromModule(QStringLiteral("Daymark"), QStringLiteral("Main"));
+
+    meetingReminderService.start();
 
     QTimer::singleShot(1200, &updateService, [&updateService] {
         updateService.checkForUpdates();

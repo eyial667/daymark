@@ -62,6 +62,7 @@ Rectangle {
                 { name: qsTr("Goals"), glyph: "◇" },
                 { name: qsTr("Focus"), glyph: "◎" },
                 { name: qsTr("Review"), glyph: "✓" },
+                { name: qsTr("Meetings"), glyph: "◷" },
                 { name: qsTr("Settings"), glyph: "⚙" }
             ]
 

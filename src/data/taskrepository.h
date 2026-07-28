@@ -5,6 +5,7 @@
 #include "domain/category.h"
 #include "domain/dailynote.h"
 #include "domain/goal.h"
+#include "domain/meeting.h"
 #include "domain/task.h"
 
 #include <QSqlDatabase>
@@ -75,10 +76,22 @@ public:
         const QString &goalId,
         bool completed,
         QString *errorMessage = nullptr);
+    [[nodiscard]] QVector<Meeting> meetings(QString *errorMessage = nullptr) const;
+    [[nodiscard]] bool addMeeting(
+        const Meeting &meeting,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool deleteMeeting(
+        const QString &meetingId,
+        QString *errorMessage = nullptr);
+    [[nodiscard]] bool markMeetingNotified(
+        const QString &meetingId,
+        const QDateTime &notifiedAt,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool mergeImportedData(
         const QVector<Category> &categories,
         const QVector<Task> &tasks,
         const QVector<Goal> &goals,
+        const QVector<Meeting> &meetings,
         QString *errorMessage = nullptr);
 
 private:

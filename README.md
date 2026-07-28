@@ -40,11 +40,13 @@ embedded webview, Node.js, or a local web server.
   completion confirmation from a native Settings page.
 - Create long-term goals, break them into dated milestones, track their progress,
   and keep achieved goals in local history.
+- Add dated meetings with an exact start time and receive one native local
+  notification 10 minutes before each meeting while Daymark is running.
 - Choose task, goal, and milestone dates from a calendar or enter them manually
   as `YYYY-MM-DD`.
 - Export tasks, completed history, categories, subcategories and their notes,
-  goals, milestones, and preferences to a portable `.daymark.json` file, then
-  merge it safely on another computer.
+  goals, milestones, meetings, and preferences to a portable `.daymark.json`
+  file, then merge it safely on another computer.
 - Open the local application-data folder directly from Settings.
 - Check the official GitHub Releases feed after launch, offer newer native
   packages, and verify the release manifest's SHA-256 digest before installation.
@@ -133,7 +135,8 @@ shown in a newer artifact when it changes.
 - A C++20 compiler
 - CMake 3.21 or newer
 - Ninja
-- Qt 6.5 or newer with Core, GUI, Network, Quick, Quick Controls, SQL, and Test modules
+- Qt 6.5 or newer with Core, GUI, Widgets, Network, Quick, Quick Controls, SQL,
+  and Test modules, plus D-Bus on Linux
 - The Qt SQLite driver
 
 ### Fedora
@@ -216,6 +219,13 @@ only and prunes older day notes automatically. These intentionally ephemeral
 notes are not included in portable exports.
 
 Use **Focus** to select a Today task and start, pause, or reset its countdown.
+
+Use **Meetings** to add a title, date, `HH:MM` start time, and optional notes.
+Daymark stores the meeting locally and sends one operating-system notification
+10 minutes before it begins. If a meeting is added with less than 10 minutes to
+go, its reminder is sent immediately. Daymark must be running at reminder time;
+meetings and reminder state remain available after restarts and are included in
+portable exports.
 
 On launch, Daymark makes one HTTPS request for the current platform's public
 GitHub Release manifest. This request contains the app version and the normal

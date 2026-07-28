@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
     Daymark
-    VERSION 0.2.3
+    VERSION 0.2.4
     DESCRIPTION "A local-first daily command center"
     LANGUAGES CXX
 )
@@ -13,7 +13,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui LinguistTools Network Quick QuickControls2 Sql)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui LinguistTools Network Quick QuickControls2 Sql Widgets)
+if(UNIX AND NOT APPLE)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS DBus)
+endif()
 
 qt_standard_project_setup(REQUIRES 6.5)
 
@@ -31,6 +34,7 @@ add_library(daymark_core STATIC
     src/domain/category.h
     src/domain/dailynote.h
     src/domain/goal.h
+    src/domain/meeting.h
     src/domain/task.h
     src/presentation/appsettings.cpp
     src/presentation/appsettings.h
@@ -48,6 +52,10 @@ add_library(daymark_core STATIC
     src/presentation/languagemanager.h
     src/presentation/mentalmapmodel.cpp
     src/presentation/mentalmapmodel.h
+    src/presentation/meetinglistmodel.cpp
+    src/presentation/meetinglistmodel.h
+    src/presentation/meetingreminderservice.cpp
+    src/presentation/meetingreminderservice.h
     src/presentation/tasklistmodel.cpp
     src/presentation/tasklistmodel.h
     src/presentation/updateservice.cpp
@@ -64,6 +72,8 @@ else()
 endif()
 
 qt_add_executable(daymark
+    src/app/desktopnotificationservice.cpp
+    src/app/desktopnotificationservice.h
     src/app/main.cpp
 )
 
@@ -89,6 +99,7 @@ qt_add_qml_module(daymark
         qml/MetricCard.qml
         qml/MentalMapClouds.qml
         qml/MentalMapConstellation.qml
+        qml/MeetingsView.qml
         qml/MidnightCommandView.qml
         qml/QuickAddDialog.qml
         qml/QuietFocusView.qml
@@ -107,7 +118,12 @@ target_link_libraries(daymark PRIVATE
     Qt6::Gui
     Qt6::Quick
     Qt6::QuickControls2
+    Qt6::Widgets
 )
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(daymark PRIVATE Qt6::DBus)
+endif()
 
 target_compile_definitions(daymark PRIVATE DAYMARK_VERSION="${PROJECT_VERSION}")
 
@@ -198,6 +214,14 @@ if(BUILD_TESTING)
     qt_add_executable(mentalmapmodel_tests tests/mentalmapmodel_test.cpp)
     target_link_libraries(mentalmapmodel_tests PRIVATE daymark_core Qt6::Test)
     add_test(NAME mentalmapmodel_tests COMMAND mentalmapmodel_tests)
+
+    qt_add_executable(meetinglistmodel_tests tests/meetinglistmodel_test.cpp)
+    target_link_libraries(meetinglistmodel_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME meetinglistmodel_tests COMMAND meetinglistmodel_tests)
+
+    qt_add_executable(meetingreminderservice_tests tests/meetingreminderservice_test.cpp)
+    target_link_libraries(meetingreminderservice_tests PRIVATE daymark_core Qt6::Test)
+    add_test(NAME meetingreminderservice_tests COMMAND meetingreminderservice_tests)
 
     qt_add_executable(dailynotemodel_tests tests/dailynotemodel_test.cpp)
     target_link_libraries(dailynotemodel_tests PRIVATE daymark_core Qt6::Test)

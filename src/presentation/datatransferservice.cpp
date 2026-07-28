@@ -6,6 +6,7 @@
 #include "presentation/appsettings.h"
 #include "presentation/categorylistmodel.h"
 #include "presentation/goallistmodel.h"
+#include "presentation/meetinglistmodel.h"
 #include "presentation/tasklistmodel.h"
 
 #include <QCoreApplication>
@@ -121,6 +122,18 @@ QJsonObject goalToJson(const Goal &goal)
         {QStringLiteral("createdAt"), serializedDateTime(goal.createdAt)},
         {QStringLiteral("completed"), goal.completed},
         {QStringLiteral("milestones"), milestones},
+    };
+}
+
+QJsonObject meetingToJson(const Meeting &meeting)
+{
+    return {
+        {QStringLiteral("id"), meeting.id},
+        {QStringLiteral("title"), meeting.title},
+        {QStringLiteral("notes"), meeting.notes},
+        {QStringLiteral("startsAt"), serializedDateTime(meeting.startsAt)},
+        {QStringLiteral("createdAt"), serializedDateTime(meeting.createdAt)},
+        {QStringLiteral("notifiedAt"), serializedDateTime(meeting.notifiedAt)},
     };
 }
 
@@ -527,6 +540,41 @@ bool goalFromJson(
     return true;
 }
 
+bool meetingFromJson(
+    const QJsonValue &value,
+    Meeting *meeting,
+    QString *errorMessage)
+{
+    if (!value.isObject()) {
+        *errorMessage = QCoreApplication::translate(
+            "DataTransferService",
+            "Every meeting must be an object.");
+        return false;
+    }
+    const QJsonObject object = value.toObject();
+    return readString(object, QStringLiteral("id"), &meeting->id, errorMessage, false, 128)
+        && readString(object, QStringLiteral("title"), &meeting->title, errorMessage, false)
+        && readString(object, QStringLiteral("notes"), &meeting->notes, errorMessage)
+        && readDateTime(
+            object,
+            QStringLiteral("startsAt"),
+            &meeting->startsAt,
+            errorMessage,
+            true)
+        && readDateTime(
+            object,
+            QStringLiteral("createdAt"),
+            &meeting->createdAt,
+            errorMessage,
+            true)
+        && readDateTime(
+            object,
+            QStringLiteral("notifiedAt"),
+            &meeting->notifiedAt,
+            errorMessage,
+            false);
+}
+
 bool settingsFromJson(
     const QJsonValue &value,
     ImportedSettings *settings,
@@ -630,6 +678,7 @@ DataTransferService::DataTransferService(
     TaskListModel &taskModel,
     CategoryListModel &categoryModel,
     GoalListModel &goalModel,
+    MeetingListModel &meetingModel,
     AppSettings &appSettings,
     QObject *parent)
     : QObject(parent)
@@ -637,6 +686,7 @@ DataTransferService::DataTransferService(
     , m_taskModel(taskModel)
     , m_categoryModel(categoryModel)
     , m_goalModel(goalModel)
+    , m_meetingModel(meetingModel)
     , m_appSettings(appSettings)
 {
 }
@@ -669,6 +719,11 @@ bool DataTransferService::exportData(const QUrl &destination)
         setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not read goals: %1").arg(errorMessage));
         return false;
     }
+    const QVector<Meeting> meetings = m_repository.meetings(&errorMessage);
+    if (!errorMessage.isEmpty()) {
+        setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not read meetings: %1").arg(errorMessage));
+        return false;
+    }
 
     QJsonArray taskArray;
     for (const Task &task : tasks) {
@@ -682,6 +737,10 @@ bool DataTransferService::exportData(const QUrl &destination)
     for (const Goal &goal : goals) {
         goalArray.append(goalToJson(goal));
     }
+    QJsonArray meetingArray;
+    for (const Meeting &meeting : meetings) {
+        meetingArray.append(meetingToJson(meeting));
+    }
 
     const QJsonObject root {
         {QStringLiteral("format"), QString::fromLatin1(BackupFormat)},
@@ -691,6 +750,7 @@ bool DataTransferService::exportData(const QUrl &destination)
         {QStringLiteral("tasks"), taskArray},
         {QStringLiteral("categories"), categoryArray},
         {QStringLiteral("goals"), goalArray},
+        {QStringLiteral("meetings"), meetingArray},
         {QStringLiteral("settings"), settingsToJson(m_appSettings)},
     };
 
@@ -711,7 +771,7 @@ bool DataTransferService::exportData(const QUrl &destination)
     }
 
     setStatusMessage(QCoreApplication::translate("DataTransferService",
-        "Exported tasks, categories, subcategories, goals, and preferences to %1.")
+        "Exported tasks, categories, subcategories, goals, meetings, and preferences to %1.")
         .arg(QFileInfo(path).fileName()));
     return true;
 }
@@ -755,8 +815,10 @@ bool DataTransferService::importData(const QUrl &source)
     const QJsonValue tasksValue = root.value(QStringLiteral("tasks"));
     const QJsonValue categoriesValue = root.value(QStringLiteral("categories"));
     const QJsonValue goalsValue = root.value(QStringLiteral("goals"));
+    const QJsonValue meetingsValue = root.value(QStringLiteral("meetings"));
     if (!tasksValue.isArray() || !goalsValue.isArray()
-        || (!categoriesValue.isUndefined() && !categoriesValue.isArray())) {
+        || (!categoriesValue.isUndefined() && !categoriesValue.isArray())
+        || (!meetingsValue.isUndefined() && !meetingsValue.isArray())) {
         setStatusMessage(QCoreApplication::translate("DataTransferService", "The export is missing its task or goal list."));
         return false;
     }
@@ -766,8 +828,11 @@ bool DataTransferService::importData(const QUrl &source)
         ? categoriesValue.toArray()
         : QJsonArray();
     const QJsonArray goalArray = goalsValue.toArray();
+    const QJsonArray meetingArray = meetingsValue.isArray()
+        ? meetingsValue.toArray()
+        : QJsonArray();
     if (taskArray.size() > MaximumRecords || categoryArray.size() > MaximumRecords
-        || goalArray.size() > MaximumRecords) {
+        || goalArray.size() > MaximumRecords || meetingArray.size() > MaximumRecords) {
         setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains too many records."));
         return false;
     }
@@ -775,6 +840,7 @@ bool DataTransferService::importData(const QUrl &source)
     QVector<Task> tasks;
     QVector<Category> categories;
     QVector<Goal> goals;
+    QVector<Meeting> meetings;
     QSet<QString> taskIds;
     QSet<QString> categoryIds;
     QSet<QString> categoryNames;
@@ -783,6 +849,7 @@ bool DataTransferService::importData(const QUrl &source)
     QHash<QString, QString> subcategoryParents;
     QSet<QString> goalIds;
     QSet<QString> milestoneIds;
+    QSet<QString> meetingIds;
     qsizetype subcategoryCount = 0;
     QString validationError;
 
@@ -890,6 +957,20 @@ bool DataTransferService::importData(const QUrl &source)
         goals.append(goal);
     }
 
+    for (const QJsonValue &value : meetingArray) {
+        Meeting meeting;
+        if (!meetingFromJson(value, &meeting, &validationError)) {
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not import a meeting: %1").arg(validationError));
+            return false;
+        }
+        if (meetingIds.contains(meeting.id)) {
+            setStatusMessage(QCoreApplication::translate("DataTransferService", "The export contains a duplicate meeting ID."));
+            return false;
+        }
+        meetingIds.insert(meeting.id);
+        meetings.append(meeting);
+    }
+
     ImportedSettings importedSettings;
     if (!settingsFromJson(
             root.value(QStringLiteral("settings")),
@@ -900,7 +981,12 @@ bool DataTransferService::importData(const QUrl &source)
     }
 
     QString databaseError;
-    if (!m_repository.mergeImportedData(categories, tasks, goals, &databaseError)) {
+    if (!m_repository.mergeImportedData(
+            categories,
+            tasks,
+            goals,
+            meetings,
+            &databaseError)) {
         setStatusMessage(QCoreApplication::translate("DataTransferService", "Could not merge the imported data: %1").arg(databaseError));
         return false;
     }
@@ -909,13 +995,15 @@ bool DataTransferService::importData(const QUrl &source)
     m_categoryModel.reload();
     m_taskModel.reload();
     m_goalModel.reload();
+    m_meetingModel.reload();
     setStatusMessage(QCoreApplication::translate("DataTransferService",
-        "Imported %1 tasks, %2 categories, %3 subcategories, and %4 goals. "
+        "Imported %1 tasks, %2 categories, %3 subcategories, %4 goals, and %5 meetings. "
         "Existing records were kept.")
         .arg(tasks.size())
         .arg(categories.size())
         .arg(subcategoryCount)
-        .arg(goals.size()));
+        .arg(goals.size())
+        .arg(meetings.size()));
     return true;
 }
 

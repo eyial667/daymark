@@ -7,6 +7,14 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-07-28
+
+### Added
+
+- Local meeting scheduling with date, time, optional notes, portable backup,
+  and one native notification 10 minutes before each meeting while Daymark is
+  running.
+
 ## [0.2.3] - 2026-07-28
 
 ### Fixed

@@ -9,6 +9,7 @@
 class AppSettings;
 class CategoryListModel;
 class GoalListModel;
+class MeetingListModel;
 class TaskListModel;
 class TaskRepository;
 
@@ -23,6 +24,7 @@ public:
         TaskListModel &taskModel,
         CategoryListModel &categoryModel,
         GoalListModel &goalModel,
+        MeetingListModel &meetingModel,
         AppSettings &appSettings,
         QObject *parent = nullptr);
 
@@ -42,6 +44,7 @@ private:
     TaskListModel &m_taskModel;
     CategoryListModel &m_categoryModel;
     GoalListModel &m_goalModel;
+    MeetingListModel &m_meetingModel;
     AppSettings &m_appSettings;
     QString m_statusMessage;
 };

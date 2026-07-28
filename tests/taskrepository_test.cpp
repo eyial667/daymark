@@ -130,6 +130,38 @@ private slots:
         }
     }
 
+    void storesNotifiesAndRemovesMeetings()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        Meeting meeting;
+        meeting.id = QStringLiteral("meeting-1");
+        meeting.title = QStringLiteral("Release planning");
+        meeting.notes = QStringLiteral("Confirm the package matrix.");
+        meeting.startsAt = QDateTime::currentDateTime().addDays(1);
+        meeting.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addMeeting(meeting, &error), qPrintable(error));
+
+        QVector<Meeting> meetings = repository.meetings(&error);
+        QCOMPARE(meetings.size(), 1);
+        QCOMPARE(meetings.first().title, meeting.title);
+        QCOMPARE(meetings.first().notes, meeting.notes);
+        QVERIFY(!meetings.first().notifiedAt.isValid());
+
+        const QDateTime notifiedAt = QDateTime::currentDateTime();
+        QVERIFY2(
+            repository.markMeetingNotified(meeting.id, notifiedAt, &error),
+            qPrintable(error));
+        QVERIFY(!repository.markMeetingNotified(meeting.id, notifiedAt, &error));
+        meetings = repository.meetings(&error);
+        QVERIFY(meetings.first().notifiedAt.isValid());
+
+        QVERIFY2(repository.deleteMeeting(meeting.id, &error), qPrintable(error));
+        QVERIFY(repository.meetings(&error).isEmpty());
+    }
+
     void migratesVersionOneWithoutLosingTasks()
     {
         QTemporaryDir directory;
@@ -192,6 +224,14 @@ private slots:
         note.updatedAt = QDateTime::currentDateTime();
         QVERIFY2(repository.saveDailyNote(note, &error), qPrintable(error));
         QCOMPARE(repository.dailyNote(note.date, &error)->text, note.text);
+
+        Meeting meeting;
+        meeting.id = QStringLiteral("post-migration-meeting");
+        meeting.title = QStringLiteral("Migration review");
+        meeting.startsAt = QDateTime::currentDateTime().addDays(1);
+        meeting.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addMeeting(meeting, &error), qPrintable(error));
+        QCOMPARE(repository.meetings(&error).size(), 1);
     }
 
     void migratesLegacyProjectsIntoCategories()

@@ -158,6 +158,18 @@ void bindMilestone(QSqlQuery &query, const Milestone &milestone)
         milestone.completed ? QDateTime::currentDateTime() : QDateTime());
 }
 
+void bindMeeting(QSqlQuery &query, const Meeting &meeting)
+{
+    query.bindValue(QStringLiteral(":id"), meeting.id);
+    query.bindValue(QStringLiteral(":title"), meeting.title);
+    query.bindValue(
+        QStringLiteral(":notes"),
+        meeting.notes.isNull() ? QStringLiteral("") : meeting.notes);
+    query.bindValue(QStringLiteral(":starts_at"), serializeDateTime(meeting.startsAt));
+    query.bindValue(QStringLiteral(":created_at"), serializeDateTime(meeting.createdAt));
+    bindNullableDateTime(query, QStringLiteral(":notified_at"), meeting.notifiedAt);
+}
+
 } // namespace
 
 TaskRepository::TaskRepository(QString databasePath)
@@ -747,10 +759,102 @@ bool TaskRepository::setGoalCompleted(
     return true;
 }
 
+QVector<Meeting> TaskRepository::meetings(QString *errorMessage) const
+{
+    QVector<Meeting> result;
+    QSqlQuery query(m_database);
+    if (!query.exec(QStringLiteral(
+            "SELECT id, title, notes, starts_at, created_at, notified_at "
+            "FROM meetings ORDER BY starts_at ASC, created_at ASC"))) {
+        assignError(errorMessage, query.lastError().text());
+        return result;
+    }
+
+    while (query.next()) {
+        Meeting meeting;
+        meeting.id = query.value(0).toString();
+        meeting.title = query.value(1).toString();
+        meeting.notes = query.value(2).toString();
+        meeting.startsAt = deserializeDateTime(query.value(3).toString());
+        meeting.createdAt = deserializeDateTime(query.value(4).toString());
+        meeting.notifiedAt = deserializeDateTime(query.value(5).toString());
+        result.append(meeting);
+    }
+    return result;
+}
+
+bool TaskRepository::addMeeting(
+    const Meeting &meeting,
+    QString *errorMessage)
+{
+    if (meeting.title.trimmed().isEmpty() || !meeting.startsAt.isValid()
+        || !meeting.createdAt.isValid()) {
+        assignError(errorMessage, QStringLiteral("A meeting needs a title and valid start time."));
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "INSERT INTO meetings (id, title, notes, starts_at, created_at, notified_at) "
+        "VALUES (:id, :title, :notes, :starts_at, :created_at, :notified_at)"));
+    bindMeeting(query, meeting);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::deleteMeeting(
+    const QString &meetingId,
+    QString *errorMessage)
+{
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral("DELETE FROM meetings WHERE id = :id"));
+    query.bindValue(QStringLiteral(":id"), meetingId);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected meeting no longer exists."));
+        return false;
+    }
+    return true;
+}
+
+bool TaskRepository::markMeetingNotified(
+    const QString &meetingId,
+    const QDateTime &notifiedAt,
+    QString *errorMessage)
+{
+    if (!notifiedAt.isValid()) {
+        assignError(errorMessage, QStringLiteral("A valid notification time is required."));
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE meetings SET notified_at = :notified_at "
+        "WHERE id = :id AND notified_at IS NULL"));
+    query.bindValue(QStringLiteral(":notified_at"), serializeDateTime(notifiedAt));
+    query.bindValue(QStringLiteral(":id"), meetingId);
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The meeting was already notified or removed."));
+        return false;
+    }
+    return true;
+}
+
 bool TaskRepository::mergeImportedData(
     const QVector<Category> &categoriesToMerge,
     const QVector<Task> &tasks,
     const QVector<Goal> &goalsToMerge,
+    const QVector<Meeting> &meetingsToMerge,
     QString *errorMessage)
 {
     if (!m_database.transaction()) {
@@ -855,6 +959,22 @@ bool TaskRepository::mergeImportedData(
         }
     }
 
+    QSqlQuery meetingQuery(m_database);
+    meetingQuery.prepare(QStringLiteral(
+        "INSERT INTO meetings (id, title, notes, starts_at, created_at, notified_at) "
+        "VALUES (:id, :title, :notes, :starts_at, :created_at, :notified_at) "
+        "ON CONFLICT(id) DO UPDATE SET title = excluded.title, notes = excluded.notes, "
+        "starts_at = excluded.starts_at, created_at = excluded.created_at, "
+        "notified_at = COALESCE(meetings.notified_at, excluded.notified_at)"));
+    for (const Meeting &meeting : meetingsToMerge) {
+        bindMeeting(meetingQuery, meeting);
+        if (!meetingQuery.exec()) {
+            assignError(errorMessage, meetingQuery.lastError().text());
+            m_database.rollback();
+            return false;
+        }
+    }
+
     if (!m_database.commit()) {
         assignError(errorMessage, m_database.lastError().text());
         m_database.rollback();
@@ -872,13 +992,13 @@ bool TaskRepository::migrate(QString *errorMessage)
     }
 
     const int version = versionQuery.value(0).toInt();
-    if (version > 6) {
+    if (version > 7) {
         assignError(
             errorMessage,
             QStringLiteral("This database was created by a newer Daymark version."));
         return false;
     }
-    if (version == 6) {
+    if (version == 7) {
         return true;
     }
 
@@ -1010,6 +1130,24 @@ bool TaskRepository::migrate(QString *errorMessage)
             "updated_at TEXT NOT NULL"
             ")"), errorMessage)
             && execute(QStringLiteral("PRAGMA user_version = 6"), errorMessage);
+    }
+
+    if (migrated && version < 7) {
+        migrated = execute(QStringLiteral(
+            "CREATE TABLE meetings ("
+            "id TEXT PRIMARY KEY NOT NULL, "
+            "title TEXT NOT NULL CHECK(length(trim(title)) > 0), "
+            "notes TEXT NOT NULL DEFAULT '', "
+            "starts_at TEXT NOT NULL, "
+            "created_at TEXT NOT NULL, "
+            "notified_at TEXT"
+            ")"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX meetings_start_index ON meetings(starts_at)"), errorMessage)
+            && execute(QStringLiteral(
+                "CREATE INDEX meetings_pending_reminder_index "
+                "ON meetings(notified_at, starts_at)"), errorMessage)
+            && execute(QStringLiteral("PRAGMA user_version = 7"), errorMessage);
     }
 
     if (!migrated) {

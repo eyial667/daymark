@@ -35,6 +35,15 @@ and unfinished milestones so each native map renderer presents the same facts.
 to QML. These objects translate user actions into repository operations without
 exposing SQL to QML.
 
+`MeetingListModel` validates and presents locally stored meetings.
+`MeetingReminderService` is the single reminder scheduler: while Daymark is
+running, it wakes at the next ten-minute boundary, atomically records a meeting
+as notified, and emits one delivery request. `DesktopNotificationService`
+delivers that request through the freedesktop notification service on Linux and
+the native system-tray notification facility on Windows and macOS. Recording
+the reminder before delivery prevents duplicate notifications across timer
+wakeups and application restarts.
+
 `UpdateService` is the single network and installer boundary. It performs a
 non-blocking startup request for a platform-specific manifest attached to the
 latest public GitHub Release. This avoids unauthenticated REST API quotas while
@@ -62,6 +71,9 @@ separate from its deadline; moving work into Today never changes when it is due.
 The former free-text project field is migrated into
 categories and is no longer part of the product interface. Goal and milestone
 target dates are calendar dates stored in ISO-8601 form without a timezone.
+Meetings store their start, creation, and optional notification timestamps as
+UTC ISO-8601 values and convert them back to local time for display and
+scheduling. Reminder state is durable so each meeting is claimed at most once.
 
 Daily notes use a separate date-keyed table. On startup and across day
 boundaries, records older than yesterday are deleted. The current and previous
@@ -100,5 +112,5 @@ will not silently replace the deterministic engine.
 - Calendar adapters import events into a separate calendar domain.
 - A future graph service extends the current visual hierarchy with explicit
   dependencies and user-authored relationships.
-- Platform services wrap notifications, autostart, tray, and credential storage.
+- Additional platform services wrap autostart and credential storage.
 - Export and backup operate on documented, versioned formats.

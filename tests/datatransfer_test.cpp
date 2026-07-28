@@ -4,6 +4,7 @@
 #include "presentation/categorylistmodel.h"
 #include "presentation/datatransferservice.h"
 #include "presentation/goallistmodel.h"
+#include "presentation/meetinglistmodel.h"
 #include "presentation/tasklistmodel.h"
 
 #include <QCoreApplication>
@@ -45,11 +46,13 @@ private slots:
         CategoryListModel sourceCategories(sourceRepository);
         GoalListModel sourceGoals(sourceRepository);
         AppSettings sourceSettings(directory.filePath(QStringLiteral("source-data")));
+        MeetingListModel sourceMeetings(sourceRepository, sourceSettings);
         DataTransferService sourceTransfer(
             sourceRepository,
             sourceTasks,
             sourceCategories,
             sourceGoals,
+            sourceMeetings,
             sourceSettings);
 
         QVERIFY(sourceCategories.addCategory(
@@ -88,6 +91,11 @@ private slots:
             QStringLiteral("Create an export"),
             QStringLiteral("2030-01-15")));
         QVERIFY(sourceGoals.setMilestoneCompleted(0, 0, true));
+        QVERIFY(sourceMeetings.addMeeting(
+            QStringLiteral("Portable meeting"),
+            QDate::currentDate().addDays(1).toString(Qt::ISODate),
+            QStringLiteral("23:59"),
+            QStringLiteral("This meeting must move too.")));
 
         sourceSettings.setInterfaceStyle(AppSettings::QuietFocus);
         sourceSettings.setLanguage(AppSettings::French);
@@ -113,11 +121,13 @@ private slots:
         CategoryListModel targetCategories(targetRepository);
         GoalListModel targetGoals(targetRepository);
         AppSettings targetSettings(directory.filePath(QStringLiteral("target-data")));
+        MeetingListModel targetMeetings(targetRepository, targetSettings);
         DataTransferService targetTransfer(
             targetRepository,
             targetTasks,
             targetCategories,
             targetGoals,
+            targetMeetings,
             targetSettings);
 
         QVERIFY(targetTasks.addTask(
@@ -153,6 +163,11 @@ private slots:
         QCOMPARE(targetGoals.goalCount(), 1);
         QCOMPARE(targetGoals.totalMilestoneCount(), 1);
         QCOMPARE(targetGoals.completedMilestoneCount(), 1);
+        QCOMPARE(targetMeetings.meetingCount(), 1);
+        QCOMPARE(targetMeetings.nextMeetingTitle(), QStringLiteral("Portable meeting"));
+        QCOMPARE(
+            targetRepository.meetings(&error).first().notes,
+            QStringLiteral("This meeting must move too."));
         QCOMPARE(targetSettings.interfaceStyle(), AppSettings::QuietFocus);
         QCOMPARE(targetSettings.language(), AppSettings::French);
         QCOMPARE(targetSettings.colorMode(), AppSettings::Light);
@@ -186,7 +201,14 @@ private slots:
         CategoryListModel categories(repository);
         GoalListModel goals(repository);
         AppSettings settings(directory.filePath(QStringLiteral("data")));
-        DataTransferService transfer(repository, tasks, categories, goals, settings);
+        MeetingListModel meetings(repository, settings);
+        DataTransferService transfer(
+            repository,
+            tasks,
+            categories,
+            goals,
+            meetings,
+            settings);
         QVERIFY(tasks.addTask(QStringLiteral("Keep me"), {}, 3, 30, {}));
 
         QVERIFY(!transfer.importData(QUrl::fromLocalFile(malformedPath)));
@@ -210,11 +232,13 @@ private slots:
         CategoryListModel sourceCategories(sourceRepository);
         GoalListModel sourceGoals(sourceRepository);
         AppSettings sourceSettings(directory.filePath(QStringLiteral("legacy-source")));
+        MeetingListModel sourceMeetings(sourceRepository, sourceSettings);
         DataTransferService sourceTransfer(
             sourceRepository,
             sourceTasks,
             sourceCategories,
             sourceGoals,
+            sourceMeetings,
             sourceSettings);
         const QString exportBase = directory.filePath(QStringLiteral("legacy-project"));
         QVERIFY(sourceTransfer.exportData(QUrl::fromLocalFile(exportBase)));
@@ -228,6 +252,7 @@ private slots:
         settings.remove(QStringLiteral("showTimeline"));
         settings.remove(QStringLiteral("language"));
         root.insert(QStringLiteral("settings"), settings);
+        root.remove(QStringLiteral("meetings"));
         QJsonArray tasks = root.value(QStringLiteral("tasks")).toArray();
         tasks.append(QJsonObject {
             {QStringLiteral("id"), QStringLiteral("legacy-project-task")},
@@ -254,11 +279,13 @@ private slots:
         CategoryListModel targetCategories(targetRepository);
         GoalListModel targetGoals(targetRepository);
         AppSettings targetSettings(directory.filePath(QStringLiteral("legacy-target")));
+        MeetingListModel targetMeetings(targetRepository, targetSettings);
         DataTransferService targetTransfer(
             targetRepository,
             targetTasks,
             targetCategories,
             targetGoals,
+            targetMeetings,
             targetSettings);
 
         QVERIFY(targetTransfer.importData(QUrl::fromLocalFile(exportPath)));
@@ -269,6 +296,7 @@ private slots:
         QCOMPARE(importedTasks.first().categoryName, QStringLiteral("Client work"));
         QVERIFY(importedTasks.first().project.isEmpty());
         QVERIFY(!targetSettings.showTimeline());
+        QCOMPARE(targetMeetings.meetingCount(), 0);
     }
 };
 

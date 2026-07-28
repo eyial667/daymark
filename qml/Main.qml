@@ -11,6 +11,7 @@ ApplicationWindow {
     required property var todayTaskModel
     required property var categoryModel
     required property var goalModel
+    required property var meetingModel
     required property var mentalMapModel
     required property var dailyNoteModel
     required property var focusSession
@@ -141,6 +142,13 @@ ApplicationWindow {
     }
 
     Connections {
+        target: window.meetingModel
+        function onStatusMessageChanged() {
+            window.showFeedback(window.meetingModel.statusMessage)
+        }
+    }
+
+    Connections {
         target: window.focusSession
         function onStatusMessageChanged() {
             window.showFeedback(window.focusSession.statusMessage)
@@ -176,6 +184,7 @@ ApplicationWindow {
             window.taskModel.clearStatus()
             window.todayTaskModel.clearStatus()
             window.goalModel.clearStatus()
+            window.meetingModel.clearStatus()
             window.focusSession.clearStatus()
             window.mentalMapModel.clearStatus()
             window.dailyNoteModel.clearStatus()
@@ -204,7 +213,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Ctrl+,"
-        onActivated: window.currentPage = 7
+        onActivated: window.currentPage = 8
     }
 
     Shortcut {
@@ -392,6 +401,11 @@ ApplicationWindow {
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)
+                }
+
+                MeetingsView {
+                    meetingModel: window.meetingModel
+                    theme: interfaceTheme
                 }
 
                 SettingsView {

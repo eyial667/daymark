@@ -15,6 +15,7 @@ system's SQLite and settings locations.
 | `tasks` | array | Open and completed task records. |
 | `categories` | array | Reusable task categories with nested subcategories and notes. |
 | `goals` | array | Active and achieved goals with nested milestones. |
+| `meetings` | array | Dated meetings and their durable reminder state. |
 | `settings` | object | Portable appearance, planning, and behavior preferences. |
 
 Task records contain their stable ID, title, notes, optional category and
@@ -25,6 +26,8 @@ task field remains as an empty compatibility field for older Daymark builds; old
 imports with a project value convert it into a category. Goal and milestone
 records contain stable IDs, titles, descriptions where applicable, target dates,
 creation timestamps, and completion state.
+Meeting records contain a stable ID, title, notes, required start and creation
+timestamps, and an optional notification timestamp.
 
 Settings include the selected interface, language, and palette, planning and capture
 defaults, and behavior preferences such as timeline visibility. The
@@ -51,6 +54,7 @@ anything. Import then performs one SQLite transaction:
 - category and subcategory records are merged before tasks so assignments remain
   intact;
 - milestones remain attached to their exported goal;
+- meetings retain their start time and whether their reminder was already sent;
 - preferences are applied only after the database transaction succeeds.
 
 Unknown format versions are rejected so a newer Daymark export cannot be
@@ -63,3 +67,5 @@ earlier Daymark builds therefore remain valid; legacy project labels become
 categories automatically. A task's `plannedDate` is also optional in version 1,
 so backups from builds that predate Today planning remain valid and import those
 tasks into To-do without assigning them to a day.
+The top-level `meetings` list is optional for the same compatibility reason;
+older version 1 backups import with an empty meeting list.
