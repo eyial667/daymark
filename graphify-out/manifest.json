@@ -1,0 +1,347 @@
+{
+  "CMakePresets.json": {
+    "mtime": 1785168896.546659,
+    "ast_hash": "0c6ff9705ef0821ed6e130a36e65fc84",
+    "semantic_hash": "0c6ff9705ef0821ed6e130a36e65fc84"
+  },
+  "packaging/linux/install.sh": {
+    "mtime": 1785167534.66821,
+    "ast_hash": "5e631b88700cd0858d184a0387ffca14",
+    "semantic_hash": "5e631b88700cd0858d184a0387ffca14"
+  },
+  "src/app/desktopnotificationservice.cpp": {
+    "mtime": 1785242029.5130138,
+    "ast_hash": "daa6f0eb6f42e291878b46a80deac294",
+    "semantic_hash": "daa6f0eb6f42e291878b46a80deac294"
+  },
+  "src/app/desktopnotificationservice.h": {
+    "mtime": 1785241780.3209753,
+    "ast_hash": "537bda717650a0a617d60222516d19a2",
+    "semantic_hash": "537bda717650a0a617d60222516d19a2"
+  },
+  "src/app/main.cpp": {
+    "mtime": 1785268993.357449,
+    "ast_hash": "2404b9d5a6cb7b6517cdeacc63fdc105",
+    "semantic_hash": "2404b9d5a6cb7b6517cdeacc63fdc105"
+  },
+  "src/core/priorityengine.cpp": {
+    "mtime": 1785189552.0847213,
+    "ast_hash": "7e9bcb65db8d4345507d63ce1f2d453e",
+    "semantic_hash": "7e9bcb65db8d4345507d63ce1f2d453e"
+  },
+  "src/core/priorityengine.h": {
+    "mtime": 1785168896.5473955,
+    "ast_hash": "6f85be7a38fcaa8ab0bf8fdbde55452a",
+    "semantic_hash": "6f85be7a38fcaa8ab0bf8fdbde55452a"
+  },
+  "src/data/taskrepository.cpp": {
+    "mtime": 1785269150.552564,
+    "ast_hash": "f4a80a1ef7bf9e157b43097ce63066c2",
+    "semantic_hash": "f4a80a1ef7bf9e157b43097ce63066c2"
+  },
+  "src/data/taskrepository.h": {
+    "mtime": 1785268876.1411264,
+    "ast_hash": "972596a81809d61435bb83e36fffbccc",
+    "semantic_hash": "972596a81809d61435bb83e36fffbccc"
+  },
+  "src/domain/category.h": {
+    "mtime": 1785177900.9825313,
+    "ast_hash": "7491f58845fc478e1d969926198e9236",
+    "semantic_hash": "7491f58845fc478e1d969926198e9236"
+  },
+  "src/domain/dailynote.h": {
+    "mtime": 1785185706.8647058,
+    "ast_hash": "ac9b34a5a28886d59026bdf05d11a14b",
+    "semantic_hash": "ac9b34a5a28886d59026bdf05d11a14b"
+  },
+  "src/domain/goal.h": {
+    "mtime": 1785172890.3121593,
+    "ast_hash": "4a70a7a0960e8a7fad6d1ca04d7e7226",
+    "semantic_hash": "4a70a7a0960e8a7fad6d1ca04d7e7226"
+  },
+  "src/domain/meeting.h": {
+    "mtime": 1785241663.154595,
+    "ast_hash": "83b27f3ffd7b62599a6354c20679dc3c",
+    "semantic_hash": "83b27f3ffd7b62599a6354c20679dc3c"
+  },
+  "src/domain/mentalmap.h": {
+    "mtime": 1785267815.9578912,
+    "ast_hash": "422cb0e6386c0ecf9e6fba55afe57e9a",
+    "semantic_hash": "422cb0e6386c0ecf9e6fba55afe57e9a"
+  },
+  "src/domain/task.h": {
+    "mtime": 1785181616.2665687,
+    "ast_hash": "08049d3a284f05b96ac9e12839915bb7",
+    "semantic_hash": "08049d3a284f05b96ac9e12839915bb7"
+  },
+  "src/presentation/appsettings.cpp": {
+    "mtime": 1785189009.8428419,
+    "ast_hash": "1abf2e5ad764ba235a7f50c20cc51bf4",
+    "semantic_hash": "1abf2e5ad764ba235a7f50c20cc51bf4"
+  },
+  "src/presentation/appsettings.h": {
+    "mtime": 1785189009.75084,
+    "ast_hash": "31aca3837b9aeeceebe815e1a8ded170",
+    "semantic_hash": "31aca3837b9aeeceebe815e1a8ded170"
+  },
+  "src/presentation/categorylistmodel.cpp": {
+    "mtime": 1785268520.138072,
+    "ast_hash": "bca1ab6b425540cf532bc64846b9c5c9",
+    "semantic_hash": "bca1ab6b425540cf532bc64846b9c5c9"
+  },
+  "src/presentation/categorylistmodel.h": {
+    "mtime": 1785268520.0520704,
+    "ast_hash": "50a1e4a5728fa9ac03efa3b2134c5d20",
+    "semantic_hash": "50a1e4a5728fa9ac03efa3b2134c5d20"
+  },
+  "src/presentation/dailynotemodel.cpp": {
+    "mtime": 1785269220.2139444,
+    "ast_hash": "bc818d1989927e236f32fe4a3c964797",
+    "semantic_hash": "bc818d1989927e236f32fe4a3c964797"
+  },
+  "src/presentation/dailynotemodel.h": {
+    "mtime": 1785268690.8984559,
+    "ast_hash": "6283a28990bd70ef29722b7e1bd822f1",
+    "semantic_hash": "6283a28990bd70ef29722b7e1bd822f1"
+  },
+  "src/presentation/datatransferservice.cpp": {
+    "mtime": 1785268993.1814456,
+    "ast_hash": "d0f8babfc39b6bdbfc225f74b38c407f",
+    "semantic_hash": "d0f8babfc39b6bdbfc225f74b38c407f"
+  },
+  "src/presentation/datatransferservice.h": {
+    "mtime": 1785268993.2694473,
+    "ast_hash": "91736daea82e5306ce7fde7ffbc39b89",
+    "semantic_hash": "91736daea82e5306ce7fde7ffbc39b89"
+  },
+  "src/presentation/focussessionmodel.cpp": {
+    "mtime": 1785189354.4419365,
+    "ast_hash": "ded5d365bf41bdeed13d5b7eb3983a8f",
+    "semantic_hash": "ded5d365bf41bdeed13d5b7eb3983a8f"
+  },
+  "src/presentation/focussessionmodel.h": {
+    "mtime": 1785184086.1661422,
+    "ast_hash": "941e5cc0f976818e69ccddbc443da789",
+    "semantic_hash": "941e5cc0f976818e69ccddbc443da789"
+  },
+  "src/presentation/goallistmodel.cpp": {
+    "mtime": 1785268520.3100755,
+    "ast_hash": "ab1e7e450c215ddcc8f168439d84d920",
+    "semantic_hash": "ab1e7e450c215ddcc8f168439d84d920"
+  },
+  "src/presentation/goallistmodel.h": {
+    "mtime": 1785268520.2250738,
+    "ast_hash": "8c6b247744bf03e15cecf581d45dfda6",
+    "semantic_hash": "8c6b247744bf03e15cecf581d45dfda6"
+  },
+  "src/presentation/languagemanager.cpp": {
+    "mtime": 1785189010.0268455,
+    "ast_hash": "d3e046497d1523e30393bad4c82f3784",
+    "semantic_hash": "d3e046497d1523e30393bad4c82f3784"
+  },
+  "src/presentation/languagemanager.h": {
+    "mtime": 1785189009.9358437,
+    "ast_hash": "0535cddd4e5cf291f7991a60e0d3f4eb",
+    "semantic_hash": "0535cddd4e5cf291f7991a60e0d3f4eb"
+  },
+  "src/presentation/meetinglistmodel.cpp": {
+    "mtime": 1785241780.0269713,
+    "ast_hash": "6a4da3708846c001582fcb56af9f429d",
+    "semantic_hash": "6a4da3708846c001582fcb56af9f429d"
+  },
+  "src/presentation/meetinglistmodel.h": {
+    "mtime": 1785241779.9289699,
+    "ast_hash": "80feaeaf0678b6a44f1ea90a1d00a619",
+    "semantic_hash": "80feaeaf0678b6a44f1ea90a1d00a619"
+  },
+  "src/presentation/meetingreminderservice.cpp": {
+    "mtime": 1785241780.2319741,
+    "ast_hash": "e436a15a24dc8b728bc403ef0c9dd2b3",
+    "semantic_hash": "e436a15a24dc8b728bc403ef0c9dd2b3"
+  },
+  "src/presentation/meetingreminderservice.h": {
+    "mtime": 1785241780.1349728,
+    "ast_hash": "cd8c96c3fdd61a7669557169490d8f80",
+    "semantic_hash": "cd8c96c3fdd61a7669557169490d8f80"
+  },
+  "src/presentation/mentalmapmodel.cpp": {
+    "mtime": 1785269052.1726146,
+    "ast_hash": "e847c8be676fa3e451968c39e2ec4146",
+    "semantic_hash": "e847c8be676fa3e451968c39e2ec4146"
+  },
+  "src/presentation/mentalmapmodel.h": {
+    "mtime": 1785268068.7960458,
+    "ast_hash": "9269633bba17faa4519076bc875b45be",
+    "semantic_hash": "9269633bba17faa4519076bc875b45be"
+  },
+  "src/presentation/tasklistmodel.cpp": {
+    "mtime": 1785268519.9660687,
+    "ast_hash": "eda076352581e29abac4bb2d49ee0b30",
+    "semantic_hash": "eda076352581e29abac4bb2d49ee0b30"
+  },
+  "src/presentation/tasklistmodel.h": {
+    "mtime": 1785268519.878067,
+    "ast_hash": "1cd5eb96513e4b95d19032fa2b3aad84",
+    "semantic_hash": "1cd5eb96513e4b95d19032fa2b3aad84"
+  },
+  "src/presentation/updateservice.cpp": {
+    "mtime": 1785193964.6338968,
+    "ast_hash": "a39b595a0b2669e200ae8e5f5d0ec542",
+    "semantic_hash": "a39b595a0b2669e200ae8e5f5d0ec542"
+  },
+  "src/presentation/updateservice.h": {
+    "mtime": 1785193520.2209752,
+    "ast_hash": "d8c331454158b5335b0c88b83da93e0c",
+    "semantic_hash": "d8c331454158b5335b0c88b83da93e0c"
+  },
+  "tests/appsettings_test.cpp": {
+    "mtime": 1785189075.6691637,
+    "ast_hash": "c072bcc9f6e19c820f27762ae307d1da",
+    "semantic_hash": "c072bcc9f6e19c820f27762ae307d1da"
+  },
+  "tests/categorylistmodel_test.cpp": {
+    "mtime": 1785268796.5755498,
+    "ast_hash": "2dd95ca8c4cb4c1e877bad80a809a94d",
+    "semantic_hash": "2dd95ca8c4cb4c1e877bad80a809a94d"
+  },
+  "tests/dailynotemodel_test.cpp": {
+    "mtime": 1785269224.7100334,
+    "ast_hash": "6b7edbd7cbfd329e313e40353cddd838",
+    "semantic_hash": "6b7edbd7cbfd329e313e40353cddd838"
+  },
+  "tests/datatransfer_test.cpp": {
+    "mtime": 1785274571.8898861,
+    "ast_hash": "4b882084c893b493e0017d5bad92df9d",
+    "semantic_hash": "4b882084c893b493e0017d5bad92df9d"
+  },
+  "tests/focussessionmodel_test.cpp": {
+    "mtime": 1785184086.353146,
+    "ast_hash": "141ea1688b49c4e2c1df037d376b66c3",
+    "semantic_hash": "141ea1688b49c4e2c1df037d376b66c3"
+  },
+  "tests/goallistmodel_test.cpp": {
+    "mtime": 1785268796.6615515,
+    "ast_hash": "4b23af674d8bc817916015751f5c7767",
+    "semantic_hash": "4b23af674d8bc817916015751f5c7767"
+  },
+  "tests/languagemanager_test.cpp": {
+    "mtime": 1785189986.6763465,
+    "ast_hash": "272e67c10128ed32784b5c89d3b70beb",
+    "semantic_hash": "272e67c10128ed32784b5c89d3b70beb"
+  },
+  "tests/meetinglistmodel_test.cpp": {
+    "mtime": 1785241970.186905,
+    "ast_hash": "f2fa78fa0187e4c05c034a9ae55418f4",
+    "semantic_hash": "f2fa78fa0187e4c05c034a9ae55418f4"
+  },
+  "tests/meetingreminderservice_test.cpp": {
+    "mtime": 1785242091.1432052,
+    "ast_hash": "2c5c7fd6c26f4bba053d3b6b3e72c6f4",
+    "semantic_hash": "2c5c7fd6c26f4bba053d3b6b3e72c6f4"
+  },
+  "tests/mentalmapmodel_test.cpp": {
+    "mtime": 1785274580.6450512,
+    "ast_hash": "08493a3bbe378ce0a20ee35406028199",
+    "semantic_hash": "08493a3bbe378ce0a20ee35406028199"
+  },
+  "tests/priorityengine_test.cpp": {
+    "mtime": 1785164508.9620965,
+    "ast_hash": "7ee0ce94b3b959364ad2cdcd2a4f4cb3",
+    "semantic_hash": "7ee0ce94b3b959364ad2cdcd2a4f4cb3"
+  },
+  "tests/tasklistmodel_test.cpp": {
+    "mtime": 1785268796.4905481,
+    "ast_hash": "a8dacd00e89bf0a8a9b2ca4d7c7f4e1a",
+    "semantic_hash": "a8dacd00e89bf0a8a9b2ca4d7c7f4e1a"
+  },
+  "tests/taskrepository_test.cpp": {
+    "mtime": 1785268810.0268164,
+    "ast_hash": "6bc688a19ec8d220da41591c56c0edc3",
+    "semantic_hash": "6bc688a19ec8d220da41591c56c0edc3"
+  },
+  "tests/updateservice_test.cpp": {
+    "mtime": 1785193557.2727177,
+    "ast_hash": "f0df75db2318d121d54dad8edd22d4de",
+    "semantic_hash": "f0df75db2318d121d54dad8edd22d4de"
+  },
+  "translations/daymark_fr.ts": {
+    "mtime": 1785242154.4914348,
+    "ast_hash": "de6857159d24f224c4e3144b40c90cec",
+    "semantic_hash": "de6857159d24f224c4e3144b40c90cec"
+  },
+  ".github/dependabot.yml": {
+    "mtime": 1785169799.673617,
+    "ast_hash": "0976d2fcc9aeb24e8d1ebf0362c43abd",
+    "semantic_hash": "0976d2fcc9aeb24e8d1ebf0362c43abd"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1785193603.1176362,
+    "ast_hash": "a69921afebc3b9eba619ce1375d77cef",
+    "semantic_hash": "a69921afebc3b9eba619ce1375d77cef"
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1785193594.0364542,
+    "ast_hash": "17137e76c2ddc55086367bdfa4316789",
+    "semantic_hash": "17137e76c2ddc55086367bdfa4316789"
+  },
+  "AGENTS.md": {
+    "mtime": 1785168840.7823193,
+    "ast_hash": "a85ac86849b2c77a150bf06494add4dd",
+    "semantic_hash": "a85ac86849b2c77a150bf06494add4dd"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1785275916.469815,
+    "ast_hash": "07191f1844cd181d3e39d6caa9e00a37",
+    "semantic_hash": "07191f1844cd181d3e39d6caa9e00a37"
+  },
+  "CLAUDE.md": {
+    "mtime": 1785168840.7823193,
+    "ast_hash": "a85ac86849b2c77a150bf06494add4dd",
+    "semantic_hash": "a85ac86849b2c77a150bf06494add4dd"
+  },
+  "CMakeLists.txt": {
+    "mtime": 1785275916.368813,
+    "ast_hash": "99171f14ca694b0d89103747fcbf26c0",
+    "semantic_hash": "99171f14ca694b0d89103747fcbf26c0"
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1785168840.873321,
+    "ast_hash": "1ce79936541b486bfe2c4a0e0a3df51d",
+    "semantic_hash": "1ce79936541b486bfe2c4a0e0a3df51d"
+  },
+  "LICENSES/GPL-3.0-only.txt": {
+    "mtime": 1785164699.0929172,
+    "ast_hash": "d32239bcb673463ab874e80d47fae504",
+    "semantic_hash": "d32239bcb673463ab874e80d47fae504"
+  },
+  "README.md": {
+    "mtime": 1785269179.7881434,
+    "ast_hash": "5767aa9bc5a51d126887ef4e52bdbbee",
+    "semantic_hash": "5767aa9bc5a51d126887ef4e52bdbbee"
+  },
+  "SECURITY.md": {
+    "mtime": 1785168840.9633229,
+    "ast_hash": "14133def404d8638f0b4885af58f6a36",
+    "semantic_hash": "14133def404d8638f0b4885af58f6a36"
+  },
+  "docs/architecture.md": {
+    "mtime": 1785269033.27324,
+    "ast_hash": "43d283a04b77cad6ce5770b4419c1b38",
+    "semantic_hash": "43d283a04b77cad6ce5770b4419c1b38"
+  },
+  "docs/data-format.md": {
+    "mtime": 1785269033.4432435,
+    "ast_hash": "22dbd9c36f0de23d714f9644ad3b3985",
+    "semantic_hash": "22dbd9c36f0de23d714f9644ad3b3985"
+  },
+  "docs/roadmap.md": {
+    "mtime": 1785269033.3582418,
+    "ast_hash": "c5779647e8c3f81cef74346012bf8a42",
+    "semantic_hash": "c5779647e8c3f81cef74346012bf8a42"
+  },
+  "assets/icons/org.daymark.dashboard.svg": {
+    "mtime": 1785168896.5467815,
+    "ast_hash": "702edbd93d0dcc2674d3b64b29e4f95f",
+    "semantic_hash": "702edbd93d0dcc2674d3b64b29e4f95f"
+  }
+}
