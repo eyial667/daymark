@@ -94,6 +94,7 @@ qt_add_qml_module(daymark
         qml/DateField.qml
         qml/DayPlanningPrompt.qml
         qml/DailyNotePanel.qml
+        qml/EditTaskDialog.qml
         qml/EmptyState.qml
         qml/FocusView.qml
         qml/GoalsView.qml

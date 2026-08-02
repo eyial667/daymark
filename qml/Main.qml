@@ -63,6 +63,14 @@ ApplicationWindow {
         categoryAssignmentDialog.open()
     }
 
+    function requestTaskEdit(taskId) {
+        editTask.openForTask(taskId)
+    }
+
+    function requestTaskPostponement(taskId, days) {
+        taskModel.postponeTask(taskId, days)
+    }
+
     function showFeedback(message) {
         if (message.length === 0)
             return
@@ -276,6 +284,9 @@ ApplicationWindow {
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
                                     taskId, taskTitle, categoryId, subcategoryId)
+                            onEditRequested: taskId => window.requestTaskEdit(taskId)
+                            onPostponeRequested: (taskId, days) =>
+                                window.requestTaskPostponement(taskId, days)
                         }
 
                         SpatialMapView {
@@ -307,6 +318,9 @@ ApplicationWindow {
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
                                     taskId, taskTitle, categoryId, subcategoryId)
+                            onEditRequested: taskId => window.requestTaskEdit(taskId)
+                            onPostponeRequested: (taskId, days) =>
+                                window.requestTaskPostponement(taskId, days)
                         }
 
                         HybridView {
@@ -326,6 +340,9 @@ ApplicationWindow {
                             onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                                 window.requestTaskCategory(
                                     taskId, taskTitle, categoryId, subcategoryId)
+                            onEditRequested: taskId => window.requestTaskEdit(taskId)
+                            onPostponeRequested: (taskId, days) =>
+                                window.requestTaskPostponement(taskId, days)
                         }
                     }
 
@@ -382,6 +399,9 @@ ApplicationWindow {
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)
+                    onEditRequested: taskId => window.requestTaskEdit(taskId)
+                    onPostponeRequested: (taskId, days) =>
+                        window.requestTaskPostponement(taskId, days)
                 }
 
                 SpatialMapView {
@@ -426,6 +446,9 @@ ApplicationWindow {
                     onCategoryRequested: (taskId, taskTitle, categoryId, subcategoryId) =>
                         window.requestTaskCategory(
                             taskId, taskTitle, categoryId, subcategoryId)
+                    onEditRequested: taskId => window.requestTaskEdit(taskId)
+                    onPostponeRequested: (taskId, days) =>
+                        window.requestTaskPostponement(taskId, days)
                 }
 
                 MeetingsView {
@@ -486,6 +509,12 @@ ApplicationWindow {
         appSettings: window.appSettings
         theme: interfaceTheme
         onManageCategoriesRequested: window.currentPage = 3
+    }
+
+    EditTaskDialog {
+        id: editTask
+        taskModel: window.taskModel
+        theme: interfaceTheme
     }
 
     UpdateDialog {

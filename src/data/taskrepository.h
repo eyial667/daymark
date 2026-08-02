@@ -36,6 +36,14 @@ public:
         const QString &taskId,
         bool completed,
         QString *errorMessage = nullptr);
+    [[nodiscard]] bool updateTask(
+        const QString &taskId,
+        const QString &title,
+        const QString &notes,
+        const QDateTime &dueAt,
+        int importance,
+        int estimatedMinutes,
+        QString *errorMessage = nullptr);
     [[nodiscard]] bool setTaskCategory(
         const QString &taskId,
         const QString &categoryId,

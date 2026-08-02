@@ -304,6 +304,109 @@ private slots:
             qPrintable(error));
         QCOMPARE(repository.openTasks(&error).first().plannedDate, plannedDate);
     }
+
+    void updatesEditableTaskFieldsWithoutTouchingIdentity()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        Category category;
+        category.id = QStringLiteral("editable-category");
+        category.name = QStringLiteral("Writing");
+        category.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addCategory(category, &error), qPrintable(error));
+
+        Task task;
+        task.id = QStringLiteral("editable-task");
+        task.title = QStringLiteral("Draft the annoncement");
+        task.notes = QStringLiteral("First pass only.");
+        task.categoryId = category.id;
+        task.createdAt = QDateTime::currentDateTime().addDays(-4);
+        task.dueAt = QDateTime::currentDateTime().addDays(1);
+        task.plannedDate = QDate::currentDate();
+        task.importance = 2;
+        task.estimatedMinutes = 60;
+        QVERIFY2(repository.addTask(task, &error), qPrintable(error));
+
+        const QDateTime newDueAt = QDateTime::currentDateTime().addDays(6);
+        QVERIFY2(
+            repository.updateTask(
+                task.id,
+                QStringLiteral("Draft the announcement"),
+                QStringLiteral("Include the migration notes."),
+                newDueAt,
+                5,
+                90,
+                &error),
+            qPrintable(error));
+
+        const QVector<Task> tasks = repository.openTasks(&error);
+        QCOMPARE(tasks.size(), 1);
+        const Task &updated = tasks.first();
+        QCOMPARE(updated.title, QStringLiteral("Draft the announcement"));
+        QCOMPARE(updated.notes, QStringLiteral("Include the migration notes."));
+        QCOMPARE(updated.importance, 5);
+        QCOMPARE(updated.estimatedMinutes, 90);
+        QCOMPARE(updated.dueAt.toSecsSinceEpoch(), newDueAt.toSecsSinceEpoch());
+
+        // Editing must never disturb identity, age, placement, or planning.
+        QCOMPARE(updated.id, task.id);
+        QCOMPARE(updated.createdAt.toSecsSinceEpoch(), task.createdAt.toSecsSinceEpoch());
+        QCOMPARE(updated.categoryId, category.id);
+        QCOMPARE(updated.categoryName, category.name);
+        QCOMPARE(updated.plannedDate, QDate::currentDate());
+    }
+
+    void clearsADeadlineAndRejectsUnknownOrUntitledEdits()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        Task task;
+        task.id = QStringLiteral("deadline-task");
+        task.title = QStringLiteral("Book the venue");
+        task.createdAt = QDateTime::currentDateTime();
+        task.dueAt = QDateTime::currentDateTime().addDays(3);
+        QVERIFY2(repository.addTask(task, &error), qPrintable(error));
+
+        QVERIFY2(
+            repository.updateTask(task.id, task.title, {}, {}, 3, 30, &error),
+            qPrintable(error));
+        QVERIFY(!repository.openTasks(&error).first().dueAt.isValid());
+
+        QVERIFY(!repository.updateTask(
+            QStringLiteral("missing-task"), QStringLiteral("Ghost"), {}, {}, 3, 30, &error));
+        QCOMPARE(error, QStringLiteral("The selected task no longer exists."));
+
+        QVERIFY(!repository.updateTask(task.id, {}, {}, {}, 3, 30, &error));
+        QCOMPARE(error, QStringLiteral("A task needs a title."));
+        QCOMPARE(repository.openTasks(&error).first().title, task.title);
+    }
+
+    void restoresACompletedTask()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        Task task;
+        task.id = QStringLiteral("restorable-task");
+        task.title = QStringLiteral("Send the invoice");
+        task.createdAt = QDateTime::currentDateTime();
+        QVERIFY2(repository.addTask(task, &error), qPrintable(error));
+
+        QVERIFY2(repository.setCompleted(task.id, true, &error), qPrintable(error));
+        QVERIFY(repository.openTasks(&error).isEmpty());
+        QVERIFY(repository.allTasks(&error).first().completedAt.isValid());
+
+        QVERIFY2(repository.setCompleted(task.id, false, &error), qPrintable(error));
+        const QVector<Task> restored = repository.openTasks(&error);
+        QCOMPARE(restored.size(), 1);
+        QVERIFY(!restored.first().completed);
+        QVERIFY(!restored.first().completedAt.isValid());
+    }
 };
 
 QTEST_GUILESS_MAIN(TaskRepositoryTest)

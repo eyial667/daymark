@@ -7,6 +7,27 @@ and releases will use semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Full task editing. Any open task's title, notes, deadline, importance, and
+  estimate can be changed from a native Edit task dialog reachable from every
+  task row. Editing preserves the task's identity, creation date, category
+  assignment, planning date, and any linked mental-map idea, so a correction
+  never resets its priority age.
+- Task notes are now captured during quick capture, shown as an indicator on
+  each task row, and editable afterwards. The field was already stored and
+  exported; it is now reachable from the interface.
+- One-click postponement from a task row: to tomorrow, by three days, or by a
+  week. Work planned for today that is pushed past today leaves the Today queue
+  and stays in To-do.
+- Undo for a task completed by mistake, from the daily review's completed list.
+
+### Fixed
+
+- French translations for the brainstorming map, mental-map messages, portable
+  import and export diagnostics, category, goal, and day-note deletion, which
+  had been left untranslated when those features were added.
+
 ## [0.2.6] - 2026-07-28
 
 ### Fixed

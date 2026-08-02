@@ -25,8 +25,18 @@ leaves the planning date empty unless the user explicitly adds the task to Today
 deterministic work-area proposal from open task counts, while `GoalListModel`
 owns goal and milestone presentation state and deterministically proposes the
 earliest unfinished milestone. `DataTransferService` coordinates validated
-portable exports and imports. `TaskListModel` also exposes a completed-today
-summary for review.
+portable exports and imports.
+
+`TaskListModel` also owns the rest of a task's life. It validates edits through
+the same routine as capture, so an amended title, deadline, importance,
+estimate, or note is rejected with the same message the capture dialog would
+produce. Postponement is deterministic calendar arithmetic: the deadline moves
+from the task's own due date, or from today when it has none, and work planned
+for today that is pushed past today loses its planning date so it leaves the
+Today queue without leaving the To-do queue. Restoring a completed task simply
+clears its completion. The completed-today summary it exposes for review carries
+each task's stable ID alongside its title so the review screen can undo a
+completion.
 `FocusSessionModel` owns the deterministic countdown state used by the Focus
 screen; it does not persist or mutate tasks. `MentalMapModel` validates and
 persists user-authored brainstorming groups, short notes, metadata, checklists,
@@ -70,6 +80,12 @@ and optional child subcategories through nullable stable IDs; names and notes
 are stored once, and assignments are cleared safely if their category is removed
 in a future version. A task's nullable planning date is a local calendar date
 separate from its deadline; moving work into Today never changes when it is due.
+Editing a task rewrites only its title, notes, deadline, importance, and
+estimate. Its identity, creation timestamp, category assignment, planning date,
+and any mental-map link are left untouched, so a corrected task keeps the
+priority age the engine derives from `created_at` and keeps its place in the
+map. Category assignment and planning date stay with their own repository
+operations, which own the checks those columns require.
 The former free-text project field is migrated into
 categories and is no longer part of the product interface. Goal and milestone
 target dates are calendar dates stored in ISO-8601 form without a timezone.

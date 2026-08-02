@@ -69,8 +69,8 @@ private slots:
         QCOMPARE(model.topTaskTitle(), QStringLiteral("Low priority"));
         QCOMPARE(model.completedTodayCount(), 1);
         QCOMPARE(
-            model.completedTodayTitles(),
-            QStringList {QStringLiteral("High priority")});
+            model.completedToday().first().toMap().value(QStringLiteral("title")).toString(),
+            QStringLiteral("High priority"));
     }
 
     void rejectsAnInvalidDueDate()
@@ -215,6 +215,155 @@ private slots:
         QCOMPARE(model.activeCount(), 0);
         QVERIFY(repository.allTasks(&error).isEmpty());
         QVERIFY(!model.deleteTask(0));
+    }
+
+    void editsATaskAndReRanksTheQueue()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel model(repository);
+        QVERIFY(model.addTask(QStringLiteral("Already urgent"), {}, 4, 30));
+        QVERIFY(model.addTask(QStringLiteral("Quiet task"), {}, 1, 60));
+        QCOMPARE(model.topTaskTitle(), QStringLiteral("Already urgent"));
+
+        const QString quietId =
+            model.data(model.index(1), TaskListModel::IdRole).toString();
+        QVERIFY(model.updateTask(
+            quietId,
+            QStringLiteral("  Suddenly critical  "),
+            QDate::currentDate().toString(Qt::ISODate),
+            5,
+            20,
+            QStringLiteral("  Escalated by the client.  ")));
+
+        // A raised importance and a deadline must move the task to the top.
+        QCOMPARE(model.topTaskTitle(), QStringLiteral("Suddenly critical"));
+        QCOMPARE(model.topTaskEstimatedMinutes(), 20);
+        QCOMPARE(
+            model.statusMessage(),
+            QStringLiteral("Task “Suddenly critical” updated."));
+
+        const QModelIndex top = model.index(0);
+        QCOMPARE(
+            model.data(top, TaskListModel::NotesRole).toString(),
+            QStringLiteral("Escalated by the client."));
+        QCOMPARE(model.data(top, TaskListModel::ImportanceRole).toInt(), 5);
+
+        const QVariantMap details = model.taskDetails(quietId);
+        QCOMPARE(details.value(QStringLiteral("title")).toString(),
+            QStringLiteral("Suddenly critical"));
+        QCOMPARE(details.value(QStringLiteral("dueDate")).toString(),
+            QDate::currentDate().toString(Qt::ISODate));
+        QCOMPARE(details.value(QStringLiteral("estimatedMinutes")).toInt(), 20);
+        QVERIFY(details.value(QStringLiteral("isInToday")).toBool());
+        QVERIFY(model.taskDetails(QStringLiteral("missing-task")).isEmpty());
+    }
+
+    void rejectsInvalidEditsWithTheSameMessagesAsCapture()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel model(repository);
+        QVERIFY(model.addTask(QStringLiteral("Original title"), {}, 3, 30));
+        const QString taskId = model.data(model.index(0), TaskListModel::IdRole).toString();
+
+        QVERIFY(!model.updateTask(
+            taskId, QStringLiteral("Renamed"), QStringLiteral("tomorrow-ish"), 3, 30));
+        QCOMPARE(model.statusMessage(), QStringLiteral("Use YYYY-MM-DD for the due date."));
+
+        QVERIFY(!model.updateTask(taskId, QStringLiteral("   "), {}, 3, 30));
+        QCOMPARE(model.statusMessage(), QStringLiteral("A task needs a title."));
+
+        QVERIFY(!model.updateTask(
+            QStringLiteral("missing-task"), QStringLiteral("Ghost"), {}, 3, 30));
+        QCOMPARE(model.statusMessage(), QStringLiteral("That task is no longer in the list."));
+
+        // Nothing may have been written by any rejected edit.
+        QCOMPARE(model.topTaskTitle(), QStringLiteral("Original title"));
+    }
+
+    void postponesATaskOutOfToday()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel todoModel(repository);
+        QVERIFY(todoModel.addTask(
+            QStringLiteral("Slipping task"),
+            QDate::currentDate().toString(Qt::ISODate),
+            3,
+            30,
+            {},
+            {},
+            true));
+
+        TaskListModel todayModel(repository, TaskListModel::Today);
+        QCOMPARE(todayModel.activeCount(), 1);
+
+        const QString taskId =
+            todoModel.data(todoModel.index(0), TaskListModel::IdRole).toString();
+        QVERIFY(todoModel.postponeTask(taskId, 7));
+
+        // The deadline moves and the task leaves Today, but stays in To-do.
+        todayModel.reload();
+        QCOMPARE(todayModel.activeCount(), 0);
+        QCOMPARE(todoModel.activeCount(), 1);
+        QCOMPARE(
+            todoModel.taskDetails(taskId).value(QStringLiteral("dueDate")).toString(),
+            QDate::currentDate().addDays(7).toString(Qt::ISODate));
+
+        QVERIFY(!todoModel.postponeTask(taskId, 0));
+        QCOMPARE(
+            todoModel.statusMessage(),
+            QStringLiteral("A postponement needs at least one day."));
+        QVERIFY(!todoModel.postponeTask(QStringLiteral("missing-task"), 1));
+    }
+
+    void postponesAnUndatedTaskRelativeToToday()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel model(repository);
+        QVERIFY(model.addTask(QStringLiteral("Undated task"), {}, 3, 30));
+        const QString taskId = model.data(model.index(0), TaskListModel::IdRole).toString();
+
+        QVERIFY(model.postponeTask(taskId, 1));
+        QCOMPARE(
+            model.taskDetails(taskId).value(QStringLiteral("dueDate")).toString(),
+            QDate::currentDate().addDays(1).toString(Qt::ISODate));
+    }
+
+    void restoresATaskCompletedByMistake()
+    {
+        TaskRepository repository(QStringLiteral(":memory:"));
+        QString error;
+        QVERIFY2(repository.open(&error), qPrintable(error));
+
+        TaskListModel model(repository);
+        QVERIFY(model.addTask(QStringLiteral("Completed too soon"), {}, 3, 30));
+        const QString taskId = model.data(model.index(0), TaskListModel::IdRole).toString();
+
+        QVERIFY(model.completeTask(0));
+        QCOMPARE(model.activeCount(), 0);
+        QCOMPARE(model.completedTodayCount(), 1);
+        QCOMPARE(
+            model.completedToday().first().toMap().value(QStringLiteral("taskId")).toString(),
+            taskId);
+
+        QVERIFY(model.restoreTask(taskId));
+        QCOMPARE(model.activeCount(), 1);
+        QCOMPARE(model.completedTodayCount(), 0);
+        QCOMPARE(model.topTaskTitle(), QStringLiteral("Completed too soon"));
+        QCOMPARE(model.statusMessage(), QStringLiteral("Task restored to the queue."));
+
+        QVERIFY(!model.restoreTask(QStringLiteral("missing-task")));
     }
 };
 

@@ -3,6 +3,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -20,6 +21,8 @@ Item {
         string taskTitle,
         string categoryId,
         string subcategoryId)
+    signal editRequested(string taskId)
+    signal postponeRequested(string taskId, int days)
 
     ColumnLayout {
         anchors.fill: parent
@@ -169,24 +172,45 @@ Item {
                         Layout.fillHeight: true
                         spacing: 6
                         clip: true
-                        model: root.todayTaskModel.completedTodayTitles
+                        model: root.todayTaskModel.completedToday
 
                         delegate: Rectangle {
-                            required property string modelData
+                            id: completedRow
+
+                            required property var modelData
                             width: ListView.view.width
                             height: 40
                             radius: root.theme.radius
                             color: root.theme.successSoft
                             border.color: root.theme.border
-                            Text {
+
+                            RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                text: "✓  " + parent.modelData
-                                color: root.theme.textPrimary
-                                font.pixelSize: 12
-                                verticalAlignment: Text.AlignVCenter
-                                elide: Text.ElideRight
+                                anchors.rightMargin: 8
+                                spacing: 8
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: "✓  " + completedRow.modelData.title
+                                    color: root.theme.textPrimary
+                                    font.pixelSize: 12
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                }
+
+                                AppButton {
+                                    implicitHeight: 26
+                                    leftPadding: 10
+                                    rightPadding: 10
+                                    theme: root.theme
+                                    quiet: true
+                                    text: qsTr("Undo")
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: qsTr("Return this task to the queue")
+                                    onClicked: root.todayTaskModel.restoreTask(
+                                        completedRow.modelData.taskId)
+                                }
                             }
                         }
                     }
@@ -245,6 +269,9 @@ Item {
                                     reviewTask.title,
                                     categoryId,
                                     subcategoryId)
+                            onEditRequested: taskId => root.editRequested(taskId)
+                            onPostponeRequested: (taskId, days) =>
+                                root.postponeRequested(taskId, days)
                         }
                     }
                     Text {

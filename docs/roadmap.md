@@ -9,7 +9,7 @@
 
 ## Slice 2 — Planning essentials
 
-- Edit, postpone, and restore completed tasks
+- Edit, postpone, and restore completed tasks (complete)
 - To-do processing and category filtering
 - Daily capacity and overload warnings
 - Recurring tasks

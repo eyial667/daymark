@@ -11,7 +11,11 @@ embedded webview, Node.js, or a local web server.
 
 ## Current vertical slice
 
-- Create tasks with a due date, importance, estimate, category, and subcategory.
+- Create tasks with a due date, importance, estimate, notes, category, and
+  subcategory.
+- Edit any open task afterwards, postpone it by a day, three days, or a week,
+  and restore a task completed by mistake. Editing keeps the task's identity,
+  age, category, and linked map idea intact.
 - Create reusable categories and nested subcategories with notes, assign them
   during capture, and change a task's placement from any task list.
 - Work through every open task in a dedicated native To-do page.

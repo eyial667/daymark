@@ -8,17 +8,22 @@ Dialog {
     id: dialog
 
     required property var taskModel
-    required property var categoryModel
-    required property var appSettings
     required property var theme
-    property string initialCategoryId: ""
-    property string initialSubcategoryId: ""
-    signal manageCategoriesRequested()
+    property string taskId: ""
+    property bool isInToday: false
 
-    function openForAssignment(categoryId, subcategoryId) {
-        initialCategoryId = categoryId
-        initialSubcategoryId = subcategoryId
-        open()
+    function openForTask(id) {
+        const details = dialog.taskModel.taskDetails(id)
+        if (!details || details.taskId === undefined)
+            return
+        dialog.taskId = details.taskId
+        dialog.isInToday = details.isInToday
+        titleField.text = details.title
+        notesField.text = details.notes
+        dueField.text = details.dueDate
+        importanceField.currentIndex = details.importance - 1
+        estimateField.value = details.estimatedMinutes
+        dialog.open()
     }
 
     parent: Overlay.overlay
@@ -39,16 +44,23 @@ Dialog {
         spacing: 15
 
         Text {
-            text: qsTr("Add a task")
+            text: qsTr("Edit task")
             color: dialog.theme.textPrimary
             font.pixelSize: 21
             font.weight: Font.DemiBold
         }
 
         Text {
-            text: qsTr("Capture it now. Daymark will place it in priority order.")
+            // preferredWidth 0 keeps the translated text from widening the
+            // fixed-width dialog instead of wrapping inside it.
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            text: dialog.isInToday
+                ? qsTr("This task is in today’s plan. Changes reorder it immediately.")
+                : qsTr("Changes reorder the queue immediately. The task keeps its age and category.")
             color: dialog.theme.textSecondary
             font.pixelSize: 12
+            wrapMode: Text.WordWrap
         }
 
         TextField {
@@ -57,40 +69,6 @@ Dialog {
             placeholderText: qsTr("What needs to be done?")
             selectByMouse: true
             onAccepted: saveButton.clicked()
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 5
-
-                Text {
-                    text: qsTr("Category or subcategory")
-                    color: dialog.theme.textSecondary
-                    font.pixelSize: 11
-                }
-
-                ComboBox {
-                    id: categoryField
-                    Layout.fillWidth: true
-                    model: [qsTr("No category")].concat(dialog.categoryModel.assignmentNames)
-                    currentIndex: 0
-                }
-            }
-
-            AppButton {
-                Layout.alignment: Qt.AlignBottom
-                theme: dialog.theme
-                quiet: true
-                text: qsTr("Manage")
-                onClicked: {
-                    dialog.close()
-                    dialog.manageCategoriesRequested()
-                }
-            }
         }
 
         ColumnLayout {
@@ -105,7 +83,7 @@ Dialog {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 72
+                Layout.preferredHeight: 92
                 radius: dialog.theme.radius
                 color: dialog.theme.surface
                 border.color: notesField.activeFocus
@@ -118,7 +96,7 @@ Dialog {
 
                     TextArea {
                         id: notesField
-                        placeholderText: qsTr("Optional context, links, or the next concrete step")
+                        placeholderText: qsTr("Context, links, or the next concrete step")
                         color: dialog.theme.textPrimary
                         placeholderTextColor: dialog.theme.textMuted
                         font.pixelSize: 12
@@ -132,6 +110,7 @@ Dialog {
 
         Text {
             Layout.fillWidth: true
+            Layout.preferredWidth: 0
             visible: dialog.taskModel.statusMessage.length > 0
             text: dialog.taskModel.statusMessage
             color: dialog.theme.danger
@@ -176,7 +155,6 @@ Dialog {
                     id: importanceField
                     Layout.fillWidth: true
                     model: [1, 2, 3, 4, 5]
-                    currentIndex: 2
                 }
             }
 
@@ -208,22 +186,13 @@ Dialog {
             }
         }
 
-        RowLayout {
+        Text {
             Layout.fillWidth: true
-            spacing: 8
-
-            CheckBox {
-                id: planTodayField
-                text: qsTr("Add directly to Today")
-                checked: false
-            }
-            Text {
-                Layout.fillWidth: true
-                text: qsTr("Leave this off for To-do. A task appears in Today automatically when its deadline arrives.")
-                color: dialog.theme.textMuted
-                font.pixelSize: 10
-                wrapMode: Text.WordWrap
-            }
+            Layout.preferredWidth: 0
+            text: qsTr("Clear the due date to remove the deadline. Use the row menu to postpone by a set number of days.")
+            color: dialog.theme.textMuted
+            font.pixelSize: 10
+            wrapMode: Text.WordWrap
         }
 
         RowLayout {
@@ -243,24 +212,16 @@ Dialog {
             AppButton {
                 id: saveButton
                 theme: dialog.theme
-                text: qsTr("Add task")
+                text: qsTr("Save changes")
                 primary: true
                 enabled: titleField.text.trim().length > 0
                 onClicked: {
-                    if (dialog.taskModel.addTask(
+                    if (dialog.taskModel.updateTask(
+                            dialog.taskId,
                             titleField.text,
                             dueField.text,
                             importanceField.currentValue,
                             estimateField.value,
-                            categoryField.currentIndex > 0
-                                ? dialog.categoryModel.categoryIdForAssignment(
-                                    categoryField.currentIndex - 1)
-                                : "",
-                            categoryField.currentIndex > 0
-                                ? dialog.categoryModel.subcategoryIdForAssignment(
-                                    categoryField.currentIndex - 1)
-                                : "",
-                            planTodayField.checked,
                             notesField.text)) {
                         dialog.close()
                     }
@@ -270,24 +231,15 @@ Dialog {
     }
 
     onOpened: {
-        importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
-        estimateField.value = dialog.appSettings.defaultEstimatedMinutes
-        planTodayField.checked = false
         dialog.taskModel.clearStatus()
-        const assignmentIndex = dialog.categoryModel.indexOfAssignment(
-            dialog.initialCategoryId, dialog.initialSubcategoryId)
-        categoryField.currentIndex = assignmentIndex >= 0 ? assignmentIndex + 1 : 0
         titleField.forceActiveFocus()
+        titleField.selectAll()
     }
     onClosed: {
+        dialog.taskId = ""
+        dialog.isInToday = false
         titleField.clear()
         notesField.clear()
-        categoryField.currentIndex = 0
         dueField.clear()
-        importanceField.currentIndex = dialog.appSettings.defaultImportance - 1
-        estimateField.value = dialog.appSettings.defaultEstimatedMinutes
-        planTodayField.checked = false
-        dialog.initialCategoryId = ""
-        dialog.initialSubcategoryId = ""
     }
 }

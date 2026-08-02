@@ -400,6 +400,45 @@ bool TaskRepository::setCompleted(
     return true;
 }
 
+bool TaskRepository::updateTask(
+    const QString &taskId,
+    const QString &title,
+    const QString &notes,
+    const QDateTime &dueAt,
+    int importance,
+    int estimatedMinutes,
+    QString *errorMessage)
+{
+    if (title.isEmpty()) {
+        assignError(errorMessage, QStringLiteral("A task needs a title."));
+        return false;
+    }
+
+    QSqlQuery query(m_database);
+    query.prepare(QStringLiteral(
+        "UPDATE tasks SET title = :title, notes = :notes, due_at = :due_at, "
+        "importance = :importance, estimated_minutes = :estimated_minutes "
+        "WHERE id = :id"));
+    query.bindValue(QStringLiteral(":title"), title);
+    query.bindValue(
+        QStringLiteral(":notes"),
+        notes.isNull() ? QStringLiteral("") : notes);
+    bindNullableDateTime(query, QStringLiteral(":due_at"), dueAt);
+    query.bindValue(QStringLiteral(":importance"), importance);
+    query.bindValue(QStringLiteral(":estimated_minutes"), estimatedMinutes);
+    query.bindValue(QStringLiteral(":id"), taskId);
+
+    if (!query.exec()) {
+        assignError(errorMessage, query.lastError().text());
+        return false;
+    }
+    if (query.numRowsAffected() != 1) {
+        assignError(errorMessage, QStringLiteral("The selected task no longer exists."));
+        return false;
+    }
+    return true;
+}
+
 bool TaskRepository::setTaskCategory(
     const QString &taskId,
     const QString &categoryId,

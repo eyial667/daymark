@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -17,6 +19,7 @@ Rectangle {
     required property string subcategoryName
     required property bool isInToday
     required property string dueText
+    required property string notes
     required property int estimatedMinutes
     required property int priorityScore
     required property string priorityReason
@@ -33,6 +36,8 @@ Rectangle {
         string currentCategoryId,
         string currentSubcategoryId)
     signal planRequested(string taskId)
+    signal editRequested(string taskId)
+    signal postponeRequested(string taskId, int days)
 
     implicitHeight: compact ? 68 : 84
     radius: theme.radius
@@ -89,6 +94,17 @@ Rectangle {
                     font.weight: Font.DemiBold
                 }
 
+                Text {
+                    visible: row.notes.length > 0
+                    text: qsTr("✎")
+                    color: row.theme.textMuted
+                    font.pixelSize: 12
+                    ToolTip.visible: notesHover.hovered
+                    ToolTip.text: row.notes
+
+                    HoverHandler { id: notesHover }
+                }
+
                 Rectangle {
                     implicitWidth: scoreLabel.implicitWidth + 16
                     implicitHeight: 25
@@ -120,13 +136,80 @@ Rectangle {
             RowLayout {
                 spacing: 12
 
-                Text {
+                Button {
+                    id: dueButton
+
+                    implicitWidth: dueLabel.implicitWidth + 16
+                    implicitHeight: 24
+                    leftPadding: 8
+                    rightPadding: 8
                     text: row.dueText
-                    color: row.dueText.indexOf(qsTr("Overdue")) === 0
-                        ? row.theme.danger
-                        : row.theme.textMuted
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
+
+                    contentItem: Text {
+                        id: dueLabel
+                        text: dueButton.text
+                        color: row.dueText.indexOf(qsTr("Overdue")) === 0
+                            ? row.theme.danger
+                            : row.theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 12
+                        color: dueButton.hovered
+                            ? row.theme.surfaceHover : "transparent"
+                        border.color: dueButton.hovered || dueButton.activeFocus
+                            ? row.theme.border : "transparent"
+                    }
+                    ToolTip.visible: hovered && !postponeMenu.visible
+                    ToolTip.text: qsTr("Postpone this task")
+                    onClicked: postponeMenu.open()
+
+                    Menu {
+                        id: postponeMenu
+
+                        y: dueButton.height + 3
+                        padding: 4
+
+                        background: Rectangle {
+                            implicitWidth: 190
+                            radius: row.theme.radius
+                            color: row.theme.surfaceRaised
+                            border.color: row.theme.borderStrong
+                        }
+
+                        delegate: MenuItem {
+                            id: postponeItem
+
+                            implicitHeight: 32
+
+                            contentItem: Text {
+                                text: postponeItem.text
+                                color: row.theme.textPrimary
+                                font.pixelSize: 12
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            background: Rectangle {
+                                radius: row.theme.radius > 5 ? 5 : 3
+                                color: postponeItem.highlighted
+                                    ? row.theme.surfaceHover : "transparent"
+                            }
+                        }
+
+                        MenuItem {
+                            text: qsTr("Postpone to tomorrow")
+                            onTriggered: row.postponeRequested(row.taskId, 1)
+                        }
+                        MenuItem {
+                            text: qsTr("Postpone by three days")
+                            onTriggered: row.postponeRequested(row.taskId, 3)
+                        }
+                        MenuItem {
+                            text: qsTr("Postpone by a week")
+                            onTriggered: row.postponeRequested(row.taskId, 7)
+                        }
+                    }
                 }
 
                 Rectangle {
@@ -193,6 +276,19 @@ Rectangle {
             primary: true
             text: qsTr("Add to Today")
             onClicked: row.planRequested(row.taskId)
+        }
+
+        AppButton {
+            Layout.preferredWidth: 34
+            implicitHeight: 32
+            leftPadding: 8
+            rightPadding: 8
+            theme: row.theme
+            quiet: true
+            text: "✎"
+            ToolTip.visible: hovered
+            ToolTip.text: qsTr("Edit task")
+            onClicked: row.editRequested(row.taskId)
         }
 
         AppButton {

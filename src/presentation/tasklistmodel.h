@@ -6,7 +6,8 @@
 #include "data/taskrepository.h"
 
 #include <QAbstractListModel>
-#include <QStringList>
+#include <QVariantList>
+#include <QVariantMap>
 #include <QVector>
 
 class TaskListModel final : public QAbstractListModel
@@ -19,7 +20,7 @@ class TaskListModel final : public QAbstractListModel
     Q_PROPERTY(QString topTaskTitle READ topTaskTitle NOTIFY summaryChanged)
     Q_PROPERTY(int topTaskEstimatedMinutes READ topTaskEstimatedMinutes NOTIFY summaryChanged)
     Q_PROPERTY(int completedTodayCount READ completedTodayCount NOTIFY summaryChanged)
-    Q_PROPERTY(QStringList completedTodayTitles READ completedTodayTitles NOTIFY summaryChanged)
+    Q_PROPERTY(QVariantList completedToday READ completedToday NOTIFY summaryChanged)
     Q_PROPERTY(bool hasBacklogSuggestion READ hasBacklogSuggestion NOTIFY summaryChanged)
     Q_PROPERTY(QString backlogSuggestionTitle READ backlogSuggestionTitle NOTIFY summaryChanged)
     Q_PROPERTY(QString backlogSuggestionDetail READ backlogSuggestionDetail NOTIFY summaryChanged)
@@ -65,7 +66,7 @@ public:
     [[nodiscard]] QString topTaskTitle() const;
     [[nodiscard]] int topTaskEstimatedMinutes() const;
     [[nodiscard]] int completedTodayCount() const;
-    [[nodiscard]] QStringList completedTodayTitles() const;
+    [[nodiscard]] QVariantList completedToday() const;
     [[nodiscard]] bool hasBacklogSuggestion() const;
     [[nodiscard]] QString backlogSuggestionTitle() const;
     [[nodiscard]] QString backlogSuggestionDetail() const;
@@ -78,11 +79,22 @@ public:
         int estimatedMinutes,
         const QString &categoryId = {},
         const QString &subcategoryId = {},
-        bool planForToday = false);
+        bool planForToday = false,
+        const QString &notes = {});
     Q_INVOKABLE bool assignTaskCategory(
         const QString &taskId,
         const QString &categoryId,
         const QString &subcategoryId = {});
+    Q_INVOKABLE QVariantMap taskDetails(const QString &taskId) const;
+    Q_INVOKABLE bool updateTask(
+        const QString &taskId,
+        const QString &title,
+        const QString &dueDate,
+        int importance,
+        int estimatedMinutes,
+        const QString &notes = {});
+    Q_INVOKABLE bool postponeTask(const QString &taskId, int days);
+    Q_INVOKABLE bool restoreTask(const QString &taskId);
     Q_INVOKABLE bool completeTask(int row);
     Q_INVOKABLE bool deleteTask(int row);
     Q_INVOKABLE bool planTaskForToday(const QString &taskId);
@@ -102,13 +114,20 @@ private:
     };
 
     void setStatusMessage(const QString &message);
+    [[nodiscard]] bool parseTaskInput(
+        const QString &title,
+        const QString &dueDate,
+        QString *cleanTitle,
+        QDateTime *dueAt);
+    [[nodiscard]] const Item *findItem(const QString &taskId) const;
     [[nodiscard]] static bool belongsToToday(const Task &task, const QDate &today);
     [[nodiscard]] static QString formatDueDate(const QDateTime &dueAt);
+    [[nodiscard]] static QDateTime deadlineFor(const QDate &date);
 
     TaskRepository &m_repository;
     Scope m_scope;
     QVector<Item> m_items;
-    QStringList m_completedTodayTitles;
+    QVariantList m_completedToday;
     QString m_backlogSuggestionTaskId;
     QString m_backlogSuggestionTitle;
     QString m_backlogSuggestionDetail;

@@ -20,6 +20,8 @@ Item {
         string taskTitle,
         string categoryId,
         string subcategoryId)
+    signal editRequested(string taskId)
+    signal postponeRequested(string taskId, int days)
 
     ColumnLayout {
         anchors.fill: parent
@@ -102,6 +104,9 @@ Item {
                         onCategoryRequested: (taskId, categoryId, subcategoryId) =>
                             root.categoryRequested(
                                 taskId, taskRow.title, categoryId, subcategoryId)
+                        onEditRequested: taskId => root.editRequested(taskId)
+                        onPostponeRequested: (taskId, days) =>
+                            root.postponeRequested(taskId, days)
                     }
                 }
 

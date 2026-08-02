@@ -127,12 +127,12 @@ int TaskListModel::topTaskEstimatedMinutes() const
 
 int TaskListModel::completedTodayCount() const
 {
-    return m_completedTodayTitles.size();
+    return m_completedToday.size();
 }
 
-QStringList TaskListModel::completedTodayTitles() const
+QVariantList TaskListModel::completedToday() const
 {
-    return m_completedTodayTitles;
+    return m_completedToday;
 }
 
 bool TaskListModel::hasBacklogSuggestion() const
@@ -155,6 +155,42 @@ QString TaskListModel::statusMessage() const
     return m_statusMessage;
 }
 
+bool TaskListModel::parseTaskInput(
+    const QString &title,
+    const QString &dueDate,
+    QString *cleanTitle,
+    QDateTime *dueAt)
+{
+    const QString trimmedTitle = title.trimmed();
+    if (trimmedTitle.isEmpty()) {
+        setStatusMessage(tr("A task needs a title."));
+        return false;
+    }
+
+    QDateTime parsedDueAt;
+    if (!dueDate.trimmed().isEmpty()) {
+        const QDate parsedDate = QDate::fromString(dueDate.trimmed(), Qt::ISODate);
+        if (!parsedDate.isValid()) {
+            setStatusMessage(tr("Use YYYY-MM-DD for the due date."));
+            return false;
+        }
+        parsedDueAt = deadlineFor(parsedDate);
+    }
+
+    *cleanTitle = trimmedTitle;
+    *dueAt = parsedDueAt;
+    return true;
+}
+
+const TaskListModel::Item *TaskListModel::findItem(const QString &taskId) const
+{
+    const auto item = std::find_if(
+        m_items.cbegin(),
+        m_items.cend(),
+        [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
+    return item == m_items.cend() ? nullptr : &(*item);
+}
+
 bool TaskListModel::addTask(
     const QString &title,
     const QString &dueDate,
@@ -162,27 +198,19 @@ bool TaskListModel::addTask(
     int estimatedMinutes,
     const QString &categoryId,
     const QString &subcategoryId,
-    bool planForToday)
+    bool planForToday,
+    const QString &notes)
 {
-    const QString cleanTitle = title.trimmed();
-    if (cleanTitle.isEmpty()) {
-        setStatusMessage(tr("A task needs a title."));
-        return false;
-    }
-
+    QString cleanTitle;
     QDateTime dueAt;
-    if (!dueDate.trimmed().isEmpty()) {
-        const QDate parsedDate = QDate::fromString(dueDate.trimmed(), Qt::ISODate);
-        if (!parsedDate.isValid()) {
-            setStatusMessage(tr("Use YYYY-MM-DD for the due date."));
-            return false;
-        }
-        dueAt = QDateTime(parsedDate, QTime(23, 59), QTimeZone::LocalTime);
+    if (!parseTaskInput(title, dueDate, &cleanTitle, &dueAt)) {
+        return false;
     }
 
     Task task;
     task.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     task.title = cleanTitle;
+    task.notes = notes.trimmed();
     task.categoryId = categoryId.trimmed();
     task.subcategoryId = subcategoryId.trimmed();
     task.dueAt = dueAt;
@@ -215,11 +243,7 @@ bool TaskListModel::assignTaskCategory(
     const QString &categoryId,
     const QString &subcategoryId)
 {
-    const auto item = std::find_if(
-        m_items.cbegin(),
-        m_items.cend(),
-        [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
-    if (item == m_items.cend()) {
+    if (findItem(taskId) == nullptr) {
         setStatusMessage(tr("That task is no longer in the list."));
         return false;
     }
@@ -238,6 +262,129 @@ bool TaskListModel::assignTaskCategory(
     setStatusMessage(categoryId.trimmed().isEmpty()
             ? tr("Category removed from task.")
             : tr("Task category updated."));
+    return true;
+}
+
+QVariantMap TaskListModel::taskDetails(const QString &taskId) const
+{
+    const Item *item = findItem(taskId);
+    if (item == nullptr) {
+        return {};
+    }
+
+    const Task &task = item->task;
+    return {
+        {QStringLiteral("taskId"), task.id},
+        {QStringLiteral("title"), task.title},
+        {QStringLiteral("notes"), task.notes},
+        {QStringLiteral("dueDate"),
+         task.dueAt.isValid() ? task.dueAt.date().toString(Qt::ISODate) : QString()},
+        {QStringLiteral("importance"), task.importance},
+        {QStringLiteral("estimatedMinutes"), task.estimatedMinutes},
+        {QStringLiteral("categoryId"), task.categoryId},
+        {QStringLiteral("subcategoryId"), task.subcategoryId},
+        {QStringLiteral("isInToday"), belongsToToday(task, QDate::currentDate())},
+    };
+}
+
+bool TaskListModel::updateTask(
+    const QString &taskId,
+    const QString &title,
+    const QString &dueDate,
+    int importance,
+    int estimatedMinutes,
+    const QString &notes)
+{
+    if (findItem(taskId) == nullptr) {
+        setStatusMessage(tr("That task is no longer in the list."));
+        return false;
+    }
+
+    QString cleanTitle;
+    QDateTime dueAt;
+    if (!parseTaskInput(title, dueDate, &cleanTitle, &dueAt)) {
+        return false;
+    }
+
+    QString errorMessage;
+    if (!m_repository.updateTask(
+            taskId,
+            cleanTitle,
+            notes.trimmed(),
+            dueAt,
+            std::clamp(importance, 1, 5),
+            std::clamp(estimatedMinutes, 5, 480),
+            &errorMessage)) {
+        setStatusMessage(tr("Could not update the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    reload();
+    emit tasksChanged();
+    setStatusMessage(tr("Task “%1” updated.").arg(cleanTitle));
+    return true;
+}
+
+bool TaskListModel::postponeTask(const QString &taskId, int days)
+{
+    if (days <= 0) {
+        setStatusMessage(tr("A postponement needs at least one day."));
+        return false;
+    }
+
+    const Item *item = findItem(taskId);
+    if (item == nullptr) {
+        setStatusMessage(tr("That task is no longer in the list."));
+        return false;
+    }
+
+    const Task task = item->task;
+    const QDate today = QDate::currentDate();
+    // A task without a deadline is postponed relative to today, so "tomorrow"
+    // always means tomorrow rather than a date already in the past.
+    const QDate anchor = task.dueAt.isValid() && task.dueAt.date() > today
+        ? task.dueAt.date()
+        : today;
+    const QDate newDueDate = anchor.addDays(days);
+
+    QString errorMessage;
+    if (!m_repository.updateTask(
+            taskId,
+            task.title,
+            task.notes,
+            deadlineFor(newDueDate),
+            task.importance,
+            task.estimatedMinutes,
+            &errorMessage)) {
+        setStatusMessage(tr("Could not postpone the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    // Work planned for today that is no longer due today leaves the Today queue.
+    if (task.plannedDate.isValid() && task.plannedDate <= today
+        && !m_repository.setTaskPlannedDate(taskId, {}, &errorMessage)) {
+        setStatusMessage(tr("Could not postpone the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    reload();
+    emit tasksChanged();
+    setStatusMessage(tr("“%1” moved to %2.")
+        .arg(task.title, QLocale().toString(newDueDate, QLocale::ShortFormat)));
+    return true;
+}
+
+bool TaskListModel::restoreTask(const QString &taskId)
+{
+    QString errorMessage;
+    if (!m_repository.setCompleted(taskId, false, &errorMessage)) {
+        setStatusMessage(tr("Could not restore the task: %1").arg(errorMessage));
+        return false;
+    }
+
+    reload();
+    emit tasksChanged();
+    setStatusMessage(tr("Task restored to the queue."));
     return true;
 }
 
@@ -281,11 +428,8 @@ bool TaskListModel::deleteTask(int row)
 
 bool TaskListModel::planTaskForToday(const QString &taskId)
 {
-    const auto item = std::find_if(
-        m_items.cbegin(),
-        m_items.cend(),
-        [&taskId](const Item &candidate) { return candidate.task.id == taskId; });
-    if (item == m_items.cend()) {
+    const Item *item = findItem(taskId);
+    if (item == nullptr) {
         setStatusMessage(tr("That task is no longer in the list."));
         return false;
     }
@@ -340,11 +484,14 @@ void TaskListModel::reload()
     std::stable_sort(allTasks.begin(), allTasks.end(), [](const Task &left, const Task &right) {
         return left.completedAt > right.completedAt;
     });
-    QStringList completedTodayTitles;
+    QVariantList completedToday;
     const QDate today = QDate::currentDate();
     for (const Task &task : allTasks) {
         if (task.completed && task.completedAt.isValid() && task.completedAt.date() == today) {
-            completedTodayTitles.append(task.title);
+            completedToday.append(QVariantMap {
+                {QStringLiteral("taskId"), task.id},
+                {QStringLiteral("title"), task.title},
+            });
         }
     }
 
@@ -394,7 +541,7 @@ void TaskListModel::reload()
 
     beginResetModel();
     m_items = std::move(refreshed);
-    m_completedTodayTitles = std::move(completedTodayTitles);
+    m_completedToday = std::move(completedToday);
     endResetModel();
     emit summaryChanged();
 
@@ -409,6 +556,11 @@ bool TaskListModel::belongsToToday(const Task &task, const QDate &today)
 {
     return task.plannedDate == today
         || (task.dueAt.isValid() && task.dueAt.date() <= today);
+}
+
+QDateTime TaskListModel::deadlineFor(const QDate &date)
+{
+    return QDateTime(date, QTime(23, 59), QTimeZone::LocalTime);
 }
 
 void TaskListModel::setStatusMessage(const QString &message)
